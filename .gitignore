@@ -1,0 +1,6 @@
+/.idea/
+/.project
+/pubspec.lock
+packages/
+/test/gmail_account.dart
+/test/test.dart
