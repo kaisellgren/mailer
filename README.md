@@ -10,6 +10,7 @@ Mailer supports file attachments, HTML emails and multiple transport methods.
 * Plaintext and HTML emails
 * Unicode support
 * Attachments
+* Secure (filters and sanitizes all fields context-wise)
 * Use any SMTP server like Gmail, Live, SendGrid, Amazon SES
 * SSL/TLS support
 * Pre-configured services (Gmail, Live, Mail.ru, etc.). Just fill in your username and password.
