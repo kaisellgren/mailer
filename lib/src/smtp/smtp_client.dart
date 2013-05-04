@@ -8,8 +8,6 @@ typedef void SmtpResponseAction(String message);
 class SmtpClient {
   SmtpOptions options;
 
-  SmtpClient(this.options);
-
   /**
    * A function to run if some data arrives from the server.
    */
@@ -19,6 +17,8 @@ class SmtpClient {
 
   Socket _connection;
 
+  bool _connectionOpen = false;
+
   /**
    * A list of supported authentication protocols.
    */
@@ -27,16 +27,16 @@ class SmtpClient {
   /**
    * When the connection is idling, it's reasy to take in a new message.
    */
-  Stream get onIdle => _onIdleController.stream;
-  StreamController _onIdleController = new StreamController.broadcast();
+  Stream onIdle;
+  StreamController _onIdleController = new StreamController();
 
   /**
    * This stream emits whenever an email has been sent.
    *
    * The returned object is an [Envelope] containing the details of what has been emailed.
    */
-  Stream<Envelope> get onSend => _onSendController.stream;
-  StreamController _onSendController = new StreamController.broadcast();
+  Stream<Envelope> onSend;
+  StreamController _onSendController = new StreamController();
 
   /**
    * Sometimes the response comes in pieces. We store each piece here.
@@ -44,6 +44,11 @@ class SmtpClient {
   List<int> _remainder = [];
 
   Envelope _envelope;
+
+  SmtpClient(this.options) {
+    onIdle = _onIdleController.stream.asBroadcastStream();
+    onSend = _onSendController.stream.asBroadcastStream();
+  }
 
   /**
    * Initializes a connection to the given server.
@@ -58,11 +63,14 @@ class SmtpClient {
     }
 
     future.then((socket) {
+      _connectionOpen = true;
+
       _connection = socket;
-      _connection.listen(_onData, onError: (e) => print(e));
+      _connection.listen(_onData, onError: (e) => print('Error occured with the connection to the SMTP server: $e'));
+      _connection.done.then((_) => _connectionOpen = false);
 
       completer.complete(true);
-    });
+    }).catchError((e) => completer.completeError('Error connecting to the SMTP server: $e'));
 
     return completer.future;
   }
@@ -74,6 +82,8 @@ class SmtpClient {
     _envelope = envelope;
 
     _connect().then((_) => _currentAction = _actionGreeting);
+
+    new Timer(const Duration(seconds: 3), () => _connection.close());
 
     onIdle.listen((_) {
       _currentAction = _actionMail;
@@ -261,7 +271,6 @@ class SmtpClient {
       recipient = _envelope.recipients[++_recipientIndex];
     }
 
-
     sendCommand('RCPT TO:<${_sanitizeEmail(recipient)}>');
   }
 
@@ -283,7 +292,6 @@ class SmtpClient {
 
     _currentAction = _actionFinishEnvelope;
     sendCommand(_envelope.toString());
-    print(_envelope.toString());
   }
 
   _actionFinishEnvelope(String message) {
@@ -297,7 +305,7 @@ class SmtpClient {
   }
 
   void _actionIdle(String message) {
-    if (int.parse(message.slice(0, 1)) > 3) {
+    if (int.parse(message.substring(0, 1)) > 3) {
       throw 'Error: $message';
     }
 

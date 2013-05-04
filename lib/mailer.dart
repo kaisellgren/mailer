@@ -4,9 +4,12 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:crypto';
 
+import 'package:content_type/content_type.dart';
+
 part 'src/envelope.dart';
 part 'src/transport.dart';
 part 'src/util.dart';
+part 'src/attachment.dart';
 part 'src/sendmail_transport.dart';
 part 'src/smtp/helper_options.dart';
 part 'src/smtp/smtp_client.dart';

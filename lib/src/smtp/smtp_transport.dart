@@ -6,14 +6,22 @@ class SmtpTransport extends Transport {
   SmtpTransport(this.options);
 
   Future send(Envelope envelope) {
-    return new Future.of(() {
+    return new Future(() {
+      var completer = new Completer();
+
       var client = new SmtpClient(options);
 
+      client.send(envelope);
+
       client.onSend.listen((Envelope mail) {
-        print('Sent: ${mail.subject}');
+        if (mail == envelope) {
+          completer.complete(true);
+        }
       });
 
-      client.send(envelope);
+      return completer.future;
     });
   }
+
+  Future sendAll(List<Envelope> envelopes) {throw 'Not implemented';}
 }
