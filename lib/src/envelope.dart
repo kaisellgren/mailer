@@ -68,7 +68,7 @@ class Envelope {
       var filename = new Path(attachment.file.path).filename;
 
       // Create a chunk'd (76 chars per line) base64 string.
-      var contents = _chunkSplit(CryptoUtils.bytesToBase64(attachment.file.readAsBytesSync()));
+      var contents = _chunkSplit(CryptoUtils.bytesToBase64(attachment.file.readAsBytesSync())); // TODO: Refactor this whole thing, no syncs please.
 
       data = '${data}--$boundary\r\n';
       data = '${data}Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n';
