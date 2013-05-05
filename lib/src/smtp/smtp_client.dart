@@ -291,7 +291,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionFinishEnvelope;
-    sendCommand(_envelope.toString());
+    _envelope.getContents().then(sendCommand);
   }
 
   _actionFinishEnvelope(String message) {
