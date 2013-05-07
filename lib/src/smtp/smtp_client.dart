@@ -66,7 +66,7 @@ class SmtpClient {
       _connectionOpen = true;
 
       _connection = socket;
-      _connection.listen(_onData, onError: (e) => print('Error occured with the connection to the SMTP server: $e'));
+      _connection.listen(_onData, onError: (e) => _logger.severe('Error occured with the connection to the SMTP server: $e'));
       _connection.done.then((_) => _connectionOpen = false);
 
       completer.complete(true);
@@ -95,7 +95,7 @@ class SmtpClient {
    * Sends a command to the SMTP server.
    */
   void sendCommand(String command) {
-    print('> $command');
+    _logger.fine('> $command');
     _connection.write('$command\r\n');
   }
 
@@ -124,7 +124,7 @@ class SmtpClient {
 
     _remainder.clear();
 
-    print(message);
+    _logger.fine(message);
 
     assert(_currentAction is Function);
 
@@ -145,16 +145,9 @@ class SmtpClient {
     });
   }
 
-  /**
-   * Logs a message with Dart Logger.
-   */
-  void _log(message) {
-    print(message);
-  }
-
   void _actionGreeting(String message) {
     if (message.startsWith('220') == false) {
-      _log('Invalid greeting from server: $message');
+      _logger.severe('Invalid greeting from server: $message');
       return;
     }
 
@@ -188,7 +181,7 @@ class SmtpClient {
 
   void _actionHELO(String message) {
     if (message.startsWith('2') == false) {
-      _log('Invalid response for EHLO/HELO: $message');
+      _logger.severe('Invalid response for EHLO/HELO: $message');
       return;
     }
 
@@ -276,7 +269,7 @@ class SmtpClient {
 
   void _actionRecipient(String message) {
     if (message.startsWith('2') == false) {
-      print('Recipient failure: $message');
+      _logger.severe('Recipient failure: $message');
       return;
     }
 

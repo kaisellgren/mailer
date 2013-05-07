@@ -68,14 +68,16 @@ class Envelope {
       return Future.forEach(attachments, (attachment) {
         var filename = new Path(attachment.file.path).filename;
 
-        // Create a chunk'd (76 chars per line) base64 string.
-        var contents = _chunkSplit(CryptoUtils.bytesToBase64(attachment.file.readAsBytesSync())); // TODO: Refactor this whole thing, no syncs please.
+        return attachment.file.readAsBytes().then((bytes) {
+          // Create a chunk'd (76 chars per line) base64 string.
+          var contents = _chunkSplit(CryptoUtils.bytesToBase64(bytes));
 
-        data = '${data}--$boundary\r\n';
-        data = '${data}Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n';
-        data = '${data}Content-Transfer-Encoding: base64\r\n';
-        data = '${data}Content-Disposition: attachment; filename="$filename"\r\n\r\n';
-        data = '$data${contents}\r\n\r\n';
+          data = '${data}--$boundary\r\n';
+          data = '${data}Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n';
+          data = '${data}Content-Transfer-Encoding: base64\r\n';
+          data = '${data}Content-Disposition: attachment; filename="$filename"\r\n\r\n';
+          data = '$data${contents}\r\n\r\n';
+        });
       }).then((_) {
         data = '${data}--$boundary--\r\n\r\n.';
 

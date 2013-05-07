@@ -5,6 +5,7 @@ import 'dart:async';
 import 'dart:crypto';
 
 import 'package:content_type/content_type.dart';
+import 'package:logging/logging.dart';
 
 part 'src/envelope.dart';
 part 'src/transport.dart';
@@ -15,3 +16,5 @@ part 'src/smtp/helper_options.dart';
 part 'src/smtp/smtp_client.dart';
 part 'src/smtp/smtp_options.dart';
 part 'src/smtp/smtp_transport.dart';
+
+var _logger = new Logger('mailer');
