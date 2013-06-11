@@ -11,6 +11,7 @@ class Envelope {
   List<String> recipients = [];
   List<Attachment> attachments = [];
   String from = 'anonymous@${Platform.localHostname}';
+  String fromName;
   String subject;
   String text;
   String html;
@@ -30,7 +31,15 @@ class Envelope {
 
       if (subject != null) data = '${data}Subject: ${_sanitizeField(subject)}\r\n';
 
-      if (from != null) data = '${data}From: ${_sanitizeEmail(from)}\r\n';
+      if (from != null) {
+        var fromData = _sanitizeEmail(from);
+
+        if (fromName != null) {
+          fromData = '$fromName <$fromData>';
+        }
+
+        data = '${data}From: $fromData\r\n';
+      }
 
       if (recipients != null && recipients.length > 0) {
         var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
