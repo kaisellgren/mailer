@@ -4,6 +4,6 @@ description: Compose and send emails from Dart. Supports file attachments, HTML 
 author: Kai Sellgren <kaisellgren@gmail.com>
 homepage: http://github.com/kaisellgren/mailer
 dependencies:
-  unittest: "=>0.5.0+1"
-  content_type: "=>0.5.0"
-  logging: "=>0.5.0+1"
+  unittest: ">=0.5.0+1"
+  content_type: ">=0.5.0"
+  logging: ">=0.5.0+1"
