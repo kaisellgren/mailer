@@ -2,7 +2,6 @@ library mailer;
 
 import 'dart:io';
 import 'dart:async';
-import 'dart:crypto';
 
 import 'package:content_type/content_type.dart';
 import 'package:logging/logging.dart';
