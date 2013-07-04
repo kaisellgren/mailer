@@ -81,7 +81,9 @@ class SmtpClient {
   void send(Envelope envelope) {
     _envelope = envelope;
 
-    _connect().then((_) => _currentAction = _actionGreeting);
+    _currentAction = _actionGreeting;
+
+    _connect();
 
     new Timer(const Duration(seconds: 3), () => _connection.close());
 
@@ -126,9 +128,7 @@ class SmtpClient {
 
     _logger.fine(message);
 
-    assert(_currentAction is Function);
-
-    _currentAction(message);
+    if (_currentAction != null) _currentAction(message);
   }
 
   /**

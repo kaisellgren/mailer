@@ -1,5 +1,5 @@
 name: mailer
-version: 0.5.1
+version: 0.5.3
 description: Compose and send emails from Dart. Supports file attachments, HTML emails and multiple transport methods.
 author: Kai Sellgren <kaisellgren@gmail.com>
 homepage: http://github.com/kaisellgren/mailer
@@ -7,3 +7,4 @@ dependencies:
   unittest: any
   content_type: any
   logging: any
+  crypto: any
