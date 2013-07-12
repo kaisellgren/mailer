@@ -62,7 +62,7 @@ class Envelope {
         data = '${data}--$boundary\r\n';
         data = '${data}Content-Type: text/plain; charset="${encoding.name}"\r\n';
         data = '${data}Content-Transfer-Encoding: 7bit\r\n\r\n';
-        data = '$data${_chunkSplit(text)}\r\n\r\n';
+        data = '$data$text\r\n\r\n';
       }
 
       // Insert HTML message.
@@ -70,7 +70,7 @@ class Envelope {
         data = '${data}--$boundary\r\n';
         data = '${data}Content-Type: text/html; charset="${encoding.name}"\r\n';
         data = '${data}Content-Transfer-Encoding: 7bit\r\n\r\n';
-        data = '$data${_chunkSplit(html)}\r\n\r\n';
+        data = '$data$html\r\n\r\n';
       }
 
       // Add all attachments.
@@ -79,7 +79,7 @@ class Envelope {
 
         return attachment.file.readAsBytes().then((bytes) {
           // Create a chunk'd (76 chars per line) base64 string.
-          var contents = _chunkSplit(CryptoUtils.bytesToBase64(bytes));
+          var contents = CryptoUtils.bytesToBase64(bytes);
 
           data = '${data}--$boundary\r\n';
           data = '${data}Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n';
