@@ -16,7 +16,7 @@ class Envelope {
   String text;
   String html;
   String identityString = 'mailer';
-  Encoding encoding = Encoding.UTF_8;
+  Encoding encoding = const Utf8Codec();
 
   int _counter = 0;
 
