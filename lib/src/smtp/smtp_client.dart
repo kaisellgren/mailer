@@ -63,6 +63,8 @@ class SmtpClient {
     }
 
     future.then((socket) {
+      _logger.finer("connect to ${options.hostName} at port ${options.port}");
+      
       _connectionOpen = true;
 
       _connection = socket;
@@ -85,7 +87,7 @@ class SmtpClient {
 
     _connect();
 
-    new Timer(const Duration(seconds: 3), () => _connection.close());
+    new Timer(const Duration(seconds: 60), () => _connection.close());
 
     onIdle.listen((_) {
       _currentAction = _actionMail;
