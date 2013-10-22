@@ -16,7 +16,7 @@ class Envelope {
   String text;
   String html;
   String identityString = 'mailer';
-  Encoding encoding = const Utf8Codec();
+  Encoding encoding = UTF8;
 
   int _counter = 0;
 
@@ -75,11 +75,11 @@ class Envelope {
 
       // Add all attachments.
       return Future.forEach(attachments, (attachment) {
-        var filename = new Path(attachment.file.path).filename;
+        var filename = basename(attachment.file.path);
 
         return attachment.file.readAsBytes().then((bytes) {
           // Create a chunk'd (76 chars per line) base64 string.
-          var contents = CryptoUtils.bytesToBase64(bytes);
+          var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator:true);
 
           data = '${data}--$boundary\r\n';
           data = '${data}Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n';

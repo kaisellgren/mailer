@@ -8,3 +8,4 @@ dependencies:
   content_type: any
   logging: any
   crypto: any
+  path: any
