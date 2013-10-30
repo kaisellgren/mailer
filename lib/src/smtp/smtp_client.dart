@@ -124,7 +124,7 @@ class SmtpClient {
     var message = new String.fromCharCodes(_remainder);
 
     // A multi line reply, wait until ending.
-    if (new RegExp('(?:^|\n)\d{3}-.+\$').hasMatch(message)) return;
+    if (new RegExp(r'(?:^|\n)\d{3}-[^\n]+\n$').hasMatch(message)) return;
 
     _remainder.clear();
 
