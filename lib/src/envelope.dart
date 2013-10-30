@@ -27,9 +27,9 @@ class Envelope {
    */
   Future<String> getContents() {
     return new Future(() {
-      var data = '';
+      var buffer = new StringBuffer();
 
-      if (subject != null) data = '${data}Subject: ${_sanitizeField(subject)}\r\n';
+      if (subject != null) buffer.write('Subject: ${_sanitizeField(subject)}\r\n');
 
       if (from != null) {
         var fromData = _sanitizeEmail(from);
@@ -38,16 +38,16 @@ class Envelope {
           fromData = '$fromName <$fromData>';
         }
 
-        data = '${data}From: $fromData\r\n';
+        buffer.write('From: $fromData\r\n');
       }
 
       if (recipients != null && recipients.length > 0) {
         var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
-        data = '${data}To: $to\r\n';
+        buffer.write('To: $to\r\n');
       }
 
-      data = '${data}X-Mailer: Dart Mailer library\r\n';
-      data = '${data}Mime-Version: 1.0\r\n';
+      buffer.write('X-Mailer: Dart Mailer library\r\n');
+      buffer.write('Mime-Version: 1.0\r\n');
 
       // Create boundary string.
       var boundary = '$identityString-?=_${++_counter}-${new DateTime.now().millisecondsSinceEpoch}';
@@ -55,22 +55,22 @@ class Envelope {
       // Alternative or mixed?
       var multipartType = html != null && text != null ? 'alternative' : 'mixed';
 
-      data = '${data}Content-Type: multipart/$multipartType; boundary="$boundary"\r\n';
+      buffer.write('Content-Type: multipart/$multipartType; boundary="$boundary"\r\n');
 
       // Insert text message.
       if (text != null) {
-        data = '${data}--$boundary\r\n';
-        data = '${data}Content-Type: text/plain; charset="${encoding.name}"\r\n';
-        data = '${data}Content-Transfer-Encoding: 7bit\r\n\r\n';
-        data = '$data$text\r\n\r\n';
+        buffer.write('--$boundary\r\n');
+        buffer.write('Content-Type: text/plain; charset="${encoding.name}"\r\n');
+        buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
+        buffer.write('$text\r\n\r\n');
       }
 
       // Insert HTML message.
       if (html != null) {
-        data = '${data}--$boundary\r\n';
-        data = '${data}Content-Type: text/html; charset="${encoding.name}"\r\n';
-        data = '${data}Content-Transfer-Encoding: 7bit\r\n\r\n';
-        data = '$data$html\r\n\r\n';
+        buffer.write('--$boundary\r\n');
+        buffer.write('Content-Type: text/html; charset="${encoding.name}"\r\n');
+        buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
+        buffer.write('$html\r\n\r\n');
       }
 
       // Add all attachments.
@@ -81,16 +81,16 @@ class Envelope {
           // Create a chunk'd (76 chars per line) base64 string.
           var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator:true);
 
-          data = '${data}--$boundary\r\n';
-          data = '${data}Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n';
-          data = '${data}Content-Transfer-Encoding: base64\r\n';
-          data = '${data}Content-Disposition: attachment; filename="$filename"\r\n\r\n';
-          data = '$data${contents}\r\n\r\n';
+          buffer.write('--$boundary\r\n');
+          buffer.write('Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n');
+          buffer.write('Content-Transfer-Encoding: base64\r\n');
+          buffer.write('Content-Disposition: attachment; filename="$filename"\r\n\r\n');
+          buffer.write('$contents\r\n\r\n');
         });
       }).then((_) {
-        data = '${data}--$boundary--\r\n\r\n.';
+        buffer.write('--$boundary--\r\n\r\n.');
 
-        return data;
+        return buffer.toString();
       });
     });
   }

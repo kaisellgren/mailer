@@ -9,19 +9,7 @@ class SmtpTransport extends Transport {
 
   Future send(Envelope envelope) {
     return new Future(() {
-      var completer = new Completer();
-
-      var client = new SmtpClient(options);
-
-      client.send(envelope);
-
-      client.onSend.listen((Envelope mail) {
-        if (mail == envelope) {
-          completer.complete(true);
-        }
-      });
-
-      return completer.future;
+      return new SmtpClient(options).send(envelope);
     });
   }
 
