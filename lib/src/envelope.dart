@@ -90,7 +90,7 @@ class Envelope {
           buffer.write('$contents\n\n');
         });
       }).then((_) {
-        buffer.write('--$boundary--\n\n.');
+        buffer.write('--$boundary--\n\r\n.');
 
         return buffer.toString();
       });
