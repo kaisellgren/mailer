@@ -9,3 +9,4 @@ dependencies:
   logging: any
   crypto: any
   path: any
+  intl: any
