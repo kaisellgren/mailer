@@ -5,7 +5,7 @@ author: Kai Sellgren <kaisellgren@gmail.com>
 homepage: http://github.com/kaisellgren/mailer
 dependencies:
   unittest: any
-  content_type: any
+  mime: any
   logging: any
   crypto: any
   path: any
