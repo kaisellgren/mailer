@@ -1,6 +1,6 @@
 part of mailer;
 
-class SendmailTransport extends Transport {
+abstract class SendmailTransport extends Transport {
   /**
    * Specifies the path to sendmail program.
    *
