@@ -29,7 +29,7 @@ class Envelope {
     return new Future(() {
       var buffer = new StringBuffer();
 
-      if (subject != null) buffer.write('Subject: ${_sanitizeField(subject)}\r\n');
+      if (subject != null) buffer.write('Subject: ${_sanitizeField(subject)}\n');
 
       if (from != null) {
         var fromData = _sanitizeEmail(from);
@@ -38,16 +38,18 @@ class Envelope {
           fromData = '$fromName <$fromData>';
         }
 
-        buffer.write('From: $fromData\r\n');
+        buffer.write('From: $fromData\n');
       }
 
       if (recipients != null && recipients.length > 0) {
         var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
-        buffer.write('To: $to\r\n');
+        buffer.write('To: $to\n');
       }
 
-      buffer.write('X-Mailer: Dart Mailer library\r\n');
-      buffer.write('Mime-Version: 1.0\r\n');
+      // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
+      buffer.write('Date: ' + new DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000').format(new DateTime.now().toUtc()) + '\n');
+      buffer.write('X-Mailer: Dart Mailer library\n');
+      buffer.write('Mime-Version: 1.0\n');
 
       // Create boundary string.
       var boundary = '$identityString-?=_${++_counter}-${new DateTime.now().millisecondsSinceEpoch}';
@@ -55,22 +57,22 @@ class Envelope {
       // Alternative or mixed?
       var multipartType = html != null && text != null ? 'alternative' : 'mixed';
 
-      buffer.write('Content-Type: multipart/$multipartType; boundary="$boundary"\r\n');
+      buffer.write('Content-Type: multipart/$multipartType; boundary="$boundary"\n\n');
 
       // Insert text message.
       if (text != null) {
-        buffer.write('--$boundary\r\n');
-        buffer.write('Content-Type: text/plain; charset="${encoding.name}"\r\n');
-        buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
-        buffer.write('$text\r\n\r\n');
+        buffer.write('--$boundary\n');
+        buffer.write('Content-Type: text/plain; charset="${encoding.name}"\n');
+        buffer.write('Content-Transfer-Encoding: 7bit\n\n');
+        buffer.write('$text\n\n');
       }
 
       // Insert HTML message.
       if (html != null) {
-        buffer.write('--$boundary\r\n');
-        buffer.write('Content-Type: text/html; charset="${encoding.name}"\r\n');
-        buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
-        buffer.write('$html\r\n\r\n');
+        buffer.write('--$boundary\n');
+        buffer.write('Content-Type: text/html; charset="${encoding.name}"\n');
+        buffer.write('Content-Transfer-Encoding: 7bit\n\n');
+        buffer.write('$html\n\n');
       }
 
       // Add all attachments.
@@ -81,14 +83,14 @@ class Envelope {
           // Create a chunk'd (76 chars per line) base64 string.
           var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator:true);
 
-          buffer.write('--$boundary\r\n');
-          buffer.write('Content-Type: ${_getMimeType(attachment.file.path)}; name="$filename"\r\n');
-          buffer.write('Content-Transfer-Encoding: base64\r\n');
-          buffer.write('Content-Disposition: attachment; filename="$filename"\r\n\r\n');
-          buffer.write('$contents\r\n\r\n');
+          buffer.write('--$boundary\n');
+          buffer.write('Content-Type: ${_getMimeType(attachment.file.path)}; name="$filename"\n');
+          buffer.write('Content-Transfer-Encoding: base64\n');
+          buffer.write('Content-Disposition: attachment; filename="$filename"\n\n');
+          buffer.write('$contents\n\n');
         });
       }).then((_) {
-        buffer.write('--$boundary--\r\n\r\n.');
+        buffer.write('--$boundary--\n\n.');
 
         return buffer.toString();
       });
