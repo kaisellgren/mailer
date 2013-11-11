@@ -54,44 +54,58 @@ class SmtpClient {
    * Initializes a connection to the given server.
    */
   Future _connect({secured: false}) {
-    var completer = new Completer(), future;
+    return new Future(() {
+      Future next(socket) {
+        _logger.finer("Connecting to ${options.hostName} at port ${options.port}.");
 
-    if (secured || options.secured) {
-      future = SecureSocket.connect(options.hostName, options.port);
-    } else {
-      future = Socket.connect(options.hostName, options.port);
-    }
+        _connectionOpen = true;
 
-    future.then((socket) {
-      _logger.finer("connect to ${options.hostName} at port ${options.port}");
-      
-      _connectionOpen = true;
+        _connection = socket;
+        _connection.listen(_onData, onError: _onSendController.addError);
+        _connection.done.then((_) => _connectionOpen = false).catchError(_onSendController.addError);
+      }
 
-      _connection = socket;
-      _connection.listen(_onData, onError: (e) => _logger.severe('Error occured with the connection to the SMTP server: $e'));
-      _connection.done.then((_) => _connectionOpen = false);
+      // Secured connection was demanded by the user.
+      if (secured || options.secured) return SecureSocket.connect(options.hostName, options.port).then(next);
 
-      completer.complete(true);
-    }).catchError((e) => completer.completeError('Error connecting to the SMTP server: $e'));
-
-    return completer.future;
+      return Socket.connect(options.hostName, options.port).then(next);
+    });
   }
 
   /**
    * Sends out an email.
    */
-  void send(Envelope envelope) {
-    _envelope = envelope;
+  Future send(Envelope envelope) {
+    return new Future(() {
+      onIdle.listen((_) {
+        _currentAction = _actionMail;
+        sendCommand('MAIL FROM:<${_sanitizeEmail(_envelope.from)}>');
+      });
 
-    _currentAction = _actionGreeting;
+      _envelope = envelope;
+      _currentAction = _actionGreeting;
 
-    _connect();
+      return _connect().then((_) {
+        var c = new Completer();
 
-    new Timer(const Duration(seconds: 60), () => _connection.close());
+        var t = new Timer(const Duration(seconds: 60), () {
+          _close();
+          c.completeError('Timed out sending an email.');
+        });
 
-    onIdle.listen((_) {
-      _currentAction = _actionMail;
-      sendCommand('MAIL FROM:<${_sanitizeEmail(_envelope.from)}>');
+        onSend.listen((Envelope mail) {
+          if (mail == envelope) {
+            t.cancel();
+            c.complete(true);
+          }
+        }, onError: (e) {
+          _close();
+          t.cancel();
+          c.completeError('Failed to send an email: $e');
+        });
+
+        return c.future;
+      });
     });
   }
 
@@ -124,13 +138,19 @@ class SmtpClient {
     var message = new String.fromCharCodes(_remainder);
 
     // A multi line reply, wait until ending.
-    if (new RegExp('(?:^|\n)\d{3}-.+\$').hasMatch(message)) return;
+    if (new RegExp(r'(?:^|\n)\d{3}-[^\n]+\n$').hasMatch(message)) return;
 
     _remainder.clear();
 
     _logger.fine(message);
 
-    if (_currentAction != null) _currentAction(message);
+    if (_currentAction != null) {
+      try {
+        _currentAction(message);
+      } catch (e) {
+        _onSendController.addError(e);
+      }
+    }
   }
 
   /**
@@ -297,6 +317,7 @@ class SmtpClient {
     _currentAction = _actionIdle;
     _onSendController.add(_envelope);
     _envelope = null;
+    _close();
   }
 
   void _actionIdle(String message) {
