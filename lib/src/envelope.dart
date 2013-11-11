@@ -81,7 +81,7 @@ class Envelope {
 
         return attachment.file.readAsBytes().then((bytes) {
           // Create a chunk'd (76 chars per line) base64 string.
-          var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator:true);
+          var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator: true);
 
           buffer.write('--$boundary\n');
           buffer.write('Content-Type: ${_getMimeType(attachment.file.path)}; name="$filename"\n');
@@ -90,7 +90,7 @@ class Envelope {
           buffer.write('$contents\n\n');
         });
       }).then((_) {
-        buffer.write('--$boundary--\n\n.');
+        buffer.write('--$boundary--\n\r\n.'); // Note. the \r actually needs to be there.
 
         return buffer.toString();
       });
@@ -100,5 +100,5 @@ class Envelope {
 
 String _getMimeType(String path) {
   final mtype = lookupMimeType(path);
-  return mtype != null ? mtype: "application/octet-stream";
+  return mtype != null ? mtype: 'application/octet-stream';
 }

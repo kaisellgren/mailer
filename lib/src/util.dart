@@ -27,18 +27,3 @@ String _sanitizeName(String value) {
     .replaceAll('<', '[')
     .replaceAll('>', ']');
 }
-
-/**
- * Splits the content to multiple lines ensuring that each line is no more than [length].
- */
-String _chunkSplit(String data, [int length = 76]) {
-  String result = '';
-
-  var linesNeeded = (data.length / length).ceil();
-
-  for (var i = 0; i < linesNeeded; i++) {
-    result = '$result${data.substring(i * 76, (i * 76 + 76).clamp(0, data.length))}\r\n';
-  }
-
-  return result.substring(0, result.length - 2);
-}

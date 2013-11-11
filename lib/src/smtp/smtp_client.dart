@@ -25,7 +25,7 @@ class SmtpClient {
   List<String> supportedAuthentications = [];
 
   /**
-   * When the connection is idling, it's reasy to take in a new message.
+   * When the connection is idling, it's ready to take in a new message.
    */
   Stream onIdle;
   StreamController _onIdleController = new StreamController();
@@ -55,20 +55,18 @@ class SmtpClient {
    */
   Future _connect({secured: false}) {
     return new Future(() {
-      Future next(socket) {
-        _logger.finer("Connecting to ${options.hostName} at port ${options.port}.");
-
-        _connectionOpen = true;
-
-        _connection = socket;
-        _connection.listen(_onData, onError: _onSendController.addError);
-        _connection.done.then((_) => _connectionOpen = false).catchError(_onSendController.addError);
-      }
-
       // Secured connection was demanded by the user.
-      if (secured || options.secured) return SecureSocket.connect(options.hostName, options.port).then(next);
+      if (secured || options.secured) return SecureSocket.connect(options.hostName, options.port);
 
-      return Socket.connect(options.hostName, options.port).then(next);
+      return Socket.connect(options.hostName, options.port);
+    }).then((socket) {
+      _logger.finer("Connecting to ${options.hostName} at port ${options.port}.");
+
+      _connectionOpen = true;
+
+      _connection = socket;
+      _connection.listen(_onData, onError: _onSendController.addError);
+      _connection.done.then((_) => _connectionOpen = false).catchError(_onSendController.addError);
     });
   }
 
@@ -86,25 +84,25 @@ class SmtpClient {
       _currentAction = _actionGreeting;
 
       return _connect().then((_) {
-        var c = new Completer();
+        var completer = new Completer();
 
-        var t = new Timer(const Duration(seconds: 60), () {
+        var timeout = new Timer(const Duration(seconds: 60), () {
           _close();
-          c.completeError('Timed out sending an email.');
+          completer.completeError('Timed out sending an email.');
         });
 
         onSend.listen((Envelope mail) {
           if (mail == envelope) {
-            t.cancel();
-            c.complete(true);
+            timeout.cancel();
+            completer.complete(true);
           }
         }, onError: (e) {
           _close();
-          t.cancel();
-          c.completeError('Failed to send an email: $e');
+          timeout.cancel();
+          completer.completeError('Failed to send an email: $e');
         });
 
-        return c.future;
+        return completer.future;
       });
     });
   }
@@ -255,9 +253,7 @@ class SmtpClient {
   }
 
   void _actionAuthenticateComplete(String message) {
-    if (message.startsWith('2') == false) {
-      throw 'Invalid login: $message';
-    }
+    if (message.startsWith('2') == false) throw 'Invalid login: $message';
 
     _currentAction = _actionIdle;
     _onIdleController.add(true);
@@ -266,9 +262,7 @@ class SmtpClient {
   var _recipientIndex = 0;
 
   void _actionMail(String message) {
-    if (message.startsWith('2') == false) {
-      throw 'Mail from command failed: $message';
-    }
+    if (message.startsWith('2') == false) throw 'Mail from command failed: $message';
 
     var recipient;
 
@@ -301,18 +295,14 @@ class SmtpClient {
 
   void _actionData(String message) {
     // The response should be either 354 or 250.
-    if (message.startsWith('2') == false && message.startsWith('3') == false) {
-      throw 'Data command failed: $message';
-    }
+    if (message.startsWith('2') == false && message.startsWith('3') == false) throw 'Data command failed: $message';
 
     _currentAction = _actionFinishEnvelope;
     _envelope.getContents().then(sendCommand);
   }
 
   _actionFinishEnvelope(String message) {
-    if (message.startsWith('2') == false) {
-      throw 'Could not send email: $message';
-    }
+    if (message.startsWith('2') == false) throw 'Could not send email: $message';
 
     _currentAction = _actionIdle;
     _onSendController.add(_envelope);
@@ -321,9 +311,7 @@ class SmtpClient {
   }
 
   void _actionIdle(String message) {
-    if (int.parse(message.substring(0, 1)) > 3) {
-      throw 'Error: $message';
-    }
+    if (int.parse(message.substring(0, 1)) > 3) throw 'Error: $message';
 
     throw 'We should never get here -- bug? Message: $message';
   }
