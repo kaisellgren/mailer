@@ -3,10 +3,12 @@ version: 0.8.10
 description: Compose and send emails from Dart. Supports file attachments, HTML emails and multiple transport methods.
 author: Kai Sellgren <kaisellgren@gmail.com>
 homepage: http://github.com/kaisellgren/mailer
+environment:
+  sdk: '>=0.8.10+6 <2.0.0'
 dependencies:
-  unittest: any
-  mime: any
-  logging: any
-  crypto: any
-  path: any
-  intl: any
+  unittest: '>=0.9.0 < 0.10.0'
+  mime: '>=0.9.0 < 0.10.0'
+  logging: '>=0.9.0 < 0.10.0'
+  crypto: '>=0.9.0 < 0.10.0'
+  path: '>=0.9.0 < 0.10.0'
+  intl: '>=0.9.0 < 0.10.0'
