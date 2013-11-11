@@ -82,7 +82,7 @@ class Envelope {
           var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator:true);
 
           buffer.write('--$boundary\r\n');
-          buffer.write('Content-Type: ${getContentType(filename: attachment.file.path)}; name="$filename"\r\n');
+          buffer.write('Content-Type: ${_getMimeType(attachment.file.path)}; name="$filename"\r\n');
           buffer.write('Content-Transfer-Encoding: base64\r\n');
           buffer.write('Content-Disposition: attachment; filename="$filename"\r\n\r\n');
           buffer.write('$contents\r\n\r\n');
@@ -94,4 +94,9 @@ class Envelope {
       });
     });
   }
+}
+
+String _getMimeType(String path) {
+  final mtype = lookupMimeType(path);
+  return mtype != null ? mtype: "application/octet-stream";
 }

@@ -5,7 +5,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:path/path.dart';
-import 'package:content_type/content_type.dart';
+import 'package:mime/mime.dart';
 import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
 
