@@ -56,7 +56,7 @@ class SmtpClient {
   Future _connect({secured: false}) {
     return new Future(() {
       // Secured connection was demanded by the user.
-      if (secured || options.secured) return SecureSocket.connect(options.hostName, options.port);
+      if (secured || options.secured) return SecureSocket.connect(options.hostName, options.port, onBadCertificate: (_) => options.ignoreBadCertificate);
 
       return Socket.connect(options.hostName, options.port);
     }).then((socket) {
@@ -155,12 +155,11 @@ class SmtpClient {
    * Upgrades the connection to use TLS.
    */
   void _upgradeConnection(callback) {
-    _ignoreData = true;
-
-    _close();
-
-    _connect(secured: true).then((_) {
-      _ignoreData = false;
+    SecureSocket.secure(_connection, onBadCertificate: (_) => options.ignoreBadCertificate)
+    .then((SecureSocket secured) {
+      _connection = secured;
+      _connection.listen(_onData, onError: _onSendController.addError);
+      _connection.done.then((_) => _connectionOpen = false).catchError(_onSendController.addError);
       callback();
     });
   }
