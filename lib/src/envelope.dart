@@ -9,6 +9,8 @@ part of mailer;
  */
 class Envelope {
   List<String> recipients = [];
+  List<String> _ccRecipients = [];
+  List<String> _bccRecipients = [];
   List<Attachment> attachments = [];
   String from = 'anonymous@${Platform.localHostname}';
   String fromName;
@@ -20,6 +22,13 @@ class Envelope {
 
   int _counter = 0;
 
+  /* Getters and setters for cc and bcc recipients. Setters only update if the new value is a list.*/
+  List<String> get ccRecipients                         => this._ccRecipients;
+               set ccRecipients (List<String> newList)  => (newList is List ? this._ccRecipients = newList : null);
+  List<String> get bccRecipients  => this._bccRecipients;
+               set bccRecipients (List<String> newList) => (newList is List ? this._bccRecipients = newList : null);
+
+  
   /**
    * Returns the envelope as a String that is suitable for use in SMTP DATA section.
    *
@@ -44,6 +53,16 @@ class Envelope {
       if (recipients != null && recipients.length > 0) {
         var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
         buffer.write('To: $to\n');
+      }
+
+      if (!this.ccRecipients.isEmpty) {
+        var to = ccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+        buffer.write('cc: $to\n');
+      }
+
+      if (!this.bccRecipients.isEmpty) {
+        var to = bccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+        buffer.write('bcc: $to\n');
       }
 
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
