@@ -12,6 +12,8 @@ class Envelope {
   List<Attachment> attachments = [];
   String from = 'anonymous@${Platform.localHostname}';
   String fromName;
+  String replyTo;
+  String replyToName;
   String subject;
   String text;
   String html;
@@ -39,6 +41,16 @@ class Envelope {
         }
 
         buffer.write('From: $fromData\n');
+      }
+
+      if (replyTo != null) {
+        var replyToData = _sanitizeEmail(replyTo);
+
+        if (replyToName != null) {
+          replyToData = '$replyToName <$replyToData>';
+        }
+
+        buffer.write('Reply-To: $replyToData\n');
       }
 
       if (recipients != null && recipients.length > 0) {
