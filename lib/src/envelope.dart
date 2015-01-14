@@ -14,6 +14,8 @@ class Envelope {
   String fromName;
   String replyTo;
   String replyToName;
+  String sender;
+  String senderName;
   String subject;
   String text;
   String html;
@@ -51,6 +53,16 @@ class Envelope {
         }
 
         buffer.write('Reply-To: $replyToData\n');
+      }
+
+      if (sender != null) {
+        var senderData = _sanitizeEmail(sender);
+
+        if (senderName != null) {
+          senderData = '$senderName <$senderData>';
+        }
+
+        buffer.write('Sender: $senderData\n');
       }
 
       if (recipients != null && recipients.length > 0) {
