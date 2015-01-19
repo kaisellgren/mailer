@@ -9,6 +9,8 @@ part of mailer;
  */
 class Envelope {
   List<String> recipients = [];
+  List<String> ccRecipients = [];
+  List<String> bccRecipients = [];
   List<Attachment> attachments = [];
   String from = 'anonymous@${Platform.localHostname}';
   String fromName;
@@ -68,6 +70,16 @@ class Envelope {
       if (recipients != null && recipients.length > 0) {
         var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
         buffer.write('To: $to\n');
+      }
+
+      if (!this.ccRecipients.isEmpty) {
+        var cc = ccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+        buffer.write('cc: $cc\n');
+      }
+
+      if (!this.bccRecipients.isEmpty) {
+        var bcc = bccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+        buffer.write('bcc: $bcc\n');
       }
 
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
