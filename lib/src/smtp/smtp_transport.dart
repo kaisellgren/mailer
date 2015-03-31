@@ -4,7 +4,6 @@ class SmtpTransport extends Transport {
   SmtpOptions options;
 
   SmtpTransport(this.options) {
-    _logger.fine('Tets');
   }
 
   Future send(Envelope envelope) {
