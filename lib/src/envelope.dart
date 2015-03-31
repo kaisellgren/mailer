@@ -80,7 +80,7 @@ class Envelope {
 
       // Insert text message.
       if (text != null) {
-        buffer.write('--$boundary\n');
+        buffer.write('--$boundary\r\n');
         buffer.write('Content-Type: text/plain; charset="${encoding.name}"\r\n');
         buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
         buffer.write('$text\r\n\r\n');
