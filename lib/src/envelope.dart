@@ -58,8 +58,15 @@ class Envelope {
         buffer.write('bcc: $bcc\n');
       }
 
+      
+      DateTime now = new DateTime.now();
+      
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
-      buffer.write('Date: ' + new DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000').format(new DateTime.now().toUtc()) + '\n');
+      buffer.write('Date: ' + new DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000').format(now.toUtc()) + '\n');
+      
+      int randomIdPart = new Random().nextInt((1<<32) - 1);
+      buffer.write('Message-ID: <${now.millisecondsSinceEpoch}-${randomIdPart}@${Platform.localHostname}>');
+      
       buffer.write('X-Mailer: Dart Mailer library\n');
       buffer.write('Mime-Version: 1.0\n');
 
