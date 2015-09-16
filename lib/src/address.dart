@@ -758,6 +758,26 @@ class Address {
   }
 
   //----------------------------------------------------------------
+  /// Returns the simple-address in a mailbox address.
+  ///
+  /// That is, returns _localPart@domain_, ignoring any display-name
+  /// or routes.
+  ///
+  /// Throws an exception if the address is not a mailbox (i.e. if it
+  /// is a group).
+  ///
+  String simpleAddress() {
+    if (!isMailbox) {
+      throw new AddressNotMailbox();
+    }
+
+    var addrSpec = _formatAtomOrQuotedString(_localPart);
+
+    addrSpec += "@";
+    addrSpec += _domain; // TODO: quote this if needed
+
+    return addrSpec;
+  }
 
   String toString() {
     if (isMailbox) {
