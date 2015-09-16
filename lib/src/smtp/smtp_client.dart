@@ -77,7 +77,7 @@ class SmtpClient {
     return new Future(() {
       onIdle.listen((_) {
         _currentAction = _actionMail;
-        sendCommand('MAIL FROM:<${_sanitizeEmail(_envelope.from)}>');
+        sendCommand('MAIL FROM: ${Address.sanitizeEmail(_envelope.from)}');
       });
 
       _envelope = envelope;
@@ -279,7 +279,7 @@ class SmtpClient {
       recipient = _envelope.recipients[++_recipientIndex];
     }
 
-    sendCommand('RCPT TO:<${_sanitizeEmail(recipient)}>');
+    sendCommand('RCPT TO: ${Address.sanitizeEmail(recipient)}');
   }
 
   void _actionRecipient(String message) {

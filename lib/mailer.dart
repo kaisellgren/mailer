@@ -10,6 +10,7 @@ import 'package:mime/mime.dart';
 import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
 
+part 'src/address.dart';
 part 'src/envelope.dart';
 part 'src/transport.dart';
 part 'src/util.dart';
