@@ -172,4 +172,23 @@ void main() {
       });
     }
   });
+
+  group("Sanitize", () {
+    var values = [
+    [ "a@b", "a@b"],
+    [ "a.b.c@d", "a.b.c@d"],
+    [ " foo.bar @ baz.example.com ", "foo.bar@baz.example.com"],
+    [ "foobar < a@b >", "foobar<a@b>"],
+    [ 'foo"bar"baz < a@b >', '"foo bar baz"<a@b>'],
+    ];
+
+    for (var value in values) {
+      var input = value[0];
+      var output = value[1];
+
+      test(input, () {
+        expect(Address.sanitize(input), equals(output));
+      });
+    }
+  });
 }

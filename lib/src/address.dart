@@ -80,12 +80,6 @@ class AddressNotGroup extends AddressException {
 class Address {
   // Members
 
-  String _displayName;
-  String _localPart;
-  String _domain;
-  List<String> _route;
-  List<Address> _group;
-
   String _tmp; // internal use during parsing
   int _offset; // position reached when using the _parseMailbox constructor.
 
@@ -94,52 +88,47 @@ class Address {
   ///
   /// Returns true if it is a mailbox, returns false if it is a group.
   ///
-  bool get isMailbox => (_group == null);
+  bool get isMailbox => (groupMailboxes == null);
 
   //--------
   // The display-name can apply to both mailboxes and groups
 
   /// The display-name part of the address, or null if there is no display-name.
-  String get displayName => _displayName;
+  /// Available for both mailbox addresses and group addresses.
+  ///
+  String displayName;
 
   //--------
   // The localPart, domain and route only apply to mailboxes
 
   /// The local-part of the mailbox
-  String get localPart {
-    if (_group != null) {
-      throw new AddressNotMailbox();
-    }
-    return _localPart;
-  }
+  ///
+  /// Only available for a group address.
+  String localPart;
+
 
   /// The domain of the mailbox.
-  String get domain {
-    if (_group != null) {
-      throw new AddressNotMailbox();
-    }
-    return _domain;
-  }
+  ///
+  /// Only available for mailbox addresses.
+  ///
+  String domain;
+
 
   /// The route (as a list of domains) part of the mailbox, or null if none.
-  List<String> get route {
-    if (_group != null) {
-      throw new AddressNotMailbox();
-    }
-    return _route;
-  }
+  ///
+  /// Only available for mailbox addresses.
+  ///
+  List<String> route;
 
   //--------
   // The below is only apply to groups
 
   /// The mailboxes (if any) making up the group, or null if not a group.
   /// This can be an empty list.
-  List<Address> get group {
-    if (_group == null) {
-      throw new AddressNotGroup();
-    }
-    return _group;
-  }
+  ///
+  /// Only available for group addresses.
+  ///
+  List<Address> groupMailboxes;
 
   //----------------------------------------------------------------
   /// Constructor for a mailbox address from component values.
@@ -153,12 +142,12 @@ class Address {
       throw new AddressInvalid("missing domain");
     }
 
-    _group = null;
+    groupMailboxes = null;
 
-    _localPart = localPart;
-    _domain = domain;
-    _displayName = displayName; // can be null
-    _route = route; // can be null
+    localPart = localPart;
+    domain = domain;
+    displayName = displayName; // can be null
+    route = route; // can be null
   }
 
   //----------------------------------------------------------------
@@ -178,8 +167,8 @@ class Address {
       }
     }
 
-    _group = members;
-    _displayName = displayName; // can be null
+    groupMailboxes = members;
+    displayName = displayName; // can be null
   }
 
   //----------------------------------------------------------------
@@ -227,11 +216,11 @@ class Address {
   //----------------------------------------------------------------
 
   int _parse(String str, int begin, int end) {
-    _displayName = null;
-    _localPart = null;
-    _domain = null;
-    _route = null;
-    _group = null;
+    displayName = null;
+    localPart = null;
+    domain = null;
+    route = null;
+    groupMailboxes = null;
 
     // Parse the first word (which is mandatory for all forms of addresses)
 
@@ -325,7 +314,7 @@ class Address {
 
         case "@":
           // End of local-part reached
-          _localPart = words.join(".");
+          localPart = words.join(".");
           // Parse the domain part
           pos = _parseDomain(str, pos + 1, end);
           return pos; // success
@@ -355,9 +344,9 @@ class Address {
     // as the _phrase_ and was mandatory.
 
     if (1 <= words.length) {
-      _displayName = words.join(" ");
+      displayName = words.join(" ");
     } else {
-      _displayName = null; // there is no display-name
+      displayName = null; // there is no display-name
     }
 
     // Step over the "<"
@@ -374,7 +363,7 @@ class Address {
     if (str.substring(pos, pos + 1) == "@") {
       pos = _parseRoute(str, pos, end); // route is present
     } else {
-      _route = null; // route not present
+      route = null; // route not present
     }
 
     // Parse the first word in the addr-spec
@@ -417,7 +406,7 @@ class Address {
     if (words.isEmpty) {
       throw new AddressInvalid("group missing display-name");
     }
-    _displayName = words.join(" ");
+    displayName = words.join(" ");
 
     // Step over ":"
 
@@ -425,7 +414,7 @@ class Address {
 
     // Parse [mailbox-list] ";"
 
-    _group = new List<Address>();
+    groupMailboxes = new List<Address>();
 
     var expectingMailbox = null; // null since mailbox-list can be empty
 
@@ -439,7 +428,7 @@ class Address {
           }
           return pos + 1;
         } else if (char == ",") {
-          if (_group.isEmpty) {
+          if (groupMailboxes.isEmpty) {
             throw new AddressInvalid("group has unexpected initial comma");
           }
           if (expectingMailbox != null && expectingMailbox) {
@@ -455,7 +444,7 @@ class Address {
           if (!mailbox.isMailbox) {
             throw new AddressInvalid("nested groups are not permitted");
           }
-          _group.add(mailbox);
+          groupMailboxes.add(mailbox);
           pos = mailbox._offset;
           expectingMailbox = false;
         }
@@ -478,7 +467,7 @@ class Address {
 
     var pos = begin;
 
-    _route = new List<String>();
+    route = new List<String>();
 
     var expectingDomain = true;
 
@@ -490,8 +479,8 @@ class Address {
           }
           try {
             pos = _parseDomain(str, pos + 1, end);
-            _route.add(_domain);
-            _domain = null; // just using the _parseDomain method temporally
+            route.add(domain);
+            domain = null; // just using the _parseDomain method temporally
             expectingDomain = false;
           } on AddressInvalid {
             throw new AddressInvalid("route has bad domain");
@@ -530,7 +519,7 @@ class Address {
     // EBNF: sub-domain = domain-ref / domain-literal
     // EBNF: domain-ref = atom
 
-    _domain = "";
+    domain = "";
     while (pos < end) {
       pos = _skipLinearWhiteSpace(str, pos, end);
 
@@ -542,13 +531,13 @@ class Address {
       }
 
       if (_tmp == null) {
-        if (_domain.isEmpty) {
+        if (domain.isEmpty) {
           throw new AddressInvalid("domain has unexpected initial full-stop");
         } else {
           throw new AddressInvalid("domain has unexpected extra full-stop");
         }
       }
-      _domain += _tmp;
+      domain += _tmp;
       pos = subdomainEnd;
 
       pos = _skipLinearWhiteSpace(str, pos, end);
@@ -561,11 +550,11 @@ class Address {
 
       // Domain has more sub-domains
 
-      _domain += ".";
+      domain += ".";
       pos++;
     }
 
-    if (_domain.isEmpty) {
+    if (domain.isEmpty) {
       throw new AddressInvalid("domain is missing");
     } else {
       throw new AddressInvalid("domain has unexpected final full-stop");
@@ -771,31 +760,29 @@ class Address {
       throw new AddressNotMailbox();
     }
 
-    var addrSpec = _formatAtomOrQuotedString(_localPart);
+    var addrSpec = _formatDotted(localPart);
 
     addrSpec += "@";
-    addrSpec += _domain; // TODO: quote this if needed
+    addrSpec += _formatDotted(domain); // TODO: quote this if needed
 
     return addrSpec;
   }
 
   String toString() {
     if (isMailbox) {
-      assert(_group == null);
-      assert(_localPart != null && _localPart.isNotEmpty);
-      assert(_domain != null && _domain.isNotEmpty);
+      // Mailbox
+      assert(groupMailboxes == null);
+      assert(localPart != null && localPart.isNotEmpty);
+      assert(domain != null && domain.isNotEmpty);
 
-      var addrSpec = _formatAtomOrQuotedString(_localPart);
-
-      addrSpec += "@";
-      addrSpec += _domain; // TODO: quote this if needed
+      var addrSpec = simpleAddress();
 
       // Route
 
-      if (_route != null) {
+      if (route != null) {
         // Address with route
         var r = "";
-        for (var domain in _route) {
+        for (var domain in route) {
           r = r + "@" + domain;
         }
         addrSpec = "${r}:${addrSpec}";
@@ -803,29 +790,29 @@ class Address {
 
       // Optional phase
 
-      if (_displayName == null && _route == null) {
+      if (displayName == null && route == null) {
         // Does not need < >
         return addrSpec;
       } else {
         // Need < >
-        return "\"${_displayName}\" <${addrSpec}>";
+        return "${_formatAtomOrQuotedString(displayName)}<${addrSpec}>";
       }
     } else {
       // Group
-      assert(_group != null);
-      assert(_localPart == null);
-      assert(_domain == null);
-      assert(_route == null);
+      assert(groupMailboxes != null);
+      assert(localPart == null);
+      assert(domain == null);
+      assert(route == null);
 
       var str;
-      if (_displayName == null) {
+      if (displayName == null) {
         throw new AddressInvalid("Group cannot have no display-name");
       } else {
-        str = "${_displayName}:";
+        str = "${displayName}:";
       }
 
       var first = true;
-      for (var mailbox in _group) {
+      for (var mailbox in groupMailboxes) {
         if (first) {
           first = false;
         } else {
@@ -837,6 +824,12 @@ class Address {
       str += ";";
       return str;
     }
+  }
+
+  //----------------
+
+  static String _formatDotted(String str) {
+    return str.split(".").map((s) => _formatAtomOrQuotedString(s)).join(".");
   }
 
   //----------------
