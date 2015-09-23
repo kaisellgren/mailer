@@ -107,7 +107,10 @@ void main() {
       "a@b.c.d.example.com",
       "group:;",
       "group:a@b;",
-      "group:a@b,c@d;"
+      "group:a@b,c@d;",
+      "route<,@foo:a@b>",
+      "route<@foo,,@bar:a@b>",
+      "route<@foo,:a@b>",
     ]) {
       test(str, () {
         expect(Address.sanitize(str), isNotEmpty);
@@ -144,9 +147,6 @@ void main() {
       // bad routes
       "route<@:a@b>",
       "route<:a@b>",
-      "route<,@foo:a@b>",
-      "route<@foo,,@bar:a@b>",
-      "route<@foo,:a@b>",
       "route<@foo @bar:a@b>",
       // bad groups
       "group:",

@@ -34,16 +34,11 @@ class AddressNotGroup extends AddressException {
 
 //================================================================
 
-/// An RFC #822 address, with updates from RFC #2822.
-///
-/// For simplicity, this will be referred to as an RFC #822 address, even
-/// though strictly speaking it does not conform to RFC #822. For example,
-/// "<a@b>" is not a valid address in RFC #822, but is a valid RFC #2822
-/// address.
+/// An RFC #5322 address with support for RFC #6531 for UTF-8.
 ///
 /// This class implements an address (as specified by
-/// section 4 "Address Specification" of RFC #2822, which replaced
-/// RFC #822).
+/// section 3.4 "Address Specification" of RFC #5822, which obsoleted
+/// RFC #2822, which obsoleted RFC #822).
 ///
 /// This class is useful for both parsing an address into its components,
 /// formatting an address from its components,
@@ -58,7 +53,7 @@ class AddressNotGroup extends AddressException {
 /// object with it and then get its string representation with [toString].
 /// The static method [sanitize] does this.
 ///
-/// An RFC #822 "address" can either be a "mailbox" (what a typical email
+/// An RFC #5822 "address" can either be a "mailbox" (what a typical email
 /// address would be) or a "group" (a named set of zero or more mailboxes).
 /// The [Address] class supports both forms, even though groups are rarely used.
 /// The [isMailbox] method can be used to determine which form the address
@@ -71,11 +66,6 @@ class AddressNotGroup extends AddressException {
 /// - displayName<@route1,@route2:localPart@domain> - mailbox with a name and route
 /// - displayName:; - group with zero explicitly specified mailboxes
 /// - displayName:a@a.domain,b@b.domain,c@c.domain; - group with three mailboxes
-///
-/// Note: this implemention only permits comments (which in RFC #822
-/// is text surrounded by parenthesis, possibly nested) only where
-/// linear-whitespace can occur.
-/// Proper RFC #822 permits comments in other places too.
 ///
 class Address {
   // Members
@@ -106,13 +96,11 @@ class Address {
   /// Only available for a group address.
   String localPart;
 
-
   /// The domain of the mailbox.
   ///
   /// Only available for mailbox addresses.
   ///
   String domain;
-
 
   /// The route (as a list of domains) part of the mailbox, or null if none.
   ///
@@ -174,10 +162,10 @@ class Address {
   //----------------------------------------------------------------
   /// Constructor from a string value.
   ///
-  /// Parses the [str] as an RFC #822 address.
+  /// Parses the [str] as an RFC #5822 address.
   ///
   /// Throws an [AddressInvalid] exception if it is not a valid
-  /// RFC #822 address. A null value or empty string is not a valid RFC #822
+  /// RFC #5822 address. A null value or empty string is not a valid RFC #5822
   /// address.
   ///
   Address(String str) {
@@ -190,45 +178,132 @@ class Address {
 
     var end = str.length;
 
-    var pos = _skipLinearWhiteSpace(str, 0, end);
+    var pos = _skipCFWS(str, 0, end);
     if (pos == end) {
       throw new AddressInvalid("value is a blank string");
     }
 
     // Parse the address
 
-    pos = _parse(str, pos, end);
+    pos = _parseAddress(str, pos, end);
 
     // After which, there should be no more characters in the entire string
 
-    pos = _skipLinearWhiteSpace(str, pos, end);
+    pos = _skipCFWS(str, pos, end);
     if (pos != end) {
       throw new AddressInvalid("unexpected text after address");
     }
   }
 
   //----------------------------------------------------------------
-  /// Internal constructor for creating an address when parsing a group.
+  /// Internal constructor for creating an address
+  ///
+  /// This is invoked when parsing an address that is a member of a group.
+  /// Sets the [_offset] to the position in the string that is reached.
   ///
   Address._parseMailbox(String str, int begin, int end) {
-    _offset = _parse(str, begin, end);
+    _offset = _parseAddress(str, begin, end);
+    if (!this.isMailbox) {
+      throw new AddressInvalid("nested groups are not permitted");
+    }
   }
+
   //----------------------------------------------------------------
 
-  int _parse(String str, int begin, int end) {
+  int _parseAddress(String str, int begin, int end) {
     displayName = null;
     localPart = null;
     domain = null;
     route = null;
     groupMailboxes = null;
 
-    // Parse the first word (which is mandatory for all forms of addresses)
+    // According to RFC #5822, an address is:
+    //
+    // address         =   mailbox / group
+    //
+    // mailbox         =   name-addr / addr-spec
+    //
+    // name-addr       =   [display-name] angle-addr
+    //
+    // angle-addr      =   [CFWS] "<" addr-spec ">" [CFWS] / obs-angle-addr
+    //
+    // group           =   display-name ":" [group-list] ";" [CFWS]
+    //
+    // display-name    =   phrase
+    //
+    // addr-spec       =   local-part "@" domain
+    //
+    // local-part      =   dot-atom / quoted-string / obs-local-part
+    //
+    // phrase          =   1*word / obs-phrase
+    //
+    // dot-atom        =   [CFWS] dot-atom-text [CFWS]
+    //
+    // dot-atom-text   =   1*atext *("." 1*atext)
+    //
+    // quoted-string   =   [CFWS] DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
+    //
+    // obs-local-part  =   word *("." word)
+    //
+    // obs-phrase      =   word *(word / "." / CFWS)
+    //
+    // word            =   atom / quoted-string
+    //
+    // atom            =   [CFWS] 1*atext [CFWS]
+    //
+    // obs-angle-addr  =   [CFWS] "<" obs-route addr-spec ">" [CFWS]
+
+    //---------
+    // For the purposes of parsing, it has been transformed into:
+    //
+    // address = name-addr / addr-spec / group
+    //
+    // address = ( [display-name] angle-addr ) /
+    //           ( local-part "@" domain ) /
+    //           ( display-name ":" [group-list] ";" [CFWS] )
+    //
+    // address = ( [phrase] [CFWS] "<" addr-spec ">" [CWFS] / obs-angle-addr ) /
+    //           ( dot-atom / quoted-string / obs-local-part "@" domain ) /
+    //           ( phrase ":" [group-list] ";" [CFWS] )
+    //
+    // address = ( [phrase] [CFWS] "<" addr-spec ">" [CWFS] ) /
+    //           ( [phrase] [CFWS] "<" obs-route addr-spec ">" [CFWS] ) /
+    //           ( dot-atom / quoted-string / obs-local-part "@" domain ) /
+    //           ( phrase ":" [group-list] ";" [CFWS] )
+    //
+    // address = ( [phrase] [CFWS] "<" addr-spec ">" [CWFS] ) /
+    //           ( [phrase] [CFWS] "<" obs-route addr-spec ">" [CFWS] ) /
+    //           ( [CFWS] dot-atom-text [CFWS] "@" domain ) /
+    //           ( quoted-string "@" domain ) /
+    //           ( word *("." word) "@" domain ) /
+    //           ( phrase ":" [group-list] ";" [CFWS] )
+    //
+    // address = ( [1*word / obs-phrase] [CFWS] "<" addr-spec ">" [CWFS] ) /
+    //           ( [1*word / obs-phrase] [CFWS] "<" obs-route addr-spec ">" [CFWS] ) /
+    //           ( [CFWS] dot-atom-text [CFWS] "@" domain ) /
+    //           ( quoted-string "@" domain ) /
+    //           ( word *("." word) "@" domain ) /
+    //           ( 1*word / obs-phrase ":" [group-list] ";" [CFWS] )
+    //
+    // address = ( [1*word] [CFWS] "<" addr-spec ">" [CWFS] ) /
+    //           ( [ word *(word / "." / CFWS) ] [CFWS] "<" addr-spec ">" [CWFS] ) /
+    //           ( [1*word] [CFWS] "<" obs-route addr-spec ">" [CFWS] ) /
+    //           ( [ word *(word / "." / CFWS) ] [CFWS] "<" obs-route addr-spec ">" [CFWS] ) /
+    //           ( [CFWS] dot-atom-text [CFWS] "@" domain ) /
+    //           ( quoted-string "@" domain ) /
+    //           ( word *("." word) "@" domain ) /
+    //           ( 1*word ":" [group-list] ";" [CFWS] )
+    //           ( word *(word / "." / CFWS) ":" [group-list] ";" [CFWS] )
+    //
+    // So the address starts with one or more words followed by "<", ".", "@", ":".
 
     var pos = begin;
 
     var words = new List<String>();
 
     var prevPos = null; // to prevent infinite loop when no more words to parse
+
+    // Parse words until we reach a special character.
 
     while (pos < end) {
       // Parse the first/next word
@@ -255,7 +330,7 @@ class Address {
 
       // The next character might determine what form of address it is
 
-      pos = _skipLinearWhiteSpace(str, pos, end);
+      pos = _skipCFWS(str, pos, end);
       if (end <= pos) {
         throw new AddressInvalid("incomplete address");
       }
@@ -271,10 +346,10 @@ class Address {
             // which is why it is implemented that way.
             throw new AddressInvalid("simple address is invalid");
           }
-          return _parseSimpleAddress(str, pos, end, words);
+          return _parseAddrSpec(str, pos, end, words);
 
         case "<":
-          return _parseNameAndAddrSpec(str, pos, end, words);
+          return _parseAngleAddr(str, pos, end, words);
 
         case ":":
           return _parseGroup(str, pos, end, words);
@@ -286,15 +361,27 @@ class Address {
       }
     }
 
-    // End of string reached, but only parsed words.
+    // End of string reached, but still only parsed words.
     // Never got to a special character
     throw new AddressInvalid("incomplete address");
   }
 
   //----------------
-  //  word *("." word) "@" sub-domain *("." sub-domain)
+  // addr-spec       =   local-part "@" domain
+  //
+  // local-part      =   dot-atom / quoted-string / obs-local-part
+  //
+  // domain          =   dot-atom / domain-literal / obs-domain
+  //
+  // atom            =   [CFWS] 1*atext [CFWS]
+  //
+  // dot-atom-text   =   1*atext *("." 1*atext)
+  //
+  // dot-atom        =   [CFWS] dot-atom-text [CFWS]
 
-  int _parseSimpleAddress(String str, int start, int end, List<String> words) {
+  // The [words] contains the first word in the local-part.
+
+  int _parseAddrSpec(String str, int start, int end, List<String> words) {
     assert(start < end);
     assert(words.length == 1);
 
@@ -320,23 +407,24 @@ class Address {
           return pos; // success
 
         default:
-          throw new AddressInvalid(
-              "unexpected character in position ${pos}: \"${str.substring(pos, pos+1)}\"");
+          throw new AddressInvalid("unexpected character in local-part");
       }
-      pos = _skipLinearWhiteSpace(str, pos, end);
     } while (pos < end);
 
     throw new AddressInvalid("incomplete address");
   }
 
   //----------------
-  // Got: 1*word
-  // Remaining: "<" [1#("@" domain) ":"] word *("." word) "@" sub-domain *("." sub-domain) ">"
+  // Got: 1*word [CFWS]
+  // Remaining: "<" addr-spec ">" [CFWS] / obs-angle-addr
+  //
+  // The [words] contain the optional display-name.
 
-  int _parseNameAndAddrSpec(
-      String str, int begin, int end, List<String> words) {
+  int _parseAngleAddr(String str, int begin, int end, List<String> words) {
     assert(begin < end);
     assert(str.substring(begin, begin + 1) == "<");
+
+    // angle-addr      =   [CFWS] "<" addr-spec ">" [CFWS] / obs-angle-addr
 
     // Words are the displayName part of the "[displayName] route-addr" form of
     // a mailbox.
@@ -355,18 +443,21 @@ class Address {
 
     // Try to parse the optional route
 
-    pos = _skipLinearWhiteSpace(str, pos, end);
+    pos = _skipCFWS(str, pos, end);
     if (end <= pos) {
       throw new AddressInvalid("incomplete route-addr address");
     }
 
-    if (str.substring(pos, pos + 1) == "@") {
+    if (str.substring(pos, pos + 1) == "@" ||
+        str.substring(pos, pos + 1) == ",") {
       pos = _parseRoute(str, pos, end); // route is present
     } else {
       route = null; // route not present
     }
 
-    // Parse the first word in the addr-spec
+    // Parse the first word in the addr-spec (so we can use the
+    // _parseSimpleAddress method which requires the first word to have
+    // already been parsed.
 
     pos = _parseWord(str, pos, end);
     var word = _tmp;
@@ -374,11 +465,11 @@ class Address {
       throw new AddressInvalid("addr-spec does not start with a word");
     }
 
-    pos = _parseSimpleAddress(str, pos, end, [word]);
+    pos = _parseAddrSpec(str, pos, end, [word]);
 
     // The ">" terminating the route-addr
 
-    pos = _skipLinearWhiteSpace(str, pos, end);
+    pos = _skipCFWS(str, pos, end);
     if (end <= pos) {
       throw new AddressInvalid("incomplete route-addr address");
     }
@@ -441,15 +532,12 @@ class Address {
             throw new AddressInvalid("group is missing comma");
           }
           var mailbox = new Address._parseMailbox(str, pos, end);
-          if (!mailbox.isMailbox) {
-            throw new AddressInvalid("nested groups are not permitted");
-          }
           groupMailboxes.add(mailbox);
           pos = mailbox._offset;
           expectingMailbox = false;
         }
 
-        pos = _skipLinearWhiteSpace(str, pos, end);
+        pos = _skipCFWS(str, pos, end);
       }
     } while (pos < end);
 
@@ -463,7 +551,12 @@ class Address {
   int _parseRoute(String str, int begin, int end) {
     assert(str != null);
     assert(begin < end);
-    assert(str.substring(begin, begin + 1) == "@");
+    assert(str.substring(begin, begin + 1) == "@" || str.substring(begin, begin + 1) == ",");
+
+    // obs-route       =   obs-domain-list ":"
+    //
+    // obs-domain-list =   *(CFWS / ",") "@" domain
+    //                     *("," [CFWS] ["@" domain])
 
     var pos = begin;
 
@@ -474,13 +567,14 @@ class Address {
     while (begin < end) {
       switch (str.substring(pos, pos + 1)) {
         case "@":
-          if (!expectingDomain) {
-            throw new AddressInvalid("route is missing comma");
+          if (! expectingDomain) {
+            throw new AddressInvalid("route missing a comma");
           }
           try {
             pos = _parseDomain(str, pos + 1, end);
             route.add(domain);
-            domain = null; // just using the _parseDomain method temporally
+            domain = null; // just using the _parseDomain method for its
+            // side effect of getting a domain. This is not the real domain value.
             expectingDomain = false;
           } on AddressInvalid {
             throw new AddressInvalid("route has bad domain");
@@ -488,21 +582,18 @@ class Address {
           break;
 
         case ",":
-          if (expectingDomain) {
-            throw new AddressInvalid("route has unexpected extra comma");
-          }
           pos++;
           expectingDomain = true;
           break;
 
         case ":":
           // End of route
-          if (expectingDomain) {
-            throw new AddressInvalid("route has unexpected final comma");
+          if (route.isEmpty) {
+            throw new AddressInvalid("route must have at least one domain");
           }
           return pos + 1; // success
       }
-      pos = _skipLinearWhiteSpace(str, pos, end);
+      pos = _skipCFWS(str, pos, end);
     }
 
     throw new AddressInvalid("route is missing terminating colon");
@@ -521,7 +612,7 @@ class Address {
 
     domain = "";
     while (pos < end) {
-      pos = _skipLinearWhiteSpace(str, pos, end);
+      pos = _skipCFWS(str, pos, end);
 
       int subdomainEnd;
       if (str.substring(pos, pos + 1) != "[") {
@@ -540,7 +631,7 @@ class Address {
       domain += _tmp;
       pos = subdomainEnd;
 
-      pos = _skipLinearWhiteSpace(str, pos, end);
+      pos = _skipCFWS(str, pos, end);
       if (end <= pos) {
         return pos; // end of domain, because no more text in str to process
       }
@@ -650,7 +741,7 @@ class Address {
 
     // EBNF: word = atom / quoted-string
 
-    var pos = _skipLinearWhiteSpace(str, begin, end);
+    var pos = _skipCFWS(str, begin, end);
 
     if (pos < end) {
       if (str.substring(pos, pos + 1) != "\"") {
@@ -667,6 +758,22 @@ class Address {
   //----------------
 
   int _parseAtom(String str, int begin, int end) {
+    // RFC #5822 defines:
+    //
+    // atom            =   [CFWS] 1*atext [CFWS]
+
+    var n = _skipCFWS(str, begin, end);
+    n = _parseAtext(str, n, end);
+    return _skipCFWS(str, n, end);
+  }
+
+  //----------------
+  // Sets [_tmp] to the parsed value.
+
+  int _parseAtext(String str, int begin, int end) {
+    //
+    // 1*atext
+
     var n = begin;
     while (n < end) {
       if (!_isAtomChar(str, n)) {
@@ -679,14 +786,16 @@ class Address {
     } else {
       _tmp = null; // no word found
     }
+
     return n;
   }
 
   //----------------
-
   int _parseQuotedString(String str, int begin, int end) {
     assert(begin < end);
     assert(str.substring(begin, begin + 1) == '"');
+
+    // quoted-string = [CFWS]  DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
 
     _tmp = "";
     var n = begin + 1;
@@ -694,7 +803,8 @@ class Address {
       switch (str.substring(n, n + 1)) {
         case "\"":
           // End quote
-          return n + 1;
+          return _skipCFWS(str, n + 1, end);
+
         case "\\":
           // Escaped character
           if (str.length < n) {
@@ -714,8 +824,9 @@ class Address {
   }
 
   //----------------
+  // Skips over Comments and/or Folding White Space.
 
-  int _skipLinearWhiteSpace(String str, int begin, int end) {
+  int _skipCFWS(String str, int begin, int end) {
     var pos = begin;
 
     while (pos < end) {
@@ -737,9 +848,17 @@ class Address {
   /// Tests if character at position [pos] in the [str] can appear in an atom.
 
   static bool _isAtomChar(String str, int pos) {
+    // A character from the "atext" production in RFC #5822.
+
     var ch = str.codeUnitAt(pos);
-    if (33 <= ch &&
-        "()<>@,;:\\\".[]".indexOf(new String.fromCharCode(ch)) < 0) {
+    if ("a".codeUnitAt(0) <= ch &&
+        ch <= "z".codeUnitAt(0) ||
+        "A".codeUnitAt(0) <= ch &&
+        ch <= "Z".codeUnitAt(0) ||
+        "0".codeUnitAt(0) <= ch &&
+        ch <= "9".codeUnitAt(0) ||
+        "!#\$%&'*+-/=?^_`{|}~".indexOf(new String.fromCharCode(ch)) >= 0 ||
+        127 < ch) {
       return true;
     } else {
       return false;
@@ -875,7 +994,7 @@ class Address {
   /// Returns a sanitized version of the address.
   ///
   /// Throws an [AddressInvalid] if the [address] is not
-  /// a valid RFC #822 address.
+  /// a valid RFC #5822 address.
   ///
   static String sanitize(String address) {
     return new Address(address).toString();
