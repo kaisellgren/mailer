@@ -551,7 +551,8 @@ class Address {
   int _parseRoute(String str, int begin, int end) {
     assert(str != null);
     assert(begin < end);
-    assert(str.substring(begin, begin + 1) == "@" || str.substring(begin, begin + 1) == ",");
+    assert(str.substring(begin, begin + 1) == "@" ||
+        str.substring(begin, begin + 1) == ",");
 
     // obs-route       =   obs-domain-list ":"
     //
@@ -567,7 +568,7 @@ class Address {
     while (begin < end) {
       switch (str.substring(pos, pos + 1)) {
         case "@":
-          if (! expectingDomain) {
+          if (!expectingDomain) {
             throw new AddressInvalid("route missing a comma");
           }
           try {
@@ -851,12 +852,9 @@ class Address {
     // A character from the "atext" production in RFC #5822.
 
     var ch = str.codeUnitAt(pos);
-    if ("a".codeUnitAt(0) <= ch &&
-        ch <= "z".codeUnitAt(0) ||
-        "A".codeUnitAt(0) <= ch &&
-        ch <= "Z".codeUnitAt(0) ||
-        "0".codeUnitAt(0) <= ch &&
-        ch <= "9".codeUnitAt(0) ||
+    if ("a".codeUnitAt(0) <= ch && ch <= "z".codeUnitAt(0) ||
+        "A".codeUnitAt(0) <= ch && ch <= "Z".codeUnitAt(0) ||
+        "0".codeUnitAt(0) <= ch && ch <= "9".codeUnitAt(0) ||
         "!#\$%&'*+-/=?^_`{|}~".indexOf(new String.fromCharCode(ch)) >= 0 ||
         127 < ch) {
       return true;
@@ -914,7 +912,7 @@ class Address {
         return addrSpec;
       } else {
         // Need < >
-        return "${_formatAtomOrQuotedString(displayName)}<${addrSpec}>";
+        return "${_formatAtomOrQuotedString(displayName)} <${addrSpec}>";
       }
     } else {
       // Group
@@ -957,10 +955,35 @@ class Address {
     // Check if string contains characters that need to be quoted
 
     var needsQuoting = false;
+
+    // It also needs quoting if it starts or ends with whitespace
+    // or contains multiple whitespaces in sequence
+
+    if (str.length == 0) {
+      needsQuoting = true; // empty
+    } else if (str.substring(0, 1) == " " || str.substring(0, 1) == "\t") {
+      needsQuoting = true; // starts with whitespace
+    } else if (str.substring(str.length - 1, str.length) == " " ||
+        str.substring(str.length - 1, str.length) == "\t") {
+      needsQuoting = true; // ends with whitespace
+    }
+
+    var prevCharWasWhitespace = false;
     for (int n = 0; n < str.length; n++) {
-      if (!_isAtomChar(str, n)) {
+      var ch = str.substring(n, n + 1);
+      var isWhiteSpace = ch == ' ' || ch == "\t";
+      if (!_isAtomChar(str, n) && ! isWhiteSpace) {
         needsQuoting = true;
         break;
+      }
+      if (isWhiteSpace) {
+        if (prevCharWasWhitespace) {
+          needsQuoting = true; // double whitespace
+          break;
+        }
+        prevCharWasWhitespace = true;
+      } else {
+        prevCharWasWhitespace = false;
       }
     }
 

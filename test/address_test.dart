@@ -178,8 +178,9 @@ void main() {
     [ "a@b", "a@b"],
     [ "a.b.c@d", "a.b.c@d"],
     [ " foo.bar @ baz.example.com ", "foo.bar@baz.example.com"],
-    [ "foobar < a@b >", "foobar<a@b>"],
-    [ 'foo"bar"baz < a@b >', '"foo bar baz"<a@b>'],
+    [ "foobar < a@b >", "foobar <a@b>"],
+    [ '"John Smith" < a@b >', 'John Smith <a@b>'],
+    [ 'foo"bar"baz < a@b >', 'foo bar baz <a@b>'],
     ];
 
     for (var value in values) {
