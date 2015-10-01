@@ -6,7 +6,7 @@ homepage: http://github.com/kaisellgren/mailer
 environment:
   sdk: '>=0.8.10+6 <2.0.0'
 dependencies:
-  unittest: '>=0.9.0 <2.0.0'
+  test: '>=0.12.4 <1.0.0'
   mime: '>=0.9.0 <2.0.0'
   logging: '>=0.9.0 <2.0.0'
   crypto: '>=0.9.0 <2.0.0'
