@@ -11,5 +11,5 @@ class SmtpTransport extends Transport {
     });
   }
 
-  Future sendAll(List<Envelope> envelopes) {throw 'Not implemented';}
+  Future sendAll(List<Envelope> envelopes) => Future.wait(envelopes.map(send));
 }
