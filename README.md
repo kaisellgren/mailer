@@ -37,6 +37,8 @@ main() {
     ..username = 'your gmail username'
     ..password = 'your gmail password'; // Note: if you have Google's "app specific passwords" enabled,
                                         // you need to use one of those here.
+                                        
+  // How you use and store passwords is up to you. Beware of storing passwords in plain.
 
   // Create our email transport.
   var emailTransport = new SmtpTransport(options);
