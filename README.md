@@ -15,6 +15,10 @@ Mailer supports file attachments, HTML emails and multiple transport methods.
 * SSL/TLS support
 * Pre-configured services (Gmail, Live, Mail.ru, etc.). Just fill in your username and password.
 
+## Filing bug tickets
+
+Please call `printDebugInformation()` from the mailer package and send the output along with your helpful explanation of what went wrong.
+
 ## TODO
 
 * All possible SMTP authentication methods (now just LOGIN)
