@@ -43,18 +43,18 @@ class Envelope {
         buffer.write('From: $fromData\n');
       }
 
-      if (recipients != null && recipients.length > 0) {
-        var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+      if (recipients != null && !recipients.isEmpty) {
+        var to = recipients.map(_sanitizeEmail).join(',');
         buffer.write('To: $to\n');
       }
 
-      if (!this.ccRecipients.isEmpty) {
-        var cc = ccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+      if (ccRecipients != null && !ccRecipients.isEmpty) {
+        var cc = ccRecipients.map(_sanitizeEmail).join(',');
         buffer.write('cc: $cc\n');
       }
 
-      if (!this.bccRecipients.isEmpty) {
-        var bcc = bccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+      if (bccRecipients != null && !bccRecipients.isEmpty) {
+        var bcc = bccRecipients.map(_sanitizeEmail).join(',');
         buffer.write('bcc: $bcc\n');
       }
 
