@@ -210,6 +210,8 @@ class SmtpClient {
       return;
     }
 
+    supportedAuthentications.add('LOGIN');
+
     _authenticateUser();
   }
 
@@ -233,7 +235,9 @@ class SmtpClient {
       return;
     }
 
-    // TODO: Support other auth methods.
+    if (!supportedAuthentications.contains('LOGIN')) {
+      throw 'The server does not support LOGIN authentication method. Available authentication methods are: $supportedAuthentications';
+    }
 
     _currentAction = _actionAuthenticateLoginUser;
     sendCommand('AUTH LOGIN');
