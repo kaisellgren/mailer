@@ -20,6 +20,7 @@ class Envelope {
   String identityString = 'mailer';
   Encoding encoding = UTF8;
 
+  bool _isDelivered = false;
   int _counter = 0;
 
   /**

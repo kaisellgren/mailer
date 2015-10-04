@@ -75,6 +75,12 @@ class SmtpClient {
    */
   Future send(Envelope envelope) {
     return new Future(() {
+      if (envelope._isDelivered) {
+        throw 'You cannot send an envelope that has already been sent! Make sure you are not reusing an existing envelope, but instead creating new envelopes.';
+      }
+
+      envelope._isDelivered = true;
+
       onIdle.listen((_) {
         _currentAction = _actionMail;
         sendCommand('MAIL FROM:<${_sanitizeEmail(_envelope.from)}>');
