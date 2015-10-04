@@ -55,8 +55,8 @@ main() {
 
   // Email it.
   emailTransport.send(envelope)
-    .then((success) => print('Email sent! $success'))
-    .catchError((e) => print('Error occured: $e'));
+    .then((envelope) => print('Email sent!'))
+    .catchError((e) => print('Error occurred: $e'));
 }
 ```
 
