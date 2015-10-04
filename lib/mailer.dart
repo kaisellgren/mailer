@@ -21,3 +21,7 @@ part 'src/smtp/smtp_options.dart';
 part 'src/smtp/smtp_transport.dart';
 
 var _logger = new Logger('mailer');
+
+printDebugInformation() {
+  _logger.onRecord.listen(print);
+}
