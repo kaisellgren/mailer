@@ -3,9 +3,7 @@ part of mailer;
 class SmtpTransport extends Transport {
   SmtpOptions options;
 
-  SmtpTransport(this.options) {
-    _logger.fine('Tets');
-  }
+  SmtpTransport(this.options);
 
   Future send(Envelope envelope) {
     return new Future(() {
