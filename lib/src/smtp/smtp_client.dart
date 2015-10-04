@@ -100,7 +100,7 @@ class SmtpClient {
         onSend.listen((Envelope mail) {
           if (mail == envelope) {
             timeout.cancel();
-            completer.complete(true);
+            completer.complete(mail);
           }
         }, onError: (e) {
           _close();
