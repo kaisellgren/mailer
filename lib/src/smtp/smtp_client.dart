@@ -106,7 +106,7 @@ class SmtpClient {
           _close();
           timeout.cancel();
           completer.completeError('Failed to send an email: $e');
-        });
+        }, cancelOnError: true);
 
         return completer.future;
       });
