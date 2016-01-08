@@ -92,3 +92,9 @@ class MailjetSmtpOptions extends SmtpOptions { // TODO: insecure?
   final String hostName = 'in.mailjet.com';
   final int port = 587;
 }
+
+class OpenMailBoxSmtpOptions extends SmtpOptions {
+  final String hostName = 'smtp.openmailbox.org';
+  final int port = 465;
+  final bool secured = true;
+}
