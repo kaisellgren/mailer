@@ -7,8 +7,8 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:mime/mime.dart';
-import 'package:crypto/crypto.dart';
 import 'package:logging/logging.dart';
+import 'package:cryptoutils/cryptoutils.dart';
 
 part 'src/envelope.dart';
 part 'src/transport.dart';

@@ -94,7 +94,7 @@ class Envelope {
 
         return attachment.file.readAsBytes().then((bytes) {
           // Create a chunk'd (76 chars per line) base64 string.
-          var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator: true);
+          var contents = CryptoUtils.bytesToBase64(bytes, false, true);
 
           buffer.write('--$boundary\n');
           buffer.write('Content-Type: ${_getMimeType(attachment.file.path)}; name="$filename"\n');
