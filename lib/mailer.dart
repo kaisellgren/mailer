@@ -8,7 +8,7 @@ import 'dart:math' show Random;
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:mime/mime.dart';
-import 'package:crypto/crypto.dart';
+
 import 'package:logging/logging.dart';
 
 part 'src/envelope.dart';
