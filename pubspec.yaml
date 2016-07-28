@@ -14,3 +14,4 @@ dependencies:
   crypto: 0.9.0
   path: '>=0.9.0 <2.0.0'
   intl: '>=0.9.0 <2.0.0'
+  cryptoutils: ^0.2.1
