@@ -1,4 +1,7 @@
 
+## unreleased
+* merge crypto util fix and update example
+
 ## 1.0.1
 * add simple example/send_gmail.data
 * fix pubspec to pull crypto 0.9.0

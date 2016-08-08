@@ -249,7 +249,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateLoginPassword;
-    sendCommand(CryptoUtils.bytesToBase64(options.username.codeUnits));
+    sendCommand(BASE64.encode(options.username.codeUnits));
   }
 
   void _actionAuthenticateLoginPassword(String message) {
@@ -258,7 +258,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateComplete;
-    sendCommand(CryptoUtils.bytesToBase64(options.password.codeUnits));
+    sendCommand(BASE64.encode(options.password.codeUnits));
   }
 
   void _actionAuthenticateComplete(String message) {
