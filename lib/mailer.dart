@@ -11,6 +11,7 @@ import 'package:logging/logging.dart';
 
 import 'src/util.dart';
 
+part 'src/address.dart';
 part 'src/envelope.dart';
 part 'src/transport.dart';
 part 'src/attachment.dart';

@@ -24,22 +24,3 @@ String sanitizeField(String value) {
 
   return value.replaceAll(new RegExp('(\\r|\\n|\\t)+', caseSensitive: false), '');
 }
-
-/**
- * Sanitizes the email header value.
- */
-String sanitizeEmail(String value) {
-  if (value == null) return '';
-
-  return value.replaceAll(new RegExp('(\\r|\\n|\\t|"|,|<|>)+', caseSensitive: false), '');
-}
-
-/**
- * Sanitizes the name header value.
- */
-String sanitizeName(String value) {
-  return sanitizeField(value)
-    .replaceAll('"', "'")
-    .replaceAll('<', '[')
-    .replaceAll('>', ']');
-}

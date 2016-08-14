@@ -3,6 +3,7 @@
 * merge crypto util fix and update example
 * upgrade unittest to test and move it to dev_dependencies
 * added OpenMailBoxSmtpOptions
+* improve address parsing and sanitization (from hoylen)
 * cleanup chunkEncodedBytes and associated test
 * update example to allow CC and BCC
 
