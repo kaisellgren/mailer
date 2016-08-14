@@ -51,12 +51,12 @@ class Envelope {
 
       if (ccRecipients != null && !ccRecipients.isEmpty) {
         var cc = ccRecipients.map(sanitizeEmail).join(',');
-        buffer.write('cc: $cc\n');
+        buffer.write('Cc: $cc\n');
       }
 
       if (bccRecipients != null && !bccRecipients.isEmpty) {
         var bcc = bccRecipients.map(sanitizeEmail).join(',');
-        buffer.write('bcc: $bcc\n');
+        buffer.write('Bcc: $bcc\n');
       }
 
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time

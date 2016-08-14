@@ -4,6 +4,7 @@
 * upgrade unittest to test and move it to dev_dependencies
 * added OpenMailBoxSmtpOptions
 * cleanup chunkEncodedBytes and associated test
+* update example to allow CC and BCC
 
 ## 1.0.1
 * add simple example/send_gmail.data
