@@ -1,5 +1,5 @@
 import 'package:mailer/mailer.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 main() {
   test('chunkEncodedBytes', () {
