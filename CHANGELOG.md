@@ -2,6 +2,8 @@
 ## unreleased
 * merge crypto util fix and update example
 * upgrade unittest to test and move it to dev_dependencies
+* added OpenMailBoxSmtpOptions
+* cleanup chunkEncodedBytes and associated test
 
 ## 1.0.1
 * add simple example/send_gmail.data

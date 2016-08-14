@@ -32,10 +32,10 @@ class Envelope {
     return new Future(() {
       var buffer = new StringBuffer();
 
-      if (subject != null) buffer.write('Subject: ${_sanitizeField(subject)}\n');
+      if (subject != null) buffer.write('Subject: ${sanitizeField(subject)}\n');
 
       if (from != null) {
-        var fromData = _sanitizeEmail(from);
+        var fromData = sanitizeEmail(from);
 
         if (fromName != null) {
           fromData = '$fromName <$fromData>';
@@ -45,17 +45,17 @@ class Envelope {
       }
 
       if (recipients != null && !recipients.isEmpty) {
-        var to = recipients.map(_sanitizeEmail).join(',');
+        var to = recipients.map(sanitizeEmail).join(',');
         buffer.write('To: $to\n');
       }
 
       if (ccRecipients != null && !ccRecipients.isEmpty) {
-        var cc = ccRecipients.map(_sanitizeEmail).join(',');
+        var cc = ccRecipients.map(sanitizeEmail).join(',');
         buffer.write('cc: $cc\n');
       }
 
       if (bccRecipients != null && !bccRecipients.isEmpty) {
-        var bcc = bccRecipients.map(_sanitizeEmail).join(',');
+        var bcc = bccRecipients.map(sanitizeEmail).join(',');
         buffer.write('bcc: $bcc\n');
       }
 
@@ -109,23 +109,6 @@ class Envelope {
       });
     });
   }
-}
-
-/// Consume the encode bytes (no line separators),
-/// and produce a chunk'd (76 chars per line) string, separated by "\r\n".
-chunkEncodedBytes(String encoded) {
-  if (encoded == null) return null;
-  var chunked = new StringBuffer();
-  int start = 0;
-  int end = encoded.length;
-  do {
-    int next = start + 76;
-    if (next > end) next = end;
-    chunked.write(encoded.substring(start, next));
-    chunked.write('\r\n');
-    start = next;
-  } while (start < encoded.length);
-  return chunked.toString();
 }
 
 String _getMimeType(String path) {

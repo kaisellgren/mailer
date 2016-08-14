@@ -9,9 +9,10 @@ import 'package:path/path.dart';
 import 'package:mime/mime.dart';
 import 'package:logging/logging.dart';
 
+import 'src/util.dart';
+
 part 'src/envelope.dart';
 part 'src/transport.dart';
-part 'src/util.dart';
 part 'src/attachment.dart';
 part 'src/sendmail_transport.dart';
 part 'src/smtp/helper_options.dart';
