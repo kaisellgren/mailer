@@ -17,8 +17,6 @@ class SmtpClient {
 
   Socket _connection;
 
-  bool _connectionOpen = false;
-
   /**
    * A list of supported authentication protocols.
    */
@@ -62,11 +60,9 @@ class SmtpClient {
     }).then((socket) {
       _logger.finer("Connecting to ${options.hostName} at port ${options.port}.");
 
-      _connectionOpen = true;
-
       _connection = socket;
       _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done.then((_) => _connectionOpen = false).catchError(_onSendController.addError);
+      _connection.done.catchError(_onSendController.addError);
     });
   }
 
@@ -75,9 +71,15 @@ class SmtpClient {
    */
   Future send(Envelope envelope) {
     return new Future(() {
+      if (envelope._isDelivered) {
+        throw 'You cannot send an envelope that has already been sent! Make sure you are not reusing an existing envelope, but instead creating new envelopes.';
+      }
+
+      envelope._isDelivered = true;
+
       onIdle.listen((_) {
         _currentAction = _actionMail;
-        sendCommand('MAIL FROM:<${_sanitizeEmail(_envelope.from)}>');
+        sendCommand('MAIL FROM:<${Address.sanitize(_envelope.from)}>');
       });
 
       _envelope = envelope;
@@ -94,13 +96,13 @@ class SmtpClient {
         onSend.listen((Envelope mail) {
           if (mail == envelope) {
             timeout.cancel();
-            completer.complete(true);
+            completer.complete(mail);
           }
         }, onError: (e) {
           _close();
           timeout.cancel();
           completer.completeError('Failed to send an email: $e');
-        });
+        }, cancelOnError: true);
 
         return completer.future;
       });
@@ -159,7 +161,7 @@ class SmtpClient {
     .then((SecureSocket secured) {
       _connection = secured;
       _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done.then((_) => _connectionOpen = false).catchError(_onSendController.addError);
+      _connection.done.catchError(_onSendController.addError);
       callback();
     });
   }
@@ -204,6 +206,8 @@ class SmtpClient {
       return;
     }
 
+    supportedAuthentications.add('LOGIN');
+
     _authenticateUser();
   }
 
@@ -227,7 +231,9 @@ class SmtpClient {
       return;
     }
 
-    // TODO: Support other auth methods.
+    if (!supportedAuthentications.contains('LOGIN')) {
+      throw 'The server does not support LOGIN authentication method. Available authentication methods are: $supportedAuthentications';
+    }
 
     _currentAction = _actionAuthenticateLoginUser;
     sendCommand('AUTH LOGIN');
@@ -239,7 +245,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateLoginPassword;
-    sendCommand(CryptoUtils.bytesToBase64(options.username.codeUnits));
+    sendCommand(BASE64.encode(options.username.codeUnits));
   }
 
   void _actionAuthenticateLoginPassword(String message) {
@@ -248,7 +254,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateComplete;
-    sendCommand(CryptoUtils.bytesToBase64(options.password.codeUnits));
+    sendCommand(BASE64.encode(options.password.codeUnits));
   }
 
   void _actionAuthenticateComplete(String message) {
@@ -279,7 +285,7 @@ class SmtpClient {
       recipient = _envelope.recipients[++_recipientIndex];
     }
 
-    sendCommand('RCPT TO:<${_sanitizeEmail(recipient)}>');
+    sendCommand('RCPT TO:<${Address.sanitize(recipient)}>');
   }
 
   void _actionRecipient(String message) {

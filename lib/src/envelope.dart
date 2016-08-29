@@ -24,6 +24,7 @@ class Envelope {
   String identityString = 'mailer';
   Encoding encoding = UTF8;
 
+  bool _isDelivered = false;
   int _counter = 0;
 
   /**
@@ -35,10 +36,10 @@ class Envelope {
     return new Future(() {
       var buffer = new StringBuffer();
 
-      if (subject != null) buffer.write('Subject: ${_sanitizeField(subject)}\n');
+      if (subject != null) buffer.write('Subject: ${sanitizeField(subject)}\n');
 
       if (from != null) {
-        var fromData = _sanitizeEmail(from);
+        var fromData = Address.sanitize(from);
 
         if (fromName != null) {
           fromData = '$fromName <$fromData>';
@@ -48,7 +49,7 @@ class Envelope {
       }
 
       if (replyTo != null) {
-        var replyToData = _sanitizeEmail(replyTo);
+        var replyToData = Address.sanitize(replyTo);
 
         if (replyToName != null) {
           replyToData = '$replyToName <$replyToData>';
@@ -58,7 +59,7 @@ class Envelope {
       }
 
       if (sender != null) {
-        var senderData = _sanitizeEmail(sender);
+        var senderData = Address.sanitize(sender);
 
         if (senderName != null) {
           senderData = '$senderName <$senderData>';
@@ -67,19 +68,19 @@ class Envelope {
         buffer.write('Sender: $senderData\n');
       }
 
-      if (recipients != null && recipients.length > 0) {
-        var to = recipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
+      if (recipients != null && !recipients.isEmpty) {
+        var to = recipients.map(Address.sanitize).join(',');
         buffer.write('To: $to\n');
       }
 
-      if (!this.ccRecipients.isEmpty) {
-        var cc = ccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
-        buffer.write('cc: $cc\n');
+      if (ccRecipients != null && !ccRecipients.isEmpty) {
+        var cc = ccRecipients.map(Address.sanitize).join(',');
+        buffer.write('Cc: $cc\n');
       }
 
-      if (!this.bccRecipients.isEmpty) {
-        var bcc = bccRecipients.map((recipient) => _sanitizeEmail(recipient)).toList().join(',');
-        buffer.write('bcc: $bcc\n');
+      if (bccRecipients != null && !bccRecipients.isEmpty) {
+        var bcc = bccRecipients.map(Address.sanitize).join(',');
+        buffer.write('Bcc: $bcc\n');
       }
 
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
@@ -116,8 +117,8 @@ class Envelope {
         var filename = basename(attachment.file.path);
 
         return attachment.file.readAsBytes().then((bytes) {
-          // Create a chunk'd (76 chars per line) base64 string.
-          var contents = CryptoUtils.bytesToBase64(bytes, addLineSeparator: true);
+          // Chunk'd (76 chars per line) base64 string, separated by "\r\n".
+          var contents = chunkEncodedBytes(BASE64.encode(bytes));
 
           buffer.write('--$boundary\n');
           buffer.write('Content-Type: ${_getMimeType(attachment.file.path)}; name="$filename"\n');

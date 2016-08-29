@@ -1,6 +1,8 @@
+/.atom/
 /.idea/
 /.project
 /pubspec.lock
-packages/
-/test/gmail_account.dart
-/test/test.dart
+packages
+.pub/
+.packages
+*.iml

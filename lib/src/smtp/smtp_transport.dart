@@ -3,9 +3,7 @@ part of mailer;
 class SmtpTransport extends Transport {
   SmtpOptions options;
 
-  SmtpTransport(this.options) {
-    _logger.fine('Tets');
-  }
+  SmtpTransport(this.options);
 
   Future send(Envelope envelope) {
     return new Future(() {
@@ -13,5 +11,5 @@ class SmtpTransport extends Transport {
     });
   }
 
-  Future sendAll(List<Envelope> envelopes) {throw 'Not implemented';}
+  Future sendAll(List<Envelope> envelopes) => Future.wait(envelopes.map(send));
 }

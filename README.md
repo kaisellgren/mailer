@@ -15,6 +15,10 @@ Mailer supports file attachments, HTML emails and multiple transport methods.
 * SSL/TLS support
 * Pre-configured services (Gmail, Live, Mail.ru, etc.). Just fill in your username and password.
 
+## Filing bug tickets
+
+Please call `printDebugInformation()` from the mailer package and send the output along with your helpful explanation of what went wrong.
+
 ## TODO
 
 * All possible SMTP authentication methods (now just LOGIN)
@@ -37,6 +41,8 @@ main() {
     ..username = 'your gmail username'
     ..password = 'your gmail password'; // Note: if you have Google's "app specific passwords" enabled,
                                         // you need to use one of those here.
+                                        
+  // How you use and store passwords is up to you. Beware of storing passwords in plain.
 
   // Create our email transport.
   var emailTransport = new SmtpTransport(options);
@@ -53,8 +59,8 @@ main() {
 
   // Email it.
   emailTransport.send(envelope)
-    .then((success) => print('Email sent! $success'))
-    .catchError((e) => print('Error occured: $e'));
+    .then((envelope) => print('Email sent!'))
+    .catchError((e) => print('Error occurred: $e'));
 }
 ```
 
