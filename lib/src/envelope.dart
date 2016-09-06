@@ -41,8 +41,9 @@ class Envelope {
       if (from != null) {
         var fromData = Address.sanitize(from);
 
-        if (fromName != null) {
-          fromData = '$fromName <$fromData>';
+        final name = sanitizeName(fromName);
+        if (name != null) {
+          fromData = '$name <$fromData>';
         }
 
         buffer.write('From: $fromData\n');
@@ -51,8 +52,9 @@ class Envelope {
       if (replyTo != null) {
         var replyToData = Address.sanitize(replyTo);
 
-        if (replyToName != null) {
-          replyToData = '$replyToName <$replyToData>';
+        final name = sanitizeName(replyToName);
+        if (name != null) {
+          replyToData = '$name <$replyToData>';
         }
 
         buffer.write('Reply-To: $replyToData\n');
@@ -61,8 +63,9 @@ class Envelope {
       if (sender != null) {
         var senderData = Address.sanitize(sender);
 
-        if (senderName != null) {
-          senderData = '$senderName <$senderData>';
+        final name = sanitizeName(senderName);
+        if (name != null) {
+          senderData = '$name <$senderData>';
         }
 
         buffer.write('Sender: $senderData\n');
