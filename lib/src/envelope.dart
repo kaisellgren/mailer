@@ -54,11 +54,6 @@ class Envelope {
         buffer.write('Cc: $cc\n');
       }
 
-      if (bccRecipients != null && !bccRecipients.isEmpty) {
-        var bcc = bccRecipients.map(Address.sanitize).join(',');
-        buffer.write('Bcc: $bcc\n');
-      }
-
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
       buffer.write('Date: ' + new DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000').format(new DateTime.now().toUtc()) + '\n');
       buffer.write('X-Mailer: Dart Mailer library\n');
