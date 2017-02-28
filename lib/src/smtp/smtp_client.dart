@@ -103,6 +103,13 @@ class SmtpClient {
             completer.complete(mail);
           }
         }, onError: (e) {
+          if (completer.isCompleted) {
+            // There was an error, after we got a 2xx for our mail from the
+            // server.  We don't care if closing the connection... generated
+            // an error.
+            _logger.info('Error after mail was successfully sent: $e');
+            return;
+          }
           _close();
           timeout.cancel();
           completer.completeError('Failed to send an email: $e');
