@@ -1,4 +1,8 @@
 
+## 1.1.1
+* loosen crypto dependency to '>=0.9.0 <3.0.0' as suggested in the
+    [crypto changelog](https://github.com/dart-lang/crypto/blob/master/CHANGELOG.md#200)
+
 ## 1.1.0
 * merge crypto util fix and update example
 * upgrade unittest to test and move it to dev_dependencies
