@@ -1,3 +1,5 @@
+## 1.1.2
+* Fix new lines sent to server to be proper `\r\n` format
 
 ## 1.1.1
 * loosen crypto dependency to '>=0.9.0 <3.0.0' as suggested in the
