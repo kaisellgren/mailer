@@ -110,7 +110,12 @@ class SmtpClient {
         }, onError: (e) {
           _close();
           timeout.cancel();
-          completer.completeError('Failed to send an email: $e');
+          if (!completer.isCompleted) {
+            completer.completeError('Failed to send an email: $e');
+            _logger.finest('Failed to send email', e);
+          } else {
+            _logger.finest('Failed after sending email', e);
+          }
         }, cancelOnError: true);
 
         return completer.future;
