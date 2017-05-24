@@ -1,3 +1,7 @@
+## 1.1.3
+* Fix occasional issue with completer already completed. Due to an error with SMTP server
+closing connection after sending the email.
+
 ## 1.1.2
 * Fix new lines sent to server to be proper `\r\n` format
 
