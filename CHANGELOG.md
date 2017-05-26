@@ -1,3 +1,7 @@
+## 1.1.4
+* Remove extra trailing `\r\n` from messages as some servers may interpret it as an empty
+ command and send back an error code after success code
+
 ## 1.1.3
 * Fix occasional issue with completer already completed. Due to an error with SMTP server
 closing connection after sending the email.

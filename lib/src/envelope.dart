@@ -113,7 +113,7 @@ class Envelope {
         });
       }).then((_) {
         buffer.write(
-            '--$boundary--\r\n\r\n.\r\n'); // Note. the \r actually needs to be there.
+            '--$boundary--\r\n\r\n.');
 
         return buffer.toString();
       });
