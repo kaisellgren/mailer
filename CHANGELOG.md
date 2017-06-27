@@ -1,3 +1,13 @@
+## 1.1.4
+* Remove extra trailing `\r\n` from messages as some servers may interpret it as an empty
+ command and send back an error code after success code
+
+## 1.1.3
+* Fix occasional issue with completer already completed. Due to an error with SMTP server
+closing connection after sending the email.
+
+## 1.1.2
+* Fix new lines sent to server to be proper `\r\n` format
 
 ## 1.1.1
 * loosen crypto dependency to '>=0.9.0 <3.0.0' as suggested in the

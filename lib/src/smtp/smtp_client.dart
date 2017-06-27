@@ -17,6 +17,8 @@ class SmtpClient {
 
   Socket _connection;
 
+  bool _connectionOpen = false;
+
   /**
    * A list of supported authentication protocols.
    */
@@ -54,15 +56,20 @@ class SmtpClient {
   Future _connect({secured: false}) {
     return new Future(() {
       // Secured connection was demanded by the user.
-      if (secured || options.secured) return SecureSocket.connect(options.hostName, options.port, onBadCertificate: (_) => options.ignoreBadCertificate);
+      if (secured || options.secured)
+        return SecureSocket.connect(options.hostName, options.port,
+            onBadCertificate: (_) => options.ignoreBadCertificate);
 
       return Socket.connect(options.hostName, options.port);
     }).then((socket) {
-      _logger.finer("Connecting to ${options.hostName} at port ${options.port}.");
+      _logger
+          .finer("Connecting to ${options.hostName} at port ${options.port}.");
 
       _connection = socket;
       _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done.catchError(_onSendController.addError);
+      _connection.done
+          .then((_) => _connectionOpen = false)
+          .catchError(_onSendController.addError);
     });
   }
 
@@ -101,7 +108,12 @@ class SmtpClient {
         }, onError: (e) {
           _close();
           timeout.cancel();
-          completer.completeError('Failed to send an email: $e');
+          if (!completer.isCompleted) {
+            completer.completeError('Failed to send an email: $e');
+            _logger.finest('Failed to send email', e);
+          } else {
+            _logger.finest('Failed after sending email', e);
+          }
         }, cancelOnError: true);
 
         return completer.future;
@@ -157,11 +169,15 @@ class SmtpClient {
    * Upgrades the connection to use TLS.
    */
   void _upgradeConnection(callback) {
-    SecureSocket.secure(_connection, onBadCertificate: (_) => options.ignoreBadCertificate)
-    .then((SecureSocket secured) {
+    SecureSocket
+        .secure(_connection,
+            onBadCertificate: (_) => options.ignoreBadCertificate)
+        .then((SecureSocket secured) {
       _connection = secured;
       _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done.catchError(_onSendController.addError);
+      _connection.done
+          .then((_) => _connectionOpen = false)
+          .catchError(_onSendController.addError);
       callback();
     });
   }
@@ -185,17 +201,25 @@ class SmtpClient {
     }
 
     // The server supports TLS and we haven't switched to it yet, so let's do it.
-    if (_connection is! SecureSocket && new RegExp('[ \\-]STARTTLS\\r?\$', caseSensitive: false, multiLine: true).hasMatch(message)) {
+    if (_connection is! SecureSocket &&
+        new RegExp('[ \\-]STARTTLS\\r?\$',
+                caseSensitive: false, multiLine: true)
+            .hasMatch(message)) {
       sendCommand('STARTTLS');
       _currentAction = _actionStartTLS;
       return;
     }
 
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)PLAIN', caseSensitive: false).hasMatch(message)) supportedAuthentications.add('PLAIN');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)LOGIN', caseSensitive: false).hasMatch(message)) supportedAuthentications.add('LOGIN');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)CRAM-MD5', caseSensitive: false).hasMatch(message)) supportedAuthentications.add('CRAM-MD5');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)XOAUTH', caseSensitive: false).hasMatch(message)) supportedAuthentications.add('XOAUTH');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)XOAUTH2', caseSensitive: false).hasMatch(message)) supportedAuthentications.add('XOAUTH2');
+    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)PLAIN', caseSensitive: false)
+        .hasMatch(message)) supportedAuthentications.add('PLAIN');
+    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)LOGIN', caseSensitive: false)
+        .hasMatch(message)) supportedAuthentications.add('LOGIN');
+    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)CRAM-MD5', caseSensitive: false)
+        .hasMatch(message)) supportedAuthentications.add('CRAM-MD5');
+    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)XOAUTH', caseSensitive: false)
+        .hasMatch(message)) supportedAuthentications.add('XOAUTH');
+    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)XOAUTH2', caseSensitive: false)
+        .hasMatch(message)) supportedAuthentications.add('XOAUTH2');
 
     _authenticateUser();
   }
@@ -267,7 +291,8 @@ class SmtpClient {
   var _recipientIndex = 0;
 
   void _actionMail(String message) {
-    if (message.startsWith('2') == false) throw 'Mail from command failed: $message';
+    if (message.startsWith('2') == false)
+      throw 'Mail from command failed: $message';
 
     var recipient;
 
@@ -300,14 +325,16 @@ class SmtpClient {
 
   void _actionData(String message) {
     // The response should be either 354 or 250.
-    if (message.startsWith('2') == false && message.startsWith('3') == false) throw 'Data command failed: $message';
+    if (message.startsWith('2') == false && message.startsWith('3') == false)
+      throw 'Data command failed: $message';
 
     _currentAction = _actionFinishEnvelope;
     _envelope.getContents().then(sendCommand);
   }
 
   _actionFinishEnvelope(String message) {
-    if (message.startsWith('2') == false) throw 'Could not send email: $message';
+    if (message.startsWith('2') == false)
+      throw 'Could not send email: $message';
 
     _currentAction = _actionIdle;
     _onSendController.add(_envelope);
