@@ -46,8 +46,8 @@ class SmtpClient {
   Envelope _envelope;
 
   SmtpClient(this.options) {
-    onIdle = _onIdleController.stream.asBroadcastStream();
-    onSend = _onSendController.stream.asBroadcastStream();
+    onIdle = _onIdleController.stream.asBroadcastStream().cast();
+    onSend = _onSendController.stream.asBroadcastStream().cast();
   }
 
   /**
