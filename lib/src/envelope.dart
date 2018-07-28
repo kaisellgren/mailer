@@ -18,7 +18,7 @@ class Envelope {
   String text;
   String html;
   String identityString = 'mailer';
-  Encoding encoding = UTF8;
+  Encoding encoding = utf8;
 
   bool _isDelivered = false;
   int _counter = 0;
@@ -101,7 +101,7 @@ class Envelope {
 
         return attachment.file.readAsBytes().then((bytes) {
           // Chunk'd (76 chars per line) base64 string, separated by "\r\n".
-          var contents = chunkEncodedBytes(BASE64.encode(bytes));
+          var contents = chunkEncodedBytes(base64.encode(bytes));
 
           buffer.write('--$boundary\r\n');
           buffer.write(
