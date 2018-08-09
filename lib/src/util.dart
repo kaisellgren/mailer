@@ -1,7 +1,7 @@
 
 /// Consume the encode bytes (no line separators),
 /// and produce a chunk'd (76 chars per line) string, separated by "\r\n".
-chunkEncodedBytes(String encoded) {
+String chunkEncodedBytes(String encoded) {
   if (encoded == null) return null;
   var chunked = new StringBuffer();
   int start = 0;

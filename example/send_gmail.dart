@@ -23,7 +23,7 @@ main(List<String> rawArgs) {
   var emailTransport = new SmtpTransport(options);
 
   // Create our mail/envelope.
-  var envelope = new Envelope()
+  var envelope = new Mail()
     ..from = '$username@gmail.com'
     ..recipients.add(to)
     ..subject = 'Test Dart Mailer library :: ${new DateTime.now()}'

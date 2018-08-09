@@ -1,5 +1,3 @@
-part of mailer;
-
 /*!
  * This file contains pre-defined helper options.
  *

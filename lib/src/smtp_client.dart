@@ -1,50 +1,14 @@
-part of mailer;
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:async/async.dart';
+import 'package:logging/logging.dart';
+import 'smtp_options.dart';
+import 'entities/mail.dart';
+import 'smtp/server_response.dart';
+import 'smtp/capabilities.dart';
 
-class SendReport {
-  final Mail mail;
-  final bool sent;
-
-  SendReport(this.mail, this.sent);
-}
-
-class _ServerMessage {
-  final String responseCode;
-
-  /// Every line received from the server is one entry in the message list.
-  final List<String> message;
-
-  _ServerMessage(this.responseCode, this.message);
-}
-
-class Capabilities {
-  final bool startTls;
-  final bool authPlain;
-  final bool authLogin;
-  final List<String> all;
-
-  Capabilities()
-      : startTls = false,
-        authPlain = true,
-        authLogin = false,
-        all = const <String>[];
-
-  Capabilities._values(this.startTls, this.authPlain, this.authLogin, this.all);
-
-  factory Capabilities.fromResponse(List<String> ehloMessage) {
-    var upperCaseMsg = ehloMessage.map((m) => m.toUpperCase());
-
-    var startTls = upperCaseMsg.contains('STARTTLS');
-
-    var authMethods = upperCaseMsg
-        .firstWhere((l) => l.startsWith('AUTH '), orElse: () => 'AUTH')
-        .split(' ')
-        .skip(1); // first is AUTH
-    var plain = authMethods.contains('PLAIN');
-    var login = authMethods.contains('LOGIN');
-
-    return new Capabilities._values(startTls, plain, login, ehloMessage);
-  }
-}
+final _logger = new Logger('smtp-client');
 
 class SmtpClient {
   SmtpOptions _options;
@@ -60,7 +24,7 @@ class SmtpClient {
       _socketIn.cancel();
     }
     _socketIn = new StreamQueue<String>(
-        _socket.transform(new Utf8Decoder()).transform(const LineSplitter()));
+        _socket.transform(UTF8.decoder).transform(const LineSplitter()));
   }
 
   /// Initializes a connection to the given server.
@@ -83,7 +47,7 @@ class SmtpClient {
   /// Returns the next message from server.  An exception is thrown if
   /// [acceptedRespCodes] is not empty and the response code form the server
   /// does not start with any of the strings in [acceptedRespCodes];
-  Future<_ServerMessage> _sendAndReceive(String command,
+  Future<_ServerResponse> _sendAndReceive(String command,
       {List<String> acceptedRespCodes = const ['2'],
       String expect: null,
       bool waitForResponse: true}) async {
@@ -133,7 +97,7 @@ class SmtpClient {
       throw new SmtpClientCommunicationException(msg);
     }
 
-    return new _ServerMessage(responseCode, messages);
+    return new _ServerResponse(responseCode, messages);
   }
 
   /// Returns the capabilities of the server if ehlo was successful.  null if
@@ -145,7 +109,7 @@ class SmtpClient {
       return null;
     }
 
-    var capabilities = new Capabilities.fromResponse(respEhlo.message);
+    var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
 
     if (!capabilities.startTls || _socket is SecureSocket) {
       return capabilities;
@@ -259,24 +223,3 @@ class SmtpClient {
   }
 }
 
-abstract class SmtpClientException implements Exception {
-  /// A short description of the problem.
-  final String message;
-
-  SmtpClientException(this.message);
-
-  @override
-  String toString() => message;
-}
-
-/// This exception is thrown when the server either doesn't accept
-/// the authentication type or the username password is incorrect.
-class SmtpClientAuthenticationException extends SmtpClientException {
-  SmtpClientAuthenticationException(String message) : super(message);
-}
-
-/// This exception is thrown when the server unexpectedly returns a response
-/// code which differs to our accepted response codes (usually 2xx).
-class SmtpClientCommunicationException extends SmtpClientException {
-  SmtpClientCommunicationException(String message) : super(message);
-}
