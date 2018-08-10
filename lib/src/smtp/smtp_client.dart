@@ -191,10 +191,7 @@ class SmtpClient {
   }
 
   void _actionGreeting(String message) {
-    if (message.startsWith('220') == false) {
-      _logger.severe('Invalid greeting from server: $message');
-      return;
-    }
+    if (message.startsWith('220') == false) throw('Invalid greeting from server: $message');
 
     _currentAction = _actionEHLO;
     sendCommand('EHLO ${options.name}');
@@ -233,10 +230,7 @@ class SmtpClient {
   }
 
   void _actionHELO(String message) {
-    if (message.startsWith('2') == false) {
-      _logger.severe('Invalid response for EHLO/HELO: $message');
-      return;
-    }
+    if (message.startsWith('2') == false) throw('Invalid response for EHLO/HELO: $message');
 
     supportedAuthentications.add('LOGIN');
 
@@ -323,10 +317,7 @@ class SmtpClient {
   }
 
   void _actionRecipient(String message) {
-    if (message.startsWith('2') == false) {
-      _logger.severe('Recipient failure: $message');
-      return;
-    }
+    if (message.startsWith('2') == false) throw('Recipient failure: $message');
 
     _currentAction = _actionData;
     sendCommand('DATA');
