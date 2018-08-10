@@ -17,8 +17,6 @@ class SmtpClient {
 
   Socket _connection;
 
-  bool _connectionOpen = false;
-
   /**
    * A list of supported authentication protocols.
    */
@@ -65,13 +63,9 @@ class SmtpClient {
       _logger
           .finer("Connecting to ${options.hostName} at port ${options.port}.");
 
-      _connectionOpen = true;
-
       _connection = socket;
       _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done
-          .then((_) => _connectionOpen = false)
-          .catchError(_onSendController.addError);
+      _connection.done.catchError(_onSendController.addError);
     });
   }
 
@@ -177,21 +171,19 @@ class SmtpClient {
    * Upgrades the connection to use TLS.
    */
   void _upgradeConnection(callback) {
-    SecureSocket
-        .secure(_connection,
+    SecureSocket.secure(_connection,
             onBadCertificate: (_) => options.ignoreBadCertificate)
         .then((SecureSocket secured) {
       _connection = secured;
       _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done
-          .then((_) => _connectionOpen = false)
-          .catchError(_onSendController.addError);
+      _connection.done.catchError(_onSendController.addError);
       callback();
     });
   }
 
   void _actionGreeting(String message) {
-    if (message.startsWith('220') == false) throw('Invalid greeting from server: $message');
+    if (message.startsWith('220') == false)
+      throw ('Invalid greeting from server: $message');
 
     _currentAction = _actionEHLO;
     sendCommand('EHLO ${options.name}');
@@ -230,7 +222,8 @@ class SmtpClient {
   }
 
   void _actionHELO(String message) {
-    if (message.startsWith('2') == false) throw('Invalid response for EHLO/HELO: $message');
+    if (message.startsWith('2') == false)
+      throw ('Invalid response for EHLO/HELO: $message');
 
     supportedAuthentications.add('LOGIN');
 
@@ -317,7 +310,7 @@ class SmtpClient {
   }
 
   void _actionRecipient(String message) {
-    if (message.startsWith('2') == false) throw('Recipient failure: $message');
+    if (message.startsWith('2') == false) throw ('Recipient failure: $message');
 
     _currentAction = _actionData;
     sendCommand('DATA');
