@@ -27,8 +27,8 @@ class SmtpClient {
   /**
    * When the connection is idling, it's ready to take in a new message.
    */
-  Stream onIdle;
-  StreamController _onIdleController = new StreamController();
+  Stream<dynamic> onIdle;
+  StreamController<dynamic> _onIdleController = new StreamController();
 
   /**
    * This stream emits whenever an email has been sent.
@@ -36,7 +36,7 @@ class SmtpClient {
    * The returned object is an [Envelope] containing the details of what has been emailed.
    */
   Stream<Envelope> onSend;
-  StreamController _onSendController = new StreamController();
+  StreamController<Envelope> _onSendController = new StreamController();
 
   /**
    * Sometimes the response comes in pieces. We store each piece here.
