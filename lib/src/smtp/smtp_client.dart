@@ -25,6 +25,7 @@ class SmtpClient {
   /**
    * When the connection is idling, it's ready to take in a new message.
    */
+
   Stream<dynamic> onIdle;
   StreamController<dynamic> _onIdleController = new StreamController();
 
