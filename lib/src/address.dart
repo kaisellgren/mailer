@@ -507,14 +507,14 @@ class Address {
 
     groupMailboxes = new List<Address>();
 
-    var expectingMailbox = null; // null since mailbox-list can be empty
+    bool expectingMailbox = null; // null since mailbox-list can be empty
 
     do {
       if (pos < end) {
         var char = str.substring(pos, pos + 1);
         if (char == ";") {
           // end of group reached
-          if (expectingMailbox != null && expectingMailbox) {
+          if (expectingMailbox ?? false) {
             throw new AddressInvalid("group has unexpected final comma");
           }
           return pos + 1;
@@ -522,7 +522,7 @@ class Address {
           if (groupMailboxes.isEmpty) {
             throw new AddressInvalid("group has unexpected initial comma");
           }
-          if (expectingMailbox != null && expectingMailbox) {
+          if (expectingMailbox ?? false) {
             throw new AddressInvalid("group has unexpected extra comma");
           }
           pos++; // step over the comma
@@ -921,7 +921,7 @@ class Address {
       assert(domain == null);
       assert(route == null);
 
-      var str;
+      String str;
       if (displayName == null) {
         throw new AddressInvalid("Group cannot have no display-name");
       } else {
@@ -989,7 +989,7 @@ class Address {
 
     // Produce the localPart@domain
 
-    var result;
+    String result;
     if (!needsQuoting) {
       // atom
       result = str;

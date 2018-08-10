@@ -97,12 +97,14 @@ class Envelope {
       }
 
       // Add all attachments.
-      return Future.forEach(attachments, (attachment) {
+      return Future.forEach(attachments, (Attachment attachment) {
         var filename = basename(attachment.file.path);
 
         return attachment.file.readAsBytes().then((bytes) {
           // Chunk'd (76 chars per line) base64 string, separated by "\r\n".
-          var contents = chunkEncodedBytes(convert.base64.encode(bytes));
+          var x = convert.base64.encode(bytes);
+          x = x;
+          var contents = chunkEncodedBytes(convert.base64.encode(bytes) as String);
 
           buffer.write('--$boundary\r\n');
           buffer.write(

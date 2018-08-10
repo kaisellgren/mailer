@@ -53,7 +53,7 @@ class SmtpClient {
   /**
    * Initializes a connection to the given server.
    */
-  Future _connect({secured: false}) {
+  Future _connect({bool secured: false}) {
     return new Future(() {
       // Secured connection was demanded by the user.
       if (secured || options.secured)
@@ -87,7 +87,7 @@ class SmtpClient {
       envelope._isDelivered = true;
 
       onIdle.listen((_) {
-        var allR = new Set();
+        var allR = new Set<String>();
         allR.addAll(envelope.recipients ?? []);
         allR.addAll(envelope.ccRecipients ?? []);
         allR.addAll(envelope.bccRecipients ?? []);
@@ -277,7 +277,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateLoginPassword;
-    sendCommand(convert.base64.encode(options.username.codeUnits));
+    sendCommand(convert.base64.encode(options.username.codeUnits) as String);
   }
 
   void _actionAuthenticateLoginPassword(String message) {
@@ -286,7 +286,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateComplete;
-    sendCommand(convert.base64.encode(options.password.codeUnits));
+    sendCommand(convert.base64.encode(options.password.codeUnits) as String);
   }
 
   void _actionAuthenticateComplete(String message) {
@@ -303,7 +303,7 @@ class SmtpClient {
     if (message.startsWith('2') == false)
       throw 'Mail from command failed: $message';
 
-    var recipient;
+    String recipient;
 
     // We are processing the last recipient.
     if (_recipientIndex == _allRecipients.length - 1) {

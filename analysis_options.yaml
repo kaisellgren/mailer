@@ -1,0 +1,14 @@
+analyzer:
+  strong-mode:
+    implicit-casts: false
+  errors:
+    todo: ignore
+  exclude:
+    - flutter/**
+    - lib/api/*.dart
+
+linter:
+  rules:
+    - avoid_empty_else
+    - cancel_subscriptions
+    - close_sinks

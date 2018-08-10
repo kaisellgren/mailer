@@ -10,7 +10,7 @@ main(List<String> rawArgs) {
   if (username.endsWith('@gmail.com')) {
     username = username.substring(0, username.length - 10);
   }
-  String to = args[TO_ARG];
+  String to = args[TO_ARG] as String;
   if (to == null || to.isEmpty) to = username + '@gmail.com';
 
   // If you want to use an arbitrary SMTP server, go with `new SmtpOptions()`.
@@ -30,13 +30,13 @@ main(List<String> rawArgs) {
     ..text = 'This is the plain text'
     ..html = '<h1>Test</h1><p>Hey! Here\'s some HTML content</p>';
   if (args[CC_ARG] != null) {
-    envelope.ccRecipients.add(args[CC_ARG]);
+    envelope.ccRecipients.add(args[CC_ARG] as String);
   }
   if (args[BCC_ARG] != null) {
-    envelope.bccRecipients.add(args[BCC_ARG]);
+    envelope.bccRecipients.add(args[BCC_ARG] as String);
   }
   if (args[ATTACH_ARG] != null) {
-    envelope.attachments.add(new Attachment(file: new File(args[ATTACH_ARG])));
+    envelope.attachments.add(new Attachment(file: new File(args[ATTACH_ARG] as String)));
   }
 
   // Email it.
@@ -70,7 +70,7 @@ ArgResults parseArgs(List<String> rawArgs) {
     exit(1);
   }
   if (args[ATTACH_ARG] != null) {
-    File attachFile = new File(args[ATTACH_ARG]);
+    File attachFile = new File(args[ATTACH_ARG] as String);
     if (!attachFile.existsSync()) {
       showUsage(parser, 'Failed to find file to attach: ${attachFile.path}');
       exit(1);
