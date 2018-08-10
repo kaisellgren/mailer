@@ -87,6 +87,12 @@ class SmtpClient {
       envelope._isDelivered = true;
 
       onIdle.listen((_) {
+        var allR = new Set();
+        allR.addAll(envelope.recipients ?? []);
+        allR.addAll(envelope.ccRecipients ?? []);
+        allR.addAll(envelope.bccRecipients ?? []);
+        _allRecipients = allR.where((a) => a != null).toList(growable: false);
+
         _currentAction = _actionMail;
         sendCommand('MAIL FROM:<${Address.sanitize(_envelope.from)}>');
       });
@@ -271,7 +277,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateLoginPassword;
-    sendCommand(base64.encode(options.username.codeUnits));
+    sendCommand(convert.base64.encode(options.username.codeUnits));
   }
 
   void _actionAuthenticateLoginPassword(String message) {
@@ -280,7 +286,7 @@ class SmtpClient {
     }
 
     _currentAction = _actionAuthenticateComplete;
-    sendCommand(base64.encode(options.password.codeUnits));
+    sendCommand(convert.base64.encode(options.password.codeUnits));
   }
 
   void _actionAuthenticateComplete(String message) {
@@ -291,6 +297,7 @@ class SmtpClient {
   }
 
   var _recipientIndex = 0;
+  List<String> _allRecipients = [];
 
   void _actionMail(String message) {
     if (message.startsWith('2') == false)
@@ -299,17 +306,17 @@ class SmtpClient {
     var recipient;
 
     // We are processing the last recipient.
-    if (_recipientIndex == _envelope.recipients.length - 1) {
+    if (_recipientIndex == _allRecipients.length - 1) {
       _recipientIndex = 0;
 
       _currentAction = _actionRecipient;
-      recipient = _envelope.recipients[_recipientIndex];
+      recipient = _allRecipients[_recipientIndex];
     }
 
     // There are more recipients to process. We need to send RCPT TO multiple times.
     else {
       _currentAction = _actionMail;
-      recipient = _envelope.recipients[++_recipientIndex];
+      recipient = _allRecipients[++_recipientIndex];
     }
 
     sendCommand('RCPT TO:<${Address.sanitize(recipient)}>');
