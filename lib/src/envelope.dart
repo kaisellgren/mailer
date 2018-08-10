@@ -18,7 +18,7 @@ class Envelope {
   String text;
   String html;
   String identityString = 'mailer';
-  Encoding encoding = utf8;
+  Encoding encoding = convert.utf8;
 
   bool _isDelivered = false;
   int _counter = 0;
@@ -53,11 +53,6 @@ class Envelope {
       if (ccRecipients != null && !ccRecipients.isEmpty) {
         var cc = ccRecipients.map(Address.sanitize).join(',');
         buffer.write('Cc: $cc\r\n');
-      }
-
-      if (bccRecipients != null && !bccRecipients.isEmpty) {
-        var bcc = bccRecipients.map(Address.sanitize).join(',');
-        buffer.write('Bcc: $bcc\r\n');
       }
 
       // Since TimeZone is not implemented in DateFormat we need to use UTC for proper Date header generation time
@@ -101,7 +96,7 @@ class Envelope {
 
         return attachment.file.readAsBytes().then((bytes) {
           // Chunk'd (76 chars per line) base64 string, separated by "\r\n".
-          var contents = chunkEncodedBytes(base64.encode(bytes));
+          var contents = chunkEncodedBytes(convert.base64.encode(bytes));
 
           buffer.write('--$boundary\r\n');
           buffer.write(
