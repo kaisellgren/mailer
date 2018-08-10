@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:mime/mime.dart';
 import 'package:logging/logging.dart';
+import 'package:dart2_constant/convert.dart' as convert;
 
 import 'src/util.dart';
 
