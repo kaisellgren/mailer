@@ -16,6 +16,7 @@ dependencies:
   logging: ^0.11.3+2
   path: '>0.9.0 <2.0.0'
   intl: '>0.9.0 <1.0.0'
+  charcode: ^1.1.2
 dev_dependencies:
   args: '>0.13.0 <2.0.0'
   test: '>0.12.0 <2.0.0'
