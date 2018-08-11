@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:mime/mime.dart';
 import 'package:logging/logging.dart';
+import 'package:charcode/ascii.dart';
 
 import 'src/util.dart';
 

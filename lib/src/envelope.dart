@@ -14,6 +14,10 @@ class Envelope {
   List<Attachment> attachments = [];
   String from = 'anonymous@${Platform.localHostname}';
   String fromName;
+  String replyTo;
+  String replyToName;
+  String sender;
+  String senderName;
   String subject;
   String text;
   String html;
@@ -38,11 +42,34 @@ class Envelope {
       if (from != null) {
         var fromData = Address.sanitize(from);
 
-        if (fromName != null) {
-          fromData = '$fromName <$fromData>';
+        final name = sanitizeName(fromName);
+        if (name != null) {
+          fromData = '$name <$fromData>';
         }
 
         buffer.write('From: $fromData\r\n');
+      }
+
+      if (replyTo != null) {
+        var replyToData = Address.sanitize(replyTo);
+
+        final name = sanitizeName(replyToName);
+        if (name != null) {
+          replyToData = '$name <$replyToData>';
+        }
+
+        buffer.write('Reply-To: $replyToData\n');
+      }
+
+      if (sender != null) {
+        var senderData = Address.sanitize(sender);
+
+        final name = sanitizeName(senderName);
+        if (name != null) {
+          senderData = '$name <$senderData>';
+        }
+
+        buffer.write('Sender: $senderData\n');
       }
 
       if (recipients != null && !recipients.isEmpty) {

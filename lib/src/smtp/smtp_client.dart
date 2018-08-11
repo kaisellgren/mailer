@@ -65,8 +65,6 @@ class SmtpClient {
       _logger
           .finer("Connecting to ${options.hostName} at port ${options.port}.");
 
-      _connectionOpen = true;
-
       _connection = socket;
       _connection.listen(_onData, onError: _onSendController.addError);
       _connection.done
