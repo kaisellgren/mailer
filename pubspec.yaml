@@ -16,6 +16,8 @@ dependencies:
   crypto: '>=0.9.0 <3.0.0'
   path: '>=0.9.0 <2.0.0'
   intl: '>=0.9.0 <2.0.0'
+  charcode: any
+
 dev_dependencies:
   args: ^0.13.5
   test: ^0.12.4
