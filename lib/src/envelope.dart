@@ -129,7 +129,7 @@ class Envelope {
 
         return attachment.file.readAsBytes().then((bytes) {
           // Chunk'd (76 chars per line) base64 string, separated by "\r\n".
-          var contents = chunkEncodedBytes(convert.base64.encode(bytes) as String);
+          var contents = chunkEncodedBytes(convert.base64.encode(bytes));
 
           buffer.write('--$boundary\r\n');
           buffer.write(
