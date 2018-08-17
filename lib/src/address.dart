@@ -70,7 +70,7 @@ class AddressNotGroup extends AddressException {
 class Address {
   // Members
 
-  String _tmp; // internal use during parsing
+  StringBuffer _tmp; // internal use during parsing
   int _offset; // position reached when using the _parseMailbox constructor.
 
   //--------
@@ -312,7 +312,7 @@ class Address {
       var word = _tmp;
 
       if (word != null) {
-        words.add(word);
+        words.add(word.toString());
       } else {
         if (prevPos != null && prevPos == pos) {
           // Not the first time through, but there were no more words parsed
@@ -396,7 +396,7 @@ class Address {
             throw new AddressInvalid(
                 "local-part has unexpected final full-stop");
           }
-          words.add(word);
+          words.add(word.toString());
           break;
 
         case "@":
@@ -465,7 +465,7 @@ class Address {
       throw new AddressInvalid("addr-spec does not start with a word");
     }
 
-    pos = _parseAddrSpec(str, pos, end, [word]);
+    pos = _parseAddrSpec(str, pos, end, [word.toString()]);
 
     // The ">" terminating the route-addr
 
@@ -507,14 +507,14 @@ class Address {
 
     groupMailboxes = new List<Address>();
 
-    var expectingMailbox = null; // null since mailbox-list can be empty
+    bool expectingMailbox = null; // null since mailbox-list can be empty
 
     do {
       if (pos < end) {
         var char = str.substring(pos, pos + 1);
         if (char == ";") {
           // end of group reached
-          if (expectingMailbox != null && expectingMailbox) {
+          if (expectingMailbox ?? false) {
             throw new AddressInvalid("group has unexpected final comma");
           }
           return pos + 1;
@@ -522,7 +522,7 @@ class Address {
           if (groupMailboxes.isEmpty) {
             throw new AddressInvalid("group has unexpected initial comma");
           }
-          if (expectingMailbox != null && expectingMailbox) {
+          if (expectingMailbox ?? false) {
             throw new AddressInvalid("group has unexpected extra comma");
           }
           pos++; // step over the comma
@@ -629,7 +629,7 @@ class Address {
           throw new AddressInvalid("domain has unexpected extra full-stop");
         }
       }
-      domain += _tmp;
+      domain += _tmp.toString();
       pos = subdomainEnd;
 
       pos = _skipCFWS(str, pos, end);
@@ -663,22 +663,22 @@ class Address {
     var n = begin + 1;
     while (n < end) {
       var ch = str.codeUnitAt(n);
-      if (ch == "\\".codeUnitAt(0)) {
+      if (ch == $backslash) {
         // Quoted pair
         n++;
         if (end < n) {
           throw new AddressInvalid("domain-literal not terminated");
         }
-        _tmp += str.substring(n, n + 1);
+        _tmp.writeCharCode(str.codeUnitAt(n));
         n++;
       } else if (33 <= ch &&
-          ch <= 126 &&
-          "\\[]\n".indexOf(new String.fromCharCode(ch)) < 0) {
+          ch <= 126 && (ch != $backslash && ch != $lbracket &&
+            ch != $rbracket && ch != $lf)) {
         // Valid character for an dtext
-        _tmp += str.substring(n, n + 1);
+        _tmp.writeCharCode(ch);
         n++;
-      } else if (ch != "]".codeUnitAt(0)) {
-        _tmp = str.substring(begin, n);
+      } else if (ch != $rbracket) {
+        _tmp = new StringBuffer(str.substring(begin, n));
         return n;
       } else {
         throw new AddressInvalid("domain-literal not terminated with \"]\"");
@@ -698,32 +698,33 @@ class Address {
 
     var nestingDepth = 0;
 
-    _tmp = "";
+    _tmp = new StringBuffer();
     var n = begin;
     while (n < end) {
-      switch (str.substring(n, n + 1)) {
-        case "(":
+      final ch = str.codeUnitAt(n);
+      switch (ch) {
+        case $lparen:
           // Start of a comment
           nestingDepth++;
           break;
-        case ")":
+        case $rparen:
           // End of a comment
           nestingDepth--;
           if (nestingDepth == 0) {
             return n + 1;
           }
           break;
-        case "\\":
+        case $backslash:
           // Escaped character
           if (str.length < n) {
             throw new AddressInvalid("Unterminated comment");
           }
-          _tmp += str.substring(n + 1, n + 2);
+          _tmp.writeCharCode(str.codeUnitAt(n + 1));
           n++;
           break;
         default:
           // Normal character
-          _tmp += str.substring(n, n + 1);
+          _tmp.writeCharCode(ch);
           break;
       }
       n++;
@@ -777,13 +778,13 @@ class Address {
 
     var n = begin;
     while (n < end) {
-      if (!_isAtomChar(str, n)) {
+      if (!_isAtomChar(str.codeUnitAt(n))) {
         break; // terminated by non-word character
       }
       n++;
     }
     if (begin < n) {
-      _tmp = str.substring(begin, n);
+      _tmp = new StringBuffer(str.substring(begin, n));
     } else {
       _tmp = null; // no word found
     }
@@ -798,25 +799,26 @@ class Address {
 
     // quoted-string = [CFWS]  DQUOTE *([FWS] qcontent) [FWS] DQUOTE [CFWS]
 
-    _tmp = "";
+    _tmp = new StringBuffer();
     var n = begin + 1;
     while (n < end) {
-      switch (str.substring(n, n + 1)) {
-        case "\"":
+      final ch = str.codeUnitAt(n);
+      switch (ch) {
+        case $double_quote:
           // End quote
           return _skipCFWS(str, n + 1, end);
 
-        case "\\":
+        case $backslash:
           // Escaped character
           if (str.length < n) {
             throw new AddressInvalid("Incomplete escape in quoted string");
           }
-          _tmp += str.substring(n + 1, n + 2);
+          _tmp.writeCharCode(str.codeUnitAt(n + 1));
           n++;
           break;
         default:
           // Normal character
-          _tmp += str.substring(n, n + 1);
+          _tmp.writeCharCode(ch);
           break;
       }
       n++;
@@ -831,11 +833,10 @@ class Address {
     var pos = begin;
 
     while (pos < end) {
-      var ch = str.substring(pos, pos + 1);
-
-      if (ch == " " || ch == "\t") {
+      var ch = str.codeUnitAt(pos);
+      if (ch == $space || ch == $tab) {
         pos++;
-      } else if (ch == "(") {
+      } else if (ch == $lparen) {
         pos = _parseComment(str, pos, end);
       } else {
         break;
@@ -848,20 +849,15 @@ class Address {
   //----------------------------------------------------------------
   /// Tests if character at position [pos] in the [str] can appear in an atom.
 
-  static bool _isAtomChar(String str, int pos) {
+  static bool _isAtomChar(int ch) {
     // A character from the "atext" production in RFC #5822.
-
-    var ch = str.codeUnitAt(pos);
-    if ("a".codeUnitAt(0) <= ch && ch <= "z".codeUnitAt(0) ||
-        "A".codeUnitAt(0) <= ch && ch <= "Z".codeUnitAt(0) ||
-        "0".codeUnitAt(0) <= ch && ch <= "9".codeUnitAt(0) ||
-        "!#\$%&'*+-/=?^_`{|}~".indexOf(new String.fromCharCode(ch)) >= 0 ||
-        127 < ch) {
-      return true;
-    } else {
-      return false;
-    }
+    return ($a <= ch && ch <= $z) ||
+        ($A <= ch && ch <= $Z) ||
+        ($0 <= ch && ch <= $9) ||
+        _atomCharCodes.contains(ch) ||
+        127 < ch;
   }
+  static final Set<int> _atomCharCodes = "!#\$%&'*+-/=?^_`{|}~".codeUnits.toSet();
 
   //----------------------------------------------------------------
   /// Returns the simple-address in a mailbox address.
@@ -921,7 +917,7 @@ class Address {
       assert(domain == null);
       assert(route == null);
 
-      var str;
+      String str;
       if (displayName == null) {
         throw new AddressInvalid("Group cannot have no display-name");
       } else {
@@ -954,25 +950,19 @@ class Address {
   static String _formatAtomOrQuotedString(String str) {
     // Check if string contains characters that need to be quoted
 
-    var needsQuoting = false;
-
     // It also needs quoting if it starts or ends with whitespace
     // or contains multiple whitespaces in sequence
 
-    if (str.length == 0) {
-      needsQuoting = true; // empty
-    } else if (str.substring(0, 1) == " " || str.substring(0, 1) == "\t") {
-      needsQuoting = true; // starts with whitespace
-    } else if (str.substring(str.length - 1, str.length) == " " ||
-        str.substring(str.length - 1, str.length) == "\t") {
-      needsQuoting = true; // ends with whitespace
-    }
+    var ch;
+    var needsQuoting = str.isEmpty
+       || (ch = str.codeUnitAt(0)) == $space || ch == $tab // starts with whitespace
+       || (ch = str.codeUnitAt(str.length - 1)) == $space || ch == $tab; // ends with whitespace
 
     var prevCharWasWhitespace = false;
     for (int n = 0; n < str.length; n++) {
-      var ch = str.substring(n, n + 1);
-      var isWhiteSpace = ch == ' ' || ch == "\t";
-      if (!_isAtomChar(str, n) && ! isWhiteSpace) {
+      var ch = str.codeUnitAt(n);
+      var isWhiteSpace = ch == $space || ch == $tab;
+      if (!_isAtomChar(ch) && !isWhiteSpace) {
         needsQuoting = true;
         break;
       }
@@ -989,28 +979,25 @@ class Address {
 
     // Produce the localPart@domain
 
-    var result;
     if (!needsQuoting) {
       // atom
-      result = str;
+      return str;
     } else {
       // quoted-string
-      result = '"';
+      final result = new StringBuffer('"');
       for (int n = 0; n < str.length; n++) {
-        if (_isAtomChar(str, n)) {
-          result += str.substring(n, n + 1);
+        final ch = str.codeUnitAt(n);
+        if (_isAtomChar(ch)) {
+          result.writeCharCode(ch);
         } else {
-          var ch = str.substring(n, n + 1);
-          if (ch == '"' || ch == "\\" || ch == "\r") {
-            result += "\\${ch}";
-          } else {
-            result += str.substring(n, n + 1);
-          }
+          if (ch == $double_quote || ch == $backslash || ch == $cr)
+            result.write("\\");
+          result.writeCharCode(ch);
         }
       }
-      result += '"';
+      result.write('"');
+      return result.toString();
     }
-    return result;
   }
 
   //----------------------------------------------------------------
