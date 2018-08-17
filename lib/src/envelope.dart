@@ -93,8 +93,9 @@ class Envelope {
 
       // Thanks to https://github.com/kaisellgren/mailer/pull/20
       // https://github.com/analogic for the Message-Id code!
-      int randomIdPart = new Random().nextInt((1<<32) - 1);
-      buffer.write('Message-ID: <${now.millisecondsSinceEpoch}-${randomIdPart}@${Platform.localHostname}>\r\n');
+      int randomIdPart = new Random().nextInt((1 << 32) - 1);
+      buffer.write(
+          'Message-ID: <${now.millisecondsSinceEpoch}-${randomIdPart}@${Platform.localHostname}>\r\n');
 
       // Create boundary string.
       var boundary =
@@ -107,12 +108,18 @@ class Envelope {
       buffer.write('Content-Type: multipart/$multipartType; ' +
           'boundary="$boundary"\r\n\r\n');
 
+      var dotLinesReg = new RegExp(r'^(\..*)$', multiLine: true);
+      String stuffDots(String s) =>
+          s.replaceAllMapped(dotLinesReg, (match) => '.${match[1]}');
+
       // Insert text message.
       if (text != null) {
         buffer.write('--$boundary\r\n');
-        buffer.write('Content-Type: text/plain; charset="${encoding.name}"\r\n');
+        buffer
+            .write('Content-Type: text/plain; charset="${encoding.name}"\r\n');
         buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
-        buffer.write('$text\r\n\r\n'); // TODO: ensure wrapped to at least 1000
+        buffer.write(
+            '${stuffDots(text)}\r\n\r\n'); // TODO: ensure wrapped to at least 1000
       }
 
       // Insert HTML message.
@@ -120,7 +127,8 @@ class Envelope {
         buffer.write('--$boundary\r\n');
         buffer.write('Content-Type: text/html; charset="${encoding.name}"\r\n');
         buffer.write('Content-Transfer-Encoding: 7bit\r\n\r\n');
-        buffer.write('$html\r\n\r\n'); // TODO: ensure wrapped to at least 1000
+        buffer.write(
+            '${stuffDots(html)}\r\n\r\n'); // TODO: ensure wrapped to at least 1000
       }
 
       // Add all attachments.
@@ -140,8 +148,7 @@ class Envelope {
           buffer.write('$contents\r\n\r\n');
         });
       }).then((_) {
-        buffer.write(
-            '--$boundary--\r\n\r\n.');
+        buffer.write('--$boundary--\r\n\r\n.');
 
         return buffer.toString();
       });
