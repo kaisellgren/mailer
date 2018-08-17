@@ -11,6 +11,7 @@ class Attachment {
   String data;
 
   Attachment({this.file, this.stream, this.data}) {
-    if (this.stream != null || this.data != null) throw 'Please use file-parameter for attachments. Others are not yet implemented.';
+    if (this.stream != null || this.data != null)
+      throw 'Please use file-parameter for attachments. Others are not yet implemented.';
   }
 }

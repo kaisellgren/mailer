@@ -1,4 +1,3 @@
-
 /// Consume the encode bytes (no line separators),
 /// and produce a chunk'd (76 chars per line) string, separated by "\r\n".
 chunkEncodedBytes(String encoded) {
@@ -24,14 +23,14 @@ String sanitizeField(String value) {
 
   return value.replaceAll(_reField, ' ');
 }
+
 final RegExp _reField = new RegExp('(\\r|\\n|\\t)+');
 
 /// Sanitizes a display name (of an email address).
 String sanitizeName(String name) {
-  if (name == null || (name = name.trim()).isEmpty)
-    return null;
+  if (name == null || (name = name.trim()).isEmpty) return null;
 
-  return _reName.hasMatch(name) ? name:
-    '"' + name.replaceAll('"', "'") + '"';
+  return _reName.hasMatch(name) ? name : '"' + name.replaceAll('"', "'") + '"';
 }
+
 final RegExp _reName = new RegExp(r"^[- a-zA-Z0-9!#$%&'*+/=?^_`{|}~]*$");

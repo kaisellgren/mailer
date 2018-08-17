@@ -78,17 +78,20 @@ class MailRuSmtpOptions extends SmtpOptions {
   final bool secured = true;
 }
 
-class DynectEmailSmtpOptions extends SmtpOptions { // TODO: insecure?
+class DynectEmailSmtpOptions extends SmtpOptions {
+  // TODO: insecure?
   final String hostName = 'smtp.dynect.net';
   final int port = 25;
 }
 
-class MandrillSmtpOptions extends SmtpOptions { // TODO: insecure?
+class MandrillSmtpOptions extends SmtpOptions {
+  // TODO: insecure?
   final String hostName = 'smtp.mandrillapp.com';
   final int port = 587;
 }
 
-class MailjetSmtpOptions extends SmtpOptions { // TODO: insecure?
+class MailjetSmtpOptions extends SmtpOptions {
+  // TODO: insecure?
   final String hostName = 'in.mailjet.com';
   final int port = 587;
 }
