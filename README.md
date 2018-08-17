@@ -52,9 +52,9 @@ main() {
     ..from = 'foo@bar.com'
     ..recipients.add('someone@somewhere.com')
     ..bccRecipients.add('hidden@recipient.com')
-    ..subject = 'Testing the Dart Mailer library 語'
+    ..subject = 'Testing the Dart Mailer library'
     ..attachments.add(new Attachment(file: new File('path/to/file')))
-    ..text = 'This is a cool email message. Whats up? 語'
+    ..text = 'This is a cool email message. Whats up?'
     ..html = '<h1>Test</h1><p>Hey!</p>';
 
   // Email it.
