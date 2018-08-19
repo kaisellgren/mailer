@@ -1,5 +1,5 @@
 name: mailer
-version: 1.2.1
+version: 1.2.2
 description: >
   Compose and send emails from Dart.
   Supports file attachments, HTML emails and multiple transport methods.
@@ -14,7 +14,7 @@ environment:
 dependencies:
   dart2_constant: ^1.0.0
   mime: '>0.9.0 <1.0.0'
-  logging: ^0.11.3+2
+  logging: ^0.11.3+1
   path: '>0.9.0 <2.0.0'
   intl: '>0.9.0 <1.0.0'
   charcode: ^1.1.2
