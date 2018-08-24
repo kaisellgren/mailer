@@ -168,7 +168,7 @@ void main() {
             //print("           $e"); // uncomment to see exception messages
             rethrow;
           }
-        }, throwsA(new isInstanceOf<AddressInvalid>()));
+        }, throwsA(const TypeMatcher<AddressInvalid>()));
       });
     }
   });

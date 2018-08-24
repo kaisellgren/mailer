@@ -320,7 +320,7 @@ class Address {
           // below. Blocked by some character.
           if (pos < end) {
             throw new AddressInvalid(
-                "invalid address: unexpected character \"${str.substring(pos, pos+1)}\"");
+                "invalid address: unexpected character \"${str.substring(pos, pos + 1)}\"");
           } else {
             throw new AddressInvalid("invalid address");
           }
@@ -507,14 +507,14 @@ class Address {
 
     groupMailboxes = new List<Address>();
 
-    var expectingMailbox = null; // null since mailbox-list can be empty
+    bool expectingMailbox = null; // null since mailbox-list can be empty
 
     do {
       if (pos < end) {
         var char = str.substring(pos, pos + 1);
         if (char == ";") {
           // end of group reached
-          if (expectingMailbox != null && expectingMailbox) {
+          if (expectingMailbox ?? false) {
             throw new AddressInvalid("group has unexpected final comma");
           }
           return pos + 1;
@@ -522,7 +522,7 @@ class Address {
           if (groupMailboxes.isEmpty) {
             throw new AddressInvalid("group has unexpected initial comma");
           }
-          if (expectingMailbox != null && expectingMailbox) {
+          if (expectingMailbox ?? false) {
             throw new AddressInvalid("group has unexpected extra comma");
           }
           pos++; // step over the comma
@@ -672,8 +672,11 @@ class Address {
         _tmp.writeCharCode(str.codeUnitAt(n));
         n++;
       } else if (33 <= ch &&
-          ch <= 126 && (ch != $backslash && ch != $lbracket &&
-            ch != $rbracket && ch != $lf)) {
+          ch <= 126 &&
+          (ch != $backslash &&
+              ch != $lbracket &&
+              ch != $rbracket &&
+              ch != $lf)) {
         // Valid character for an dtext
         _tmp.writeCharCode(ch);
         n++;
@@ -857,7 +860,9 @@ class Address {
         _atomCharCodes.contains(ch) ||
         127 < ch;
   }
-  static final Set<int> _atomCharCodes = "!#\$%&'*+-/=?^_`{|}~".codeUnits.toSet();
+
+  static final Set<int> _atomCharCodes =
+      "!#\$%&'*+-/=?^_`{|}~".codeUnits.toSet();
 
   //----------------------------------------------------------------
   /// Returns the simple-address in a mailbox address.
@@ -917,7 +922,7 @@ class Address {
       assert(domain == null);
       assert(route == null);
 
-      var str;
+      String str;
       if (displayName == null) {
         throw new AddressInvalid("Group cannot have no display-name");
       } else {
@@ -954,9 +959,12 @@ class Address {
     // or contains multiple whitespaces in sequence
 
     var ch;
-    var needsQuoting = str.isEmpty
-       || (ch = str.codeUnitAt(0)) == $space || ch == $tab // starts with whitespace
-       || (ch = str.codeUnitAt(str.length - 1)) == $space || ch == $tab; // ends with whitespace
+    var needsQuoting = str.isEmpty ||
+        (ch = str.codeUnitAt(0)) == $space ||
+        ch == $tab // starts with whitespace
+        ||
+        (ch = str.codeUnitAt(str.length - 1)) == $space ||
+        ch == $tab; // ends with whitespace
 
     var prevCharWasWhitespace = false;
     for (int n = 0; n < str.length; n++) {
