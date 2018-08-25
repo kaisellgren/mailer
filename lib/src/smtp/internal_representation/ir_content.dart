@@ -157,7 +157,7 @@ class _IRContentText extends _IRContent {
   _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
     _header.add(_IRHeaderText('content-type', 'text/$textType; charset=utf-8'));
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
-    // ToDo normalize Text
+    // ToDo convert to canonical form Text
 
     _text = text ?? '';
   }
