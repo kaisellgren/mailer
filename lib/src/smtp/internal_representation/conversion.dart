@@ -1,12 +1,4 @@
-import '../entities/mail.dart';
-import 'capabilities.dart';
 
-Iterable<String> headers(Mail mail, Capabilities capabilities) {
-  final headers = mail.headers;
-  return headers.keys
-      .where((name) => name.toLowerCase() != 'bcc')
-      .map((name) => headers[name]);
-}
 
 bool _isMultiByteContinuationByte(int b) {
   // MultiByte continuation bytes start are 0b10XXXXXX.
@@ -29,9 +21,9 @@ Iterable<List<int>> split(List<int> data, [int maxLength]) sync* {
       break;
     }
 
-    int e = end + 1;
     // Look at the character immediately following the chunk we would like to
     // return.
+    int e = end + 1;
     while (e > start && _isMultiByteContinuationByte(data[e])) {
       e--;
     }

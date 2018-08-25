@@ -2,25 +2,8 @@
  * This file contains pre-defined helper options.
  *
  * This means the user has to only fill in the username/password.
- */
 
-class GmailSmtpOptions extends SmtpOptions {
-  final String hostName = 'smtp.gmail.com';
-  final int port = 465;
-  final bool secured = true;
-}
 
-class YahooSmtpOptions extends SmtpOptions {
-  final String hostName = 'smtp.mail.yahoo.com';
-  final int port = 465;
-  final bool secured = true;
-}
-
-class HotmailSmtpOptions extends SmtpOptions {
-  final String hostName = 'smtp.live.com';
-  final int port = 587;
-  final bool secured = true;
-}
 
 class HotEeSmtpOptions extends SmtpOptions {
   final String hostName = 'mail.hot.ee'; // TODO: insecure?
@@ -96,3 +79,4 @@ class OpenMailBoxSmtpOptions extends SmtpOptions {
   final int port = 465;
   final bool secured = true;
 }
+*/

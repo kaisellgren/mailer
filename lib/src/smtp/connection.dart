@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:async/async.dart';
 import 'package:logging/logging.dart';
-import '../smtp_options.dart';
+import 'package:mailer/smtp_server.dart';
 import 'exceptions.dart';
 import 'server_response.dart';
 
@@ -23,21 +23,23 @@ import 'server_response.dart';
 final _logger = new Logger('Connection');
 
 class Connection {
-  final SmtpOptions options;
+  final SmtpServer _server;
   Socket _socket;
   StreamQueue<String> _socketIn;
 
-  Connection(this.options);
+  Connection(this._server);
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
+
+  Future<void> sendStream(Stream<List<int>> s) => _socket.addStream(s);
 
   /// Returns the next message from server.  An exception is thrown if
   /// [acceptedRespCodes] is not empty and the response code form the server
   /// does not start with any of the strings in [acceptedRespCodes];
-  Future<ServerResponse> sendAndReceive(String command,
+  Future<ServerResponse> send(String command,
       {List<String> acceptedRespCodes = const ['2'],
-        String expect: null,
-        bool waitForResponse: true}) async {
+      String expect: null,
+      bool waitForResponse: true}) async {
     // Send the new command.
     if (command != null) {
       _logger.fine('> $command');
@@ -88,43 +90,45 @@ class Connection {
   }
 
   /// Upgrades the connection to use TLS.
-  Future<Null> upgradeConnection() async {
+  Future<void> upgradeConnection() async {
     // SecureSocket.secure suggests to call socketSubscription.pause().
     // A StreamQueue always pauses unless we explicitly call next().
     // So we don't need to call pause() ourselves.
     _socket = await SecureSocket.secure(_socket,
-        onBadCertificate: (_) => options.ignoreBadCertificate);
+        onBadCertificate: (_) => _server.ignoreBadCertificate);
     _setSocketIn();
   }
 
   /// Initializes a connection to the given server.
-  Future<Null> connect() async {
-    _logger
-        .finer("Connecting to ${options.host} at port ${options.port}.");
+  Future<void> connect() async {
+    _logger.finer("Connecting to ${_server.host} at port ${_server.port}.");
 
     // Secured connection was demanded by the user.
-    if (options.ssl) {
-      _socket = await SecureSocket.connect(options.host, options.port,
-          onBadCertificate: (_) => options.ignoreBadCertificate);
+    if (_server.ssl) {
+      _socket = await SecureSocket.connect(_server.host, _server.port,
+          onBadCertificate: (_) => _server.ignoreBadCertificate);
     } else {
-      _socket = await Socket.connect(options.host, options.port);
+      _socket = await Socket.connect(_server.host, _server.port);
     }
     _socket.timeout(const Duration(seconds: 60));
 
     _setSocketIn();
   }
 
+  Future<void> close() => _socket.close();
+
   void _setSocketIn() {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
     _socketIn = new StreamQueue<String>(
-        _socket.transform(UTF8.decoder).transform(const LineSplitter()));
+        _socket.transform(utf8.decoder).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
-    if (options.securedOnly && !isSecure) {
-      throw new SmtpUnsecureException("Aborting because connection is not secure");
+    if (!_server.allowInsecure && !isSecure) {
+      throw new SmtpUnsecureException(
+          "Aborting because connection is not secure");
     }
   }
 }

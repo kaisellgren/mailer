@@ -2,39 +2,72 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:mime/mime.dart' as mime;
+
+enum Location {
+  /// Place attachment so that referencing them inside html is possible.
+  embedded,
+
+  /// "Normal" attachment.
+  attached
+}
+
 /**
  * Represents a single email attachment.
  *
  * You may specify a [File], a [Stream] or just a [String] of [data].
+ * [cid] allows you to specify the content id.
+ *
+ * When [location] is set to [Location.embedded] The attachment (usually image)
+ * can be referenced using:
+ * `cid:yourCid`.  For instance: `<img src="cid:mylogo" />`
  */
 abstract class Attachment {
+  String cid;
+  Location location;
+  String fileName;
+  String contentType;
   Stream<List<int>> asStream();
 }
 
-class FileAttachment implements Attachment {
+class FileAttachment extends Attachment {
   final File _file;
 
-  FileAttachment(this._file);
+  FileAttachment(this._file, {String contentType, String fileName}) {
+    if (contentType == null) {
+      this.contentType = mime.lookupMimeType(_file.path);
+    }
+    this.fileName = fileName;
+  }
 
   @override
   Stream<List<int>> asStream() => _file.openRead();
 }
 
-class StreamAttachment implements Attachment {
+class StreamAttachment extends Attachment {
   final Stream<List<int>> _stream;
 
-  StreamAttachment(this._stream);
+  StreamAttachment(this._stream, String contentType, {String fileName}) {
+    this.contentType = contentType;
+    this.fileName = fileName;
+  }
 
   @override
   Stream<List<int>> asStream() => _stream;
 }
 
-class StringAttachment implements Attachment {
+class StringAttachment extends Attachment {
   final String _data;
 
-  StringAttachment(this._data);
+  StringAttachment(this._data, {String contentType, String fileName}) {
+    if (contentType == null) {
+      this.contentType = mime.lookupMimeType(fileName ?? 'unknown',
+          headerBytes: utf8.encode(_data));
+    }
+    this.fileName = fileName;
+  }
 
   @override
-  Stream<List<int>> asStream() => new Stream.fromIterable(UTF8.encode(_data));
+  // There will be only one element in the stream: the utf8 encoded string.
+  Stream<List<int>> asStream() => new Stream.fromIterable([utf8.encode(_data)]);
 }
-

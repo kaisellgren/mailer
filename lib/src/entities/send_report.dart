@@ -1,8 +1,8 @@
-import 'mail.dart';
+import 'message.dart';
 import 'problem.dart';
 
 class SendReport {
-  final Mail mail;
+  final Message mail;
   final bool sent;
   final List<Problem> validationProblems;
 

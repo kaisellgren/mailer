@@ -19,8 +19,14 @@ import 'attachment.dart';
  * Setting the [from] address is required!  You may use a group address
  * (`Group:;`) if you don't want to provide an address.  However some (/most?)
  * smtp servers will use your login address in that case.
+ *
+ * The `From:`, `To:`, `Cc:` and `Subject:` headers are build from the
+ * corresponding fields, unless a [headers] entry exists.
+ *
+ * htmlInlineImages can be referenced inside the html message using
+ * FIXME FIXME
  */
-class Mail {
+class Message {
   String envelopeFrom;
   List<String> envelopeTos;
 

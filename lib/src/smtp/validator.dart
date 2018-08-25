@@ -1,5 +1,5 @@
 import '../entities/address.dart';
-import '../entities/mail.dart';
+import '../entities/message.dart';
 import '../entities/problem.dart';
 
 // https://stackoverflow.com/questions/12052825/regular-expression-for-all-printable-characters-in-javascript
@@ -22,7 +22,7 @@ bool _validMailAddress(String ma) {
       split.every((part) => part.isNotEmpty && _printableCharsOnly(part));
 }
 
-List<Problem> validate(Mail mail) {
+List<Problem> validate(Message mail) {
   List<Problem> res = <Problem>[];
 
   var validate = (bool isValid, String code, String msg) {
@@ -58,4 +58,3 @@ List<Problem> validate(Mail mail) {
   });
   return res;
 }
-

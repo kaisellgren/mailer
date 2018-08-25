@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server/gmail.dart';
 
 /// Test mailer by sending email to yourself
 main(List<String> rawArgs) {

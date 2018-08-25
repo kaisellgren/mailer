@@ -6,4 +6,3 @@ class ServerResponse {
 
   ServerResponse(this.responseCode, this.responseLines);
 }
-

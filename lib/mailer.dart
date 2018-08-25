@@ -1,10 +1,12 @@
-import 'package:logging/logging.dart';
+import 'dart:async';
 
-export 'package:mailer/entities.dart';
-export 'src/smtp_client.dart';
+import 'src/entities.dart';
+import 'smtp_server.dart';
+import 'src/smtp/smtp_client.dart';
 
-var _logger = new Logger('mailer');
+export 'src/entities.dart';
 
-printDebugInformation() {
-  _logger.onRecord.listen(print);
+Future<List<SendReport>> send(Message message, SmtpServer smtpServer) {
+  var client = SmtpClient(smtpServer);
+  return client.send(message);
 }
