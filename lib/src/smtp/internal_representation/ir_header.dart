@@ -52,7 +52,7 @@ class _IRHeaderContentType extends _IRHeader {
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
-    return _outValue('multipart/${describeEnum(_multipartType)};boundary="$_boundary"');
+    return _outValue('multipart/${_describeEnum(_multipartType)};boundary="$_boundary"');
   }
 }
 

@@ -19,7 +19,7 @@ List<int> _to8(String s) => utf8.encode(s);
 final List<int> _eol8 = _to8(_eol);
 
 // From https://docs.flutter.io/flutter/foundation/describeEnum.html
-String describeEnum(Object enumEntry) {
+String _describeEnum(Object enumEntry) {
   final String description = enumEntry.toString();
   final int indexOfDot = description.indexOf('.');
   assert(indexOfDot != -1 && indexOfDot < description.length - 1);

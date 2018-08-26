@@ -141,7 +141,7 @@ class _IRContentAttachment extends _IRContent {
     String fnSuffix = '';
     if ((filename ?? '').isNotEmpty) fnSuffix = '; filename="$filename"';
     _header.add(_IRHeaderText(
-        'content-disposition', '${describeEnum(_attachment.location)}$fnSuffix'));
+        'content-disposition', '${_describeEnum(_attachment.location)}$fnSuffix'));
   }
 
   @override
@@ -157,7 +157,7 @@ class _IRContentText extends _IRContent {
 
   _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
     _header = header;
-    _header.add(_IRHeaderText('content-type', 'text/${describeEnum(textType)}; charset=utf-8'));
+    _header.add(_IRHeaderText('content-type', 'text/${_describeEnum(textType)}; charset=utf-8'));
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
     // ToDo convert to canonical form Text
 
