@@ -2,7 +2,7 @@ name: mailer
 version: 2.0.0
 description: >
   Compose and send emails from Dart.
-  Supports file attachments, HTML emails and multiple transport methods.
+  Supports file attachments and HTML emails
 authors:
 - Kai Sellgren <kaisellgren@gmail.com>
 - Dan Rubel <danrubel@google.com>
@@ -15,6 +15,6 @@ dependencies:
   async: ^2.0.8
   logging: ^0.11.3+2
   intl: ^0.15.7
-  collection: ^1.14.11
   mime: ^0.9.6+2
   args: ^1.5.0
+  path: ^1.6.2

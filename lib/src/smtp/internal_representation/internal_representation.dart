@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:collection/collection.dart' as collection;
 import 'package:intl/intl.dart';
 
 import '../capabilities.dart';
@@ -19,6 +18,13 @@ const String _eol = '\r\n';
 List<int> _to8(String s) => utf8.encode(s);
 final List<int> _eol8 = _to8(_eol);
 
+// From https://docs.flutter.io/flutter/foundation/describeEnum.html
+String describeEnum(Object enumEntry) {
+  final String description = enumEntry.toString();
+  final int indexOfDot = description.indexOf('.');
+  assert(indexOfDot != -1 && indexOfDot < description.length - 1);
+  return description.substring(indexOfDot + 1);
+}
 
 class _IRMetaInformation {
   final Capabilities capabilities;
@@ -27,8 +33,5 @@ class _IRMetaInformation {
 }
 
 abstract class _IROutput {
-  Stream<List<int>> _fromString(String s) =>
-      Stream.fromIterable([utf8.encode(s)]);
-
   Stream<List<int>> out(_IRMetaInformation irMetaInformation);
 }

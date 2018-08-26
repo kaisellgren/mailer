@@ -115,7 +115,7 @@ class SmtpClient {
       // Authenticate
       await _doAuthentication(capabilities);
 
-      var irMessage = IRMessage(message, capabilities);
+      var irMessage = IRMessage(message);
 
       List<String> envelopeTos = irMessage.envelopeTos;
 
@@ -145,7 +145,7 @@ class SmtpClient {
       // Finally send the actual mail.
       await _c.send('DATA', acceptedRespCodes: ['2', '3']);
 
-      await _c.sendStream(irMessage.data());
+      await _c.sendStream(irMessage.data(capabilities));
 
       await _c.send(null, acceptedRespCodes: ['2', '3']);
 

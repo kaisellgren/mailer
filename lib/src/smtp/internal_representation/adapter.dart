@@ -5,7 +5,7 @@ Iterable<String> _addressToString(List<Address> addresses) {
   return addresses.map((a) {
     var fromName = a.name ?? '';
     // ToDo base64 fromName (add _IRMetaInformation as argument)
-    '$fromName <${a.mailAddress}>';
+    return '$fromName <${a.mailAddress}>';
   });
 }
 
@@ -14,14 +14,4 @@ var identityString = 'mailer';
 
 String _buildBoundary() =>
     '$identityString-?=_${++_counter}-${new DateTime.now().millisecondsSinceEpoch}';
-
-
-List<String> _partPrefix(String boundary, String contentType, String encoding) {
-  return [
-    '--$boundary',
-    'Content-Type: $contentType; charset="FIXME"',
-    'Content-Transfer-Encoding: XXXX',
-    ''
-  ];
-}
 

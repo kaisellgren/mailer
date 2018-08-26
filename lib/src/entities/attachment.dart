@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:mime/mime.dart' as mime;
+import 'package:path/path.dart';
 
 enum Location {
   /// Place attachment so that referencing them inside html is possible.
@@ -24,7 +25,7 @@ enum Location {
  */
 abstract class Attachment {
   String cid;
-  Location location;
+  Location location = Location.attached;
   String fileName;
   String contentType;
   Stream<List<int>> asStream();
@@ -37,7 +38,7 @@ class FileAttachment extends Attachment {
     if (contentType == null) {
       this.contentType = mime.lookupMimeType(_file.path);
     }
-    this.fileName = fileName;
+    this.fileName = fileName ?? basename(_file.path);
   }
 
   @override

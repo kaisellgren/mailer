@@ -1,8 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
+import 'package:mailer/src/smtp/capabilities.dart';
+import 'package:mailer/src/smtp/internal_representation/internal_representation.dart';
 
 /// Test mailer by sending email to yourself
 main(List<String> rawArgs) async {
@@ -16,11 +19,6 @@ main(List<String> rawArgs) async {
   List<String> tos = args[toArgs] ?? [];
   if (tos.isEmpty)
     tos.add(username.contains('@') ? username : username + '@gmail.com');
-
-  // If you want to use an arbitrary SMTP server, go with `new SmtpServer()`.
-  // The gmail function is just for convenience. There are similar functions for
-  // other providers.
-  final smtpServer = gmail(username, args.rest[1]);
 
   Iterable<Address> toAd(Iterable<String> addresses) =>
       (addresses ?? []).map((a) => Address(a));
@@ -37,10 +35,18 @@ main(List<String> rawArgs) async {
     ..subject = 'Test Dart Mailer library :: ${new DateTime.now()}'
     ..text = 'This is the plain text'
     ..html = '<h1>Test</h1><p>Hey! Here\'s some HTML content</p>'
-    ..attachments.addAll(toAt(args[attachArgs]));
+    ..attachments.addAll(toAt(args[attachArgs]))
+  ;
 
-  final sendReports = await send(message, smtpServer);
-  print(sendReports);
+  var irMessage = IRMessage(message);
+  const capabilities = Capabilities();
+  var data = irMessage.data(capabilities);
+
+  var streamDone = Completer();
+  print('DATA');
+  data.listen((d) => stdout.write(utf8.decode(d))).onDone(() => streamDone.complete());
+  await streamDone.future;
+  print('-- DATA DONE --');
 }
 
 const toArgs = 'to';
@@ -73,6 +79,7 @@ ArgResults parseArgs(List<String> rawArgs) {
       exit(1);
     }
   }
+
   return args;
 }
 

@@ -2,10 +2,8 @@ part of 'internal_representation.dart';
 
 class IRMessage {
   final Message _message;
-  final _IRMetaInformation _irMetaInformation;
 
-  IRMessage(this._message, Capabilities capabilities)
-      : _irMetaInformation = new _IRMetaInformation(capabilities);
+  IRMessage(this._message);
 
   Iterable<String> get envelopeTos {
     // All recipients.
@@ -26,13 +24,9 @@ class IRMessage {
   String get envelopeFrom =>
       _message.envelopeFrom ?? _message.from?.mailAddress ?? '';
 
-  Stream<List<int>> data() {
-    // First build everything.
-    // This is necessary as during build some metaInformation is filled,
-    // which is used during the output phase.
-    var headers = _buildHeaders(_message, _irMetaInformation);
-
+  Stream<List<int>> data(Capabilities capabilities) {
+    var headers = _buildHeaders(_message);
     var content = _IRContentPartMixed(_message, headers);
-    return content.out(_irMetaInformation);
+    return content.out(_IRMetaInformation(capabilities));
   }
 }

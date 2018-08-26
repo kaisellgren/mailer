@@ -27,6 +27,7 @@ abstract class _IRContent extends _IROutput {
     // ToDo split long lines!
     yield* content.transform(base64.encoder).transform(ascii.encoder);
     yield _eol8;
+    yield _eol8;
   }
 }
 
@@ -57,21 +58,22 @@ abstract class _IRContentPart extends _IRContent {
       yield* part.out(irMetaInformation);
     }
     yield _boundaryEnd(_boundary);
+    yield _eol8;
   }
 }
 
 class _IRContentPartMixed extends _IRContentPart {
   _IRContentPartMixed(Message message, List<_IRHeader> header) {
     var attachments = message.attachments ?? [];
-    var aPerLocation = collection.groupBy(attachments, (a) => a.location);
+    var attached = attachments.where((a) => a.location == Location.attached);
 
-    _active = aPerLocation.containsKey(Location.attached);
+    _active = attached.isNotEmpty;
+
     if (_active) {
       _header = header;
       _header.add(_IRHeaderContentType(_boundary, _MultipartType.mixed));
       _IRContent contentAlternative = _IRContentPartAlternative(message, []);
-      var contentAttachments =
-          aPerLocation[Location.attached].map((a) => _IRContentAttachment(a));
+      var contentAttachments = attached.map((a) => _IRContentAttachment(a));
       _content = [contentAlternative].followedBy(contentAttachments);
     } else {
       _content = [_IRContentPartAlternative(message, header)];
@@ -93,11 +95,11 @@ class _IRContentPartAlternative extends _IRContentPart {
       var contentRelated = _IRContentPartRelated(message, []);
       _content = [contentTxt, contentRelated];
     } else if (message.text != null) {
-      // html only
-      _content = [_IRContentPartRelated(message, header)];
-    } else {
       // text only
       _content = [_IRContentText(message.text, _IRTextType.plain, header)];
+    } else {
+      // html only
+      _content = [_IRContentPartRelated(message, header)];
     }
   }
 }
@@ -105,17 +107,16 @@ class _IRContentPartAlternative extends _IRContentPart {
 class _IRContentPartRelated extends _IRContentPart {
   _IRContentPartRelated(Message message, List<_IRHeader> header) {
     var attachments = message.attachments ?? [];
-    var embeddedAttachments =
-        collection.groupBy(attachments, (a) => a.location)[Location.embedded];
+    var embedded = attachments.where((a) => a.location == Location.embedded);
 
-    _active = embeddedAttachments.isNotEmpty;
+    _active = embedded.isNotEmpty;
+
     if (_active) {
       _header = header;
       _header.add(_IRHeaderContentType(_boundary, _MultipartType.related));
       _IRContent contentHtml =
           _IRContentText(message.html, _IRTextType.html, []);
-      var contentAttachments =
-          embeddedAttachments.map((a) => _IRContentAttachment(a));
+      var contentAttachments = embedded.map((a) => _IRContentAttachment(a));
       _content = [contentHtml].followedBy(contentAttachments);
     } else {
       _content = [_IRContentText(message.html, _IRTextType.html, header)];
@@ -155,7 +156,8 @@ class _IRContentText extends _IRContent {
   String _text;
 
   _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
-    _header.add(_IRHeaderText('content-type', 'text/$textType; charset=utf-8'));
+    _header = header;
+    _header.add(_IRHeaderText('content-type', 'text/${describeEnum(textType)}; charset=utf-8'));
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
     // ToDo convert to canonical form Text
 

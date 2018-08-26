@@ -52,7 +52,7 @@ class _IRHeaderContentType extends _IRHeader {
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
-    return _outValue('multipart/$_multipartType;boundary="$_boundary"');
+    return _outValue('multipart/${describeEnum(_multipartType)};boundary="$_boundary"');
   }
 }
 
@@ -69,8 +69,7 @@ class _IRHeaderDate extends _IRHeader {
       _outValue(_dateFormat.format(_dateTime.toUtc()));
 }
 
-Iterable<_IRHeader> _buildHeaders(
-    Message message, _IRMetaInformation metaInformation) {
+Iterable<_IRHeader> _buildHeaders(Message message) {
   const noCustom = ['content-type', 'mime-version'];
 
   final headers = <_IRHeader>[];
