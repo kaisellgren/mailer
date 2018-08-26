@@ -65,7 +65,7 @@ abstract class _IRContentPart extends _IRContent {
 class _IRContentPartMixed extends _IRContentPart {
   _IRContentPartMixed(Message message, List<_IRHeader> header) {
     var attachments = message.attachments ?? [];
-    var attached = attachments.where((a) => a.location == Location.attached);
+    var attached = attachments.where((a) => a.location == Location.attachment);
 
     _active = attached.isNotEmpty;
 
@@ -84,7 +84,7 @@ class _IRContentPartMixed extends _IRContentPart {
 class _IRContentPartAlternative extends _IRContentPart {
   _IRContentPartAlternative(Message message, List<_IRHeader> header) {
     var attachments = message.attachments ?? [];
-    var hasEmbedded = attachments.any((a) => a.location == Location.embedded);
+    var hasEmbedded = attachments.any((a) => a.location == Location.inline);
 
     _active = message.text != null && (message.html != null || hasEmbedded);
 
@@ -107,7 +107,7 @@ class _IRContentPartAlternative extends _IRContentPart {
 class _IRContentPartRelated extends _IRContentPart {
   _IRContentPartRelated(Message message, List<_IRHeader> header) {
     var attachments = message.attachments ?? [];
-    var embedded = attachments.where((a) => a.location == Location.embedded);
+    var embedded = attachments.where((a) => a.location == Location.inline);
 
     _active = embedded.isNotEmpty;
 
@@ -141,7 +141,7 @@ class _IRContentAttachment extends _IRContent {
     String fnSuffix = '';
     if ((filename ?? '').isNotEmpty) fnSuffix = '; filename="$filename"';
     _header.add(_IRHeaderText(
-        'content-disposition', '${_attachment.location}$fnSuffix'));
+        'content-disposition', '${describeEnum(_attachment.location)}$fnSuffix'));
   }
 
   @override

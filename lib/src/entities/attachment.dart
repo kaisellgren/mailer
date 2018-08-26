@@ -7,10 +7,10 @@ import 'package:path/path.dart';
 
 enum Location {
   /// Place attachment so that referencing them inside html is possible.
-  embedded,
+  inline,
 
   /// "Normal" attachment.
-  attached
+  attachment
 }
 
 /**
@@ -19,13 +19,13 @@ enum Location {
  * You may specify a [File], a [Stream] or just a [String] of [data].
  * [cid] allows you to specify the content id.
  *
- * When [location] is set to [Location.embedded] The attachment (usually image)
+ * When [location] is set to [Location.inline] The attachment (usually image)
  * can be referenced using:
  * `cid:yourCid`.  For instance: `<img src="cid:mylogo" />`
  */
 abstract class Attachment {
   String cid;
-  Location location = Location.attached;
+  Location location = Location.attachment;
   String fileName;
   String contentType;
   Stream<List<int>> asStream();
