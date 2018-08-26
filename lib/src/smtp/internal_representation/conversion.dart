@@ -1,4 +1,10 @@
+import 'dart:async';
+import 'dart:convert';
 
+const String eol = '\r\n';
+
+List<int> to8(String s) => utf8.encode(s);
+final List<int> eol8 = to8(eol);
 
 bool _isMultiByteContinuationByte(int b) {
   // MultiByte continuation bytes start are 0b10XXXXXX.
@@ -12,7 +18,7 @@ bool _isMultiByteContinuationByte(int b) {
 ///
 /// If [maxLength] < 4 and there is a longer multibyte character the returned
 /// chunk will be the complete multibyte and therefore possibly too long.
-Iterable<List<int>> split(List<int> data, [int maxLength]) sync* {
+Iterable<List<int>> split(List<int> data, [int maxLength = 80]) sync* {
   int start = 0;
   for (;;) {
     int end = start + maxLength;
@@ -38,4 +44,35 @@ Iterable<List<int>> split(List<int> data, [int maxLength]) sync* {
     yield data.sublist(start, e - 1);
     start = e;
   }
+}
+
+Stream<List<int>> _splitS(Stream<List<int>> dataS, [int maxLength]) {
+  List<int> remaining = [];
+  var sc = StreamController<List<int>>();
+  dataS.listen((d) {
+    var sd = split(remaining.followedBy(d).toList(growable: false), maxLength);
+    var it = sd.iterator;
+
+    it.moveNext();
+    for (var i = 0; i < sd.length - 1; i++) {
+      sc.add(it.current);
+      sc.add(eol8);
+      it.moveNext();
+    }
+    remaining = it.current;
+  }).onDone(() {
+    if (remaining.isNotEmpty) sc.add(remaining);
+    sc.close();
+  });
+  return sc.stream;
+}
+
+class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
+  final int maxLength;
+
+  StreamSplitter([this.maxLength = null]);
+
+  @override
+  Stream<List<int>> bind(Stream<List<int>> stream) =>
+      _splitS(stream, maxLength);
 }

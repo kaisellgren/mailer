@@ -4,7 +4,7 @@ abstract class _IRHeader extends _IROutput {
   final String _name;
 
   Stream<List<int>> _outValue(String value) =>
-      Stream.fromIterable([_name, ': ', value, _eol].map(utf8.encode));
+      Stream.fromIterable([_name, ': ', value, eol].map(utf8.encode));
 
   /*
   Stream<List<int>> _outValue8(List<int> value) => Stream.fromIterable(

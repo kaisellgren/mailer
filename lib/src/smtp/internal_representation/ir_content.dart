@@ -23,11 +23,13 @@ abstract class _IRContent extends _IROutput {
   Stream<List<int>> _out64(
       Stream<List<int>> content, _IRMetaInformation irMetaInformation) async* {
     yield* _outH(irMetaInformation);
-    yield _eol8;
-    // ToDo split long lines!
-    yield* content.transform(base64.encoder).transform(ascii.encoder);
-    yield _eol8;
-    yield _eol8;
+    yield eol8;
+    yield* content
+        .transform(base64.encoder)
+        .transform(ascii.encoder)
+        .transform(StreamSplitter(base64LineLength));
+    yield eol8;
+    yield eol8;
   }
 }
 
@@ -36,8 +38,8 @@ abstract class _IRContentPart extends _IRContent {
   String _boundary = _buildBoundary();
   Iterable<_IRContent> _content;
 
-  List<int> _boundaryStart(String boundary) => _to8('--$boundary$_eol');
-  List<int> _boundaryEnd(String boundary) => _to8('--$boundary--$_eol');
+  List<int> _boundaryStart(String boundary) => to8('--$boundary$eol');
+  List<int> _boundaryEnd(String boundary) => to8('--$boundary--$eol');
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) async* {
@@ -52,13 +54,13 @@ abstract class _IRContentPart extends _IRContent {
     // If we are active output headers and then surround embedded contents
     // with boundary lines.
     yield* _outH(irMetaInformation);
-    yield _eol8;
+    yield eol8;
     for (var part in _content) {
       yield _boundaryStart(_boundary);
       yield* part.out(irMetaInformation);
     }
     yield _boundaryEnd(_boundary);
-    yield _eol8;
+    yield eol8;
   }
 }
 
@@ -140,8 +142,8 @@ class _IRContentAttachment extends _IRContent {
 
     String fnSuffix = '';
     if ((filename ?? '').isNotEmpty) fnSuffix = '; filename="$filename"';
-    _header.add(_IRHeaderText(
-        'content-disposition', '${_describeEnum(_attachment.location)}$fnSuffix'));
+    _header.add(_IRHeaderText('content-disposition',
+        '${_describeEnum(_attachment.location)}$fnSuffix'));
   }
 
   @override
@@ -157,7 +159,8 @@ class _IRContentText extends _IRContent {
 
   _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
     _header = header;
-    _header.add(_IRHeaderText('content-type', 'text/${_describeEnum(textType)}; charset=utf-8'));
+    _header.add(_IRHeaderText(
+        'content-type', 'text/${_describeEnum(textType)}; charset=utf-8'));
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
     // ToDo convert to canonical form Text
 
