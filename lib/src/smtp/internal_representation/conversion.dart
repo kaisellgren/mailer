@@ -18,7 +18,8 @@ bool _isMultiByteContinuationByte(int b) {
 ///
 /// If [maxLength] < 4 and there is a longer multibyte character the returned
 /// chunk will be the complete multibyte and therefore possibly too long.
-Iterable<List<int>> split(List<int> data, [int maxLength = 80]) sync* {
+Iterable<List<int>> split(List<int> data, int maxLength,
+    {bool avoidUtf8Cut = true}) sync* {
   int start = 0;
   for (;;) {
     int end = start + maxLength;
@@ -30,7 +31,7 @@ Iterable<List<int>> split(List<int> data, [int maxLength = 80]) sync* {
     // Look at the character immediately following the chunk we would like to
     // return.
     int e = end + 1;
-    while (e > start && _isMultiByteContinuationByte(data[e])) {
+    while (avoidUtf8Cut && e > start && _isMultiByteContinuationByte(data[e])) {
       e--;
     }
 
@@ -46,33 +47,41 @@ Iterable<List<int>> split(List<int> data, [int maxLength = 80]) sync* {
   }
 }
 
-Stream<List<int>> _splitS(Stream<List<int>> dataS, [int maxLength]) {
-  List<int> remaining = [];
-  var sc = StreamController<List<int>>();
-  dataS.listen((d) {
-    var sd = split(remaining.followedBy(d).toList(growable: false), maxLength);
-    var it = sd.iterator;
+Stream<List<int>> _splitS(
+    Stream<List<int>> dataS, int splitOver, int maxLength) {
+  int currentLineLength = 0;
 
-    it.moveNext();
-    for (var i = 0; i < sd.length - 1; i++) {
-      sc.add(it.current);
+  var sc = StreamController<List<int>>();
+  void processData(List<int> data) {
+    if (data.length + currentLineLength > maxLength) {
+      int targetLength = maxLength ~/ 2;
+      if (targetLength + currentLineLength > maxLength) {
+        targetLength = maxLength - currentLineLength;
+      }
+      split(data, targetLength, avoidUtf8Cut: false).forEach(processData);
+    } else if (data.length + currentLineLength > splitOver) {
+      // We are now over splitOver but not too long.  Perfect.
+      sc.add(data);
       sc.add(eol8);
-      it.moveNext();
+      currentLineLength = 0;
+    } else {
+      // We are still below splitOver
+      sc.add(data);
+      currentLineLength += data.length;
     }
-    remaining = it.current;
-  }).onDone(() {
-    if (remaining.isNotEmpty) sc.add(remaining);
-    sc.close();
-  });
+  }
+
+  dataS.listen(processData).onDone(() => sc.close());
   return sc.stream;
 }
 
 class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
   final int maxLength;
+  final int splitOverLength;
 
-  StreamSplitter([this.maxLength = null]);
+  StreamSplitter([this.splitOverLength = 80, this.maxLength = 800]);
 
   @override
   Stream<List<int>> bind(Stream<List<int>> stream) =>
-      _splitS(stream, maxLength);
+      _splitS(stream, splitOverLength, maxLength);
 }

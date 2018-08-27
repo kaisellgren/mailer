@@ -27,7 +27,7 @@ abstract class _IRContent extends _IROutput {
     yield* content
         .transform(base64.encoder)
         .transform(ascii.encoder)
-        .transform(StreamSplitter(base64LineLength));
+        .transform(StreamSplitter(base64SplitOverLength, base64LineLength));
     yield eol8;
     yield eol8;
   }

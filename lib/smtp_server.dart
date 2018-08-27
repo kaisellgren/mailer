@@ -11,16 +11,12 @@ class SmtpServer {
   final String password;
 
   SmtpServer(this.host,
-      {int port,
+      {this.port: 587,
       String name,
-      bool ignoreBadCertificate,
-      bool ssl,
-      bool allowInsecure,
+      this.ignoreBadCertificate: false,
+      this.ssl: false,
+      this.allowInsecure: false,
       this.username,
       this.password})
-      : this.port = port ?? 587,
-        this.name = name ?? Platform.localHostname,
-        this.ignoreBadCertificate = ignoreBadCertificate ?? false,
-        this.ssl = ssl ?? false,
-        this.allowInsecure = allowInsecure ?? false;
+      : this.name = name ?? Platform.localHostname;
 }

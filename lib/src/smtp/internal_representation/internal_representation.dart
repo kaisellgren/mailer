@@ -14,8 +14,8 @@ part 'ir_content.dart';
 part 'ir_header.dart';
 part 'ir_message.dart';
 
-
-const base64LineLength = 80;
+const base64SplitOverLength = 80;
+const base64LineLength = 800;
 
 // From https://docs.flutter.io/flutter/foundation/describeEnum.html
 String _describeEnum(Object enumEntry) {
