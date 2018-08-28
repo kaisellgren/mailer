@@ -8,14 +8,19 @@ import '../capabilities.dart';
 import '../../entities/address.dart';
 import '../../entities/attachment.dart';
 import '../../entities/message.dart';
+import '../../entities/problem.dart';
+
 
 part 'adapter.dart';
 part 'ir_content.dart';
 part 'ir_header.dart';
 part 'ir_message.dart';
 
-const base64SplitOverLength = 80;
-const base64LineLength = 800;
+// "An 'encoded-word' may not be more than 75 characters long, including
+// 'charset', 'encoding', 'encoded-text', and delimiters."
+const maxEncodedLength = 75;  // as per RFC2047
+const splitOverLength = 80;
+const maxLineLength = 800;
 
 // From https://docs.flutter.io/flutter/foundation/describeEnum.html
 String _describeEnum(Object enumEntry) {
@@ -29,6 +34,12 @@ class _IRMetaInformation {
   final Capabilities capabilities;
 
   _IRMetaInformation(this.capabilities);
+}
+
+class IRProblemException implements Exception {
+  final Problem problem;
+
+  IRProblemException(this.problem);
 }
 
 abstract class _IROutput {

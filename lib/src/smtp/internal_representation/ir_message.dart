@@ -2,31 +2,33 @@ part of 'internal_representation.dart';
 
 class IRMessage {
   final Message _message;
+  _IRContent _content;
 
-  IRMessage(this._message);
+  // Possibly throws.
+  IRMessage(this._message) {
+    var headers = _buildHeaders(_message);
+    _content = _IRContentPartMixed(_message, headers);
+  }
 
   Iterable<String> get envelopeTos {
     // All recipients.
     Iterable<String> envelopeTos = _message.envelopeTos ?? <String>[];
     if (envelopeTos.isEmpty) {
       envelopeTos = [
-        _message.recipients ?? [],
-        _message.ccRecipients ?? [],
-        _message.bccRecipients ?? []
+        _message.recipientsAsAddresses ?? [],
+        _message.ccsAsAddresses ?? [],
+        _message.bccsAsAddresses ?? []
       ]
           .expand((_) => _)
-          .where(((a) => a?.mailAddress != null))
+          .where((a) => a?.mailAddress != null)
           .map((a) => a.mailAddress);
     }
     return envelopeTos;
   }
 
   String get envelopeFrom =>
-      _message.envelopeFrom ?? _message.from?.mailAddress ?? '';
+      _message.envelopeFrom ?? _message.fromAsAddress?.mailAddress ?? '';
 
-  Stream<List<int>> data(Capabilities capabilities) {
-    var headers = _buildHeaders(_message);
-    var content = _IRContentPartMixed(_message, headers);
-    return content.out(_IRMetaInformation(capabilities));
-  }
+  Stream<List<int>> data(Capabilities capabilities) =>
+      _content.out(_IRMetaInformation(capabilities));
 }

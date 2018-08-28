@@ -21,7 +21,7 @@ main(List<String> rawArgs) async {
     tos.add(username.contains('@') ? username : username + '@gmail.com');
 
   Iterable<Address> toAd(Iterable<String> addresses) =>
-      (addresses ?? []).map((a) => Address(a));
+      (addresses ?? []).map((a) => Address(a, 'some name'));
 
   Iterable<Attachment> toAt(Iterable<String> attachments) =>
       (attachments ?? []).map((a) => FileAttachment(File(a)));
@@ -30,9 +30,9 @@ main(List<String> rawArgs) async {
   final message = Message()
     ..from = Address('$username@gmail.com')
     ..recipients.addAll(toAd(tos))
-    ..ccRecipients.addAll(toAd(args[ccArgs]))
-    ..bccRecipients.addAll(toAd(args[bccArgs]))
-    ..subject = 'Test Dart Mailer library :: ${new DateTime.now()}'
+    ..ccRecipients.addAll(args[ccArgs])
+    ..bccRecipients.addAll(args[bccArgs])
+    ..subject = 'Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}'
     ..text = 'This is the plain text'
     ..html = '<h1>Test</h1><p>Hey! Here\'s some HTML content</p>'
     ..attachments.addAll(toAt(args[attachArgs]))

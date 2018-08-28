@@ -1,6 +1,6 @@
 part of 'internal_representation.dart';
 
-Iterable<String> _addressToString(List<Address> addresses) {
+Iterable<String> _addressToString(Iterable<Address> addresses) {
   if (addresses == null) return [];
   return addresses.map((a) {
     var fromName = a.name ?? '';

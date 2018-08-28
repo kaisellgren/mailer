@@ -15,7 +15,7 @@ final Logger _logger = new Logger('smtp-client');
 
 class SmtpClient {
   final Connection _c;
-  final SmtpServer  _smtpServer;
+  final SmtpServer _smtpServer;
 
   SmtpClient(this._smtpServer) : _c = new Connection(_smtpServer);
 
@@ -96,8 +96,17 @@ class SmtpClient {
     // Don't even try to connect to the server, if message-validation fails.
     var problems = validate(message);
     if (problems.isNotEmpty) {
+      sendReports.add(SendReport(message, false, validationProblems: problems));
+      return sendReports;
+    }
+
+    IRMessage irMessage;
+    try {
+      // Constructor might throw IRProblemException.
+      irMessage = IRMessage(message);
+    } on IRProblemException catch (e) {
       sendReports
-          .add(new SendReport(message, false, validationProblems: problems));
+          .add(SendReport(message, false, validationProblems: [e.problem]));
       return sendReports;
     }
 
@@ -114,8 +123,6 @@ class SmtpClient {
 
       // Authenticate
       await _doAuthentication(capabilities);
-
-      var irMessage = IRMessage(message);
 
       List<String> envelopeTos = irMessage.envelopeTos;
 

@@ -10,7 +10,9 @@ bool _printableCharsOnly(String s) {
   return _printableCharsRegExp.hasMatch(s);
 }
 
-bool _validAddress(Address address) {
+/// [address] can either be an [Address] or String.
+bool _validAddress(dynamic address) {
+  if (address is String) address = Address(address);
   if (address == null) return false;
   return _printableCharsOnly(address.name ?? '') &&
       _validMailAddress(address.mailAddress);
@@ -22,7 +24,7 @@ bool _validMailAddress(String ma) {
       split.every((part) => part.isNotEmpty && _printableCharsOnly(part));
 }
 
-List<Problem> validate(Message mail) {
+List<Problem> validate(Message message) {
   List<Problem> res = <Problem>[];
 
   var validate = (bool isValid, String code, String msg) {
@@ -31,10 +33,10 @@ List<Problem> validate(Message mail) {
     }
   };
 
-  validate(_validMailAddress(mail.envelopeFrom ?? ''), 'ENV_FROM',
-      'Envelope mail address is invalid.  ${mail.envelopeFrom}');
+  validate(_validMailAddress(message.envelopeFrom ?? ''), 'ENV_FROM',
+      'Envelope mail address is invalid.  ${message.envelopeFrom}');
   int counter = 0;
-  (mail.envelopeTos ?? <String>[]).forEach((a) {
+  (message.envelopeTos ?? <String>[]).forEach((a) {
     counter++;
     validate((a != null && a.isNotEmpty), 'ENV_TO_EMPTY',
         'Envelope to address (pos: $counter) is null or empty');
@@ -42,11 +44,12 @@ List<Problem> validate(Message mail) {
         _validMailAddress(a), 'ENV_TO', 'Envelope to address is invalid.  $a');
   });
 
-  validate(_validAddress(mail.from), 'FROM_ADDRESS',
-      'The from address is invalid.  (${mail.from})');
+  validate(_validAddress(message.from), 'FROM_ADDRESS',
+      'The from address is invalid.  (${message.from})');
   counter = 0;
-  mail.recipients.forEach((a) {
+  message.recipients.forEach((a) {
     counter++;
+    if (a is String) a = Address(a);
     validate(
         a != null && (a.mailAddress ?? '').isNotEmpty,
         'FROM_ADDRESS_EMPTY',
