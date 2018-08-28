@@ -28,9 +28,7 @@ class _IRHeaderText extends _IRHeader {
 
     if (_value.length > maxLineLength ||
         (!utf8Allowed && _value.contains(RegExp(r'[^\x20-\x7E]')))) {
-      print('base64 encode');
       // Encode with base64.
-      var nameLength = _name.length + 2;  // 'name: '
       var b64Length = b64prefix.length + b64postfix.length;
       var availableLengthForBase64 = maxEncodedLength - b64Length;
 

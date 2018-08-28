@@ -20,7 +20,7 @@ import 'server_response.dart';
  * This wouldn't work if we stored connection information in the client itself.
  **/
 
-final _logger = new Logger('Connection');
+final _logger = Logger('Connection');
 
 class Connection {
   final SmtpServer _server;
@@ -65,7 +65,7 @@ class Connection {
     while (currentLine == null ||
         (currentLine.length > 3 && currentLine[3] != ' ')) {
       if (!(await _socketIn.hasNext)) {
-        throw new SmtpClientCommunicationException(
+        throw SmtpClientCommunicationException(
             "Socket was closed even though a response was expected.");
       }
       currentLine = await _socketIn.next;
@@ -83,10 +83,10 @@ class Connection {
       var msg =
           'After sending $command, response did not start with any of: $acceptedRespCodes';
       _logger.warning(msg);
-      throw new SmtpClientCommunicationException(msg);
+      throw SmtpClientCommunicationException(msg);
     }
 
-    return new ServerResponse(responseCode, messages);
+    return ServerResponse(responseCode, messages);
   }
 
   /// Upgrades the connection to use TLS.
@@ -115,20 +115,23 @@ class Connection {
     _setSocketIn();
   }
 
-  Future<void> close() => _socket.close();
+  Future<void> close() async {
+    if (_socketIn != null) await _socketIn.cancel();
+    if (_socket != null) await _socket.close();
+  }
 
   void _setSocketIn() {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
-    _socketIn = new StreamQueue<String>(
+    _socketIn = StreamQueue<String>(
         _socket.transform(utf8.decoder).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
     if (!_server.allowInsecure && !isSecure) {
-      throw new SmtpUnsecureException(
-          "Aborting because connection is not secure");
+      _socket.close();
+      throw SmtpUnsecureException("Aborting because connection is not secure");
     }
   }
 }

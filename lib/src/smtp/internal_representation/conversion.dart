@@ -42,7 +42,7 @@ Iterable<List<int>> split(List<int> data, int maxLength,
       while (_isMultiByteContinuationByte(data[e])) e++;
     }
 
-    yield data.sublist(start, e - 1);
+    yield data.sublist(start, e);
     start = e;
   }
 }

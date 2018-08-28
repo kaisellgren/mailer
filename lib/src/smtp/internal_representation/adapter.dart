@@ -13,5 +13,4 @@ int _counter = 0;
 var identityString = 'mailer';
 
 String _buildBoundary() =>
-    '$identityString-?=_${++_counter}-${new DateTime.now().millisecondsSinceEpoch}';
-
+    '$identityString-?=_${++_counter}-${DateTime.now().millisecondsSinceEpoch}';

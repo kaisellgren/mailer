@@ -3,8 +3,7 @@ import '../entities/message.dart';
 import '../entities/problem.dart';
 
 // https://stackoverflow.com/questions/12052825/regular-expression-for-all-printable-characters-in-javascript
-final RegExp _printableCharsRegExp =
-    new RegExp(r'^[\u0020-\u007e\u00a0-\u00ff]*$');
+final RegExp _printableCharsRegExp = RegExp(r'^[\u0020-\u007e\u00a0-\u00ff]*$');
 
 bool _printableCharsOnly(String s) {
   return _printableCharsRegExp.hasMatch(s);
@@ -29,11 +28,14 @@ List<Problem> validate(Message message) {
 
   var validate = (bool isValid, String code, String msg) {
     if (!isValid) {
-      res.add(new Problem(code, msg));
+      res.add(Problem(code, msg));
     }
   };
 
-  validate(_validMailAddress(message.envelopeFrom ?? ''), 'ENV_FROM',
+  validate(
+      _validMailAddress(
+          message.envelopeFrom ?? message.fromAsAddress.mailAddress),
+      'ENV_FROM',
       'Envelope mail address is invalid.  ${message.envelopeFrom}');
   int counter = 0;
   (message.envelopeTos ?? <String>[]).forEach((a) {

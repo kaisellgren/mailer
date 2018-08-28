@@ -11,13 +11,13 @@ import 'exceptions.dart';
 import 'package:mailer/src/entities/problem.dart';
 import 'validator.dart';
 
-final Logger _logger = new Logger('smtp-client');
+final Logger _logger = Logger('smtp-client');
 
 class SmtpClient {
   final Connection _c;
   final SmtpServer _smtpServer;
 
-  SmtpClient(this._smtpServer) : _c = new Connection(_smtpServer);
+  SmtpClient(this._smtpServer) : _c = Connection(_smtpServer);
 
   /// Returns the capabilities of the server if ehlo was successful.  null if
   /// `helo` is necessary.
@@ -29,7 +29,7 @@ class SmtpClient {
       return null;
     }
 
-    var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
+    var capabilities = Capabilities.fromResponse(respEhlo.responseLines);
 
     if (!capabilities.startTls || _c.isSecure) {
       return capabilities;
@@ -60,7 +60,7 @@ class SmtpClient {
 
     // EHLO not accepted.  Let's try HELO.
     await _c.send('HELO ${_smtpServer.name}');
-    return new Capabilities();
+    return Capabilities();
   }
 
   Future<Null> _doAuthentication(Capabilities capabilities) async {
@@ -69,7 +69,7 @@ class SmtpClient {
     }
 
     if (!capabilities.authLogin) {
-      throw new SmtpClientCommunicationException(
+      throw SmtpClientCommunicationException(
           'The server does not support LOGIN authentication method.');
     }
 
@@ -85,7 +85,7 @@ class SmtpClient {
     var loginResp =
         await _c.send(base64.encode(password.codeUnits), acceptedRespCodes: []);
     if (!loginResp.responseCode.startsWith('2')) {
-      throw new SmtpClientAuthenticationException(
+      throw SmtpClientAuthenticationException(
           'Incorrect username ($username) / password');
     }
   }
@@ -124,12 +124,12 @@ class SmtpClient {
       // Authenticate
       await _doAuthentication(capabilities);
 
-      List<String> envelopeTos = irMessage.envelopeTos;
+      Iterable<String> envelopeTos = irMessage.envelopeTos;
 
       if (envelopeTos.isEmpty) {
         _logger.info('Mail without recipients.  Not sending. ($message)');
-        sendReports.add(new SendReport(message, false, validationProblems: [
-          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
+        sendReports.add(SendReport(message, false, validationProblems: [
+          Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
         ]));
         return sendReports;
       }
@@ -154,21 +154,20 @@ class SmtpClient {
 
       await _c.sendStream(irMessage.data(capabilities));
 
-      await _c.send(null, acceptedRespCodes: ['2', '3']);
+      await _c.send('.', acceptedRespCodes: ['2', '3']);
 
-      await _c.close();
+      await _c.send('QUIT', waitForResponse: false);
 
-      // TODO What about keep-alives?
-      //   Then socket should reconnect if disconnected in _connect().
+      sendReports.add(SendReport(message, true));
 
-      sendReports.add(new SendReport(message, true));
     } catch (exception) {
-      sendReports.add(new SendReport(message, false, validationProblems: [
-        new Problem('UNKNOWN', 'Received an exception: $exception')
+      sendReports.add(SendReport(message, false, validationProblems: [
+        Problem('UNKNOWN', 'Received an exception: $exception')
       ]));
+    } finally {
+      await _c.close();
     }
 
-    await _c.send('QUIT', waitForResponse: false);
     return sendReports;
   }
 }
