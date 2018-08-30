@@ -52,6 +52,8 @@ class _IRHeaderText extends _IRHeader {
     bool utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
 
     if (_value.length > maxLineLength ||
+        // Make sure that text which looks like an encoded text is encoded.
+        _value.contains('=?') ||
         (!utf8Allowed && _value.contains(RegExp(r'[^\x20-\x7E]')))) {
       return _outValueB64(_value);
     }

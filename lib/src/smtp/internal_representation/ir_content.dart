@@ -170,8 +170,8 @@ class _IRContentText extends _IRContent {
 
   _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
     _header = header;
-    _header.add(_IRHeaderText(
-        'content-type', 'text/${_describeEnum(textType)}; charset=utf-8'));
+    var type = _describeEnum(textType);
+    _header.add(_IRHeaderText('content-type', 'text/$type; charset=utf-8'));
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
     // ToDo convert to canonical form Text
 
