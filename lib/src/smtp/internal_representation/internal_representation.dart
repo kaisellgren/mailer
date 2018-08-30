@@ -11,7 +11,6 @@ import '../../entities/message.dart';
 import '../../entities/problem.dart';
 
 
-part 'adapter.dart';
 part 'ir_content.dart';
 part 'ir_header.dart';
 part 'ir_message.dart';

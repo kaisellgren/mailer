@@ -1,12 +1,20 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:logging/logging.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 
 /// Test mailer by sending email to yourself
 main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
+
+  if (args[verboseArg]) {
+    Logger.root.level = Level.ALL;
+    Logger.root.onRecord.listen((LogRecord rec) {
+      print('${rec.level.name}: ${rec.time}: ${rec.message}');
+    });
+  }
 
   String username = args.rest[0];
   if (username.endsWith('@gmail.com')) {
@@ -34,22 +42,34 @@ main(List<String> rawArgs) async {
     ..recipients.addAll(toAd(tos))
     ..ccRecipients.addAll(toAd(args[ccArgs]))
     ..bccRecipients.addAll(toAd(args[bccArgs]))
-    ..subject = 'Test Dart Mailer library :: ${new DateTime.now()}'
+    ..subject =
+        'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text'
-    ..html = '<h1>Test</h1><p>Hey! Here\'s some HTML content</p>'
+    ..html = "<h1>Test</h1><p>Hey! Here's some HTML content</p>"
     ..attachments.addAll(toAt(args[attachArgs]));
 
   final sendReports = await send(message, smtpServer);
-  print(sendReports);
+  sendReports.forEach((sr) {
+    if (sr.sent)
+      print('Message sent');
+    else {
+      print('Message not sent.');
+      for (var p in sr.validationProblems) {
+        print('Problem: ${p.code}: ${p.msg}');
+      }
+    }
+  });
 }
 
 const toArgs = 'to';
 const attachArgs = 'attach';
 const ccArgs = 'cc';
 const bccArgs = 'bcc';
+const verboseArg = 'verbose';
 
 ArgResults parseArgs(List<String> rawArgs) {
   var parser = new ArgParser()
+    ..addFlag('verbose', abbr: 'v', help: 'Display logging output.')
     ..addMultiOption(toArgs,
         abbr: 't',
         help: 'The addresses to which the email is sent.\n'

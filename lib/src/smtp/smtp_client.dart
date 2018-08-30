@@ -142,7 +142,8 @@ class SmtpClient {
       // Tell the server the envelope from address (might be different to the
       // 'From: ' header!)
 
-      await _c.send('MAIL FROM:<${irMessage.envelopeFrom}>');
+      bool smtputf8 = capabilities.smtpUtf8;
+      await _c.send('MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
 
       // Give the server all recipients.
       // TODO what if only one address fails?

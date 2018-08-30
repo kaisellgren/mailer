@@ -3,8 +3,36 @@ part of 'internal_representation.dart';
 abstract class _IRHeader extends _IROutput {
   final String _name;
 
+  static final List<int> _b64prefix = utf8.encode(' =?utf-8?B?');
+  static final List<int> _b64postfix = utf8.encode('?=$eol');
+  static final _b64Length = _b64prefix.length + _b64postfix.length;
+
   Stream<List<int>> _outValue(String value) =>
       Stream.fromIterable([_name, ': ', value, eol].map(utf8.encode));
+
+  // Outputs value encoded as base64.
+  // Every chunk starts with ' ' and ends with eol.
+  // Call _outValueB64 after an eol.
+  Stream<List<int>> _outValueB64(String value) async* {
+    // Encode with base64.
+    var availableLengthForBase64 = maxEncodedLength - _b64Length;
+
+    // Length after base64: ceil(n / 3) * 4
+    var lengthBeforeBase64 = (availableLengthForBase64 ~/ 4) * 3;
+    var availableLength = lengthBeforeBase64;
+
+    // At least 10 chars (random length).
+    if (availableLength < 10) availableLength = 10;
+
+    var splitData = split(utf8.encode(value), availableLength);
+
+    yield utf8.encode('$_name: $eol');
+    for (var d in splitData) {
+      yield _b64prefix;
+      yield utf8.encode(base64.encode(d));
+      yield _b64postfix;
+    }
+  }
 
   /*
   Stream<List<int>> _outValue8(List<int> value) => Stream.fromIterable(
@@ -20,38 +48,26 @@ class _IRHeaderText extends _IRHeader {
   _IRHeaderText(String name, this._value) : super(name);
 
   @override
-  Stream<List<int>> out(_IRMetaInformation irMetaInformation) async* {
-    final List<int> b64prefix = utf8.encode(' =?utf-8?B?');
-    final List<int> b64postfix = utf8.encode('?=$eol');
-
+  Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
     bool utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
 
     if (_value.length > maxLineLength ||
         (!utf8Allowed && _value.contains(RegExp(r'[^\x20-\x7E]')))) {
-      // Encode with base64.
-      var b64Length = b64prefix.length + b64postfix.length;
-      var availableLengthForBase64 = maxEncodedLength - b64Length;
-
-      // Length after base64: ceil(n / 3) * 4
-      var lengthBeforeBase64 = (availableLengthForBase64 ~/ 4) * 3;
-      var availableLength = lengthBeforeBase64;
-
-      // At least 10 chars (random length).
-      if (availableLength < 10) availableLength = 10;
-
-      var splitData = split(utf8.encode(_value), availableLength);
-
-      yield utf8.encode('$_name: $eol');
-      for (var d in splitData) {
-        yield b64prefix;
-        yield utf8.encode(base64.encode(d));
-        yield b64postfix;
-      }
-      return;
+      return _outValueB64(_value);
     }
-    yield* _outValue(_value);
+    return _outValue(_value);
   }
 }
+
+Iterable<String> _addressToString(Iterable<Address> addresses) {
+  if (addresses == null) return [];
+  return addresses.map((a) {
+    var fromName = a.name ?? '';
+    // ToDo base64 fromName (add _IRMetaInformation as argument)
+    return '$fromName <${a.mailAddress}>';
+  });
+}
+
 
 class _IRHeaderAddress extends _IRHeader {
   Address _address;
