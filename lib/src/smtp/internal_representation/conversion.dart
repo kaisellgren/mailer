@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
+
+import 'package:dart2_constant/convert.dart' as convert;
 
 const String eol = '\r\n';
 
-List<int> to8(String s) => utf8.encode(s);
+List<int> to8(String s) => convert.utf8.encode(s);
 final List<int> eol8 = to8(eol);
 
 bool _isMultiByteContinuationByte(int b) {
@@ -51,7 +52,7 @@ Stream<List<int>> _splitS(
     Stream<List<int>> dataS, int splitOver, int maxLength) {
   int currentLineLength = 0;
 
-  var sc = StreamController<List<int>>();
+  var sc = new StreamController<List<int>>();
   void processData(List<int> data) {
     if (data.length + currentLineLength > maxLength) {
       int targetLength = maxLength ~/ 2;
@@ -75,7 +76,10 @@ Stream<List<int>> _splitS(
   return sc.stream;
 }
 
-class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
+// Replace `implements StreamTransformer` with `extends StreamTransformerBase`
+// when dart1 is no longer supported.
+// Also remove _CastStreamTransformer class.
+class StreamSplitter implements StreamTransformer<List<int>, List<int>> {
   final int maxLength;
   final int splitOverLength;
 
@@ -84,4 +88,19 @@ class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
   @override
   Stream<List<int>> bind(Stream<List<int>> stream) =>
       _splitS(stream, splitOverLength, maxLength);
+
+  @override
+  StreamTransformer<RS, RT> cast<RS, RT>() => new _CastStreamTransformer<List<int>, List<int>, RS, RT>(this);
+}
+
+// Copied from dart2 StreamTransformer
+class _CastStreamTransformer<SS, ST, TS, TT>
+    implements StreamTransformer<TS, TT> {
+  final StreamTransformer<SS, ST> _source;
+  _CastStreamTransformer(this._source);
+
+  StreamTransformer<RS, RT> cast<RS, RT>() =>
+      new _CastStreamTransformer<SS, ST, RS, RT>(_source);
+  Stream<TT> bind(Stream<TS> stream) =>
+      _source.bind(stream.cast<SS>()).cast<TT>();
 }

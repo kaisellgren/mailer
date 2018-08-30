@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
 import 'package:mailer/smtp_server.dart';
 import 'internal_representation/internal_representation.dart';
@@ -11,13 +11,13 @@ import 'exceptions.dart';
 import 'package:mailer/src/entities/problem.dart';
 import 'validator.dart';
 
-final Logger _logger = Logger('smtp-client');
+final Logger _logger = new Logger('smtp-client');
 
 class SmtpClient {
   final Connection _c;
   final SmtpServer _smtpServer;
 
-  SmtpClient(this._smtpServer) : _c = Connection(_smtpServer);
+  SmtpClient(this._smtpServer) : _c = new Connection(_smtpServer);
 
   /// Returns the capabilities of the server if ehlo was successful.  null if
   /// `helo` is necessary.
@@ -29,7 +29,7 @@ class SmtpClient {
       return null;
     }
 
-    var capabilities = Capabilities.fromResponse(respEhlo.responseLines);
+    var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
 
     if (!capabilities.startTls || _c.isSecure) {
       return capabilities;
@@ -60,7 +60,7 @@ class SmtpClient {
 
     // EHLO not accepted.  Let's try HELO.
     await _c.send('HELO ${_smtpServer.name}');
-    return Capabilities();
+    return new Capabilities();
   }
 
   Future<Null> _doAuthentication(Capabilities capabilities) async {
@@ -69,7 +69,7 @@ class SmtpClient {
     }
 
     if (!capabilities.authLogin) {
-      throw SmtpClientCommunicationException(
+      throw new SmtpClientCommunicationException(
           'The server does not support LOGIN authentication method.');
     }
 
@@ -80,12 +80,12 @@ class SmtpClient {
     await _c.send('AUTH LOGIN',
         acceptedRespCodes: ['334'], expect: 'VXNlcm5hbWU6');
     // 'Password:' in base64 is: UGF...
-    await _c.send(base64.encode(username.codeUnits),
+    await _c.send(convert.base64.encode(username.codeUnits),
         acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
-    var loginResp =
-        await _c.send(base64.encode(password.codeUnits), acceptedRespCodes: []);
+    var loginResp = await _c
+        .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
     if (!loginResp.responseCode.startsWith('2')) {
-      throw SmtpClientAuthenticationException(
+      throw new SmtpClientAuthenticationException(
           'Incorrect username ($username) / password');
     }
   }
@@ -96,17 +96,18 @@ class SmtpClient {
     // Don't even try to connect to the server, if message-validation fails.
     var problems = validate(message);
     if (problems.isNotEmpty) {
-      sendReports.add(SendReport(message, false, validationProblems: problems));
+      sendReports
+          .add(new SendReport(message, false, validationProblems: problems));
       return sendReports;
     }
 
     IRMessage irMessage;
     try {
       // Constructor might throw IRProblemException.
-      irMessage = IRMessage(message);
+      irMessage = new IRMessage(message);
     } on IRProblemException catch (e) {
       sendReports
-          .add(SendReport(message, false, validationProblems: [e.problem]));
+          .add(new SendReport(message, false, validationProblems: [e.problem]));
       return sendReports;
     }
 
@@ -128,8 +129,8 @@ class SmtpClient {
 
       if (envelopeTos.isEmpty) {
         _logger.info('Mail without recipients.  Not sending. ($message)');
-        sendReports.add(SendReport(message, false, validationProblems: [
-          Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
+        sendReports.add(new SendReport(message, false, validationProblems: [
+          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
         ]));
         return sendReports;
       }
@@ -143,7 +144,8 @@ class SmtpClient {
       // 'From: ' header!)
 
       bool smtputf8 = capabilities.smtpUtf8;
-      await _c.send('MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
+      await _c.send(
+          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
 
       // Give the server all recipients.
       // TODO what if only one address fails?
@@ -159,11 +161,10 @@ class SmtpClient {
 
       await _c.send('QUIT', waitForResponse: false);
 
-      sendReports.add(SendReport(message, true));
-
+      sendReports.add(new SendReport(message, true));
     } catch (exception) {
-      sendReports.add(SendReport(message, false, validationProblems: [
-        Problem('UNKNOWN', 'Received an exception: $exception')
+      sendReports.add(new SendReport(message, false, validationProblems: [
+        new Problem('UNKNOWN', 'Received an exception: $exception')
       ]));
     } finally {
       await _c.close();

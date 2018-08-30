@@ -25,9 +25,9 @@ abstract class _IRContent extends _IROutput {
     yield* _outH(irMetaInformation);
     yield eol8;
     yield* content
-        .transform(base64.encoder)
-        .transform(ascii.encoder)
-        .transform(StreamSplitter(splitOverLength, maxLineLength));
+        .transform(convert.base64.encoder)
+        .transform(convert.ascii.encoder)
+        .transform(new StreamSplitter(splitOverLength, maxLineLength));
     yield eol8;
     yield eol8;
   }
@@ -46,10 +46,10 @@ abstract class _IRContentPart extends _IRContent {
   static int _counter = 0;
   static int _prevTimestamp = null;
   static String _buildBoundary() {
-    var now = DateTime.now().millisecondsSinceEpoch;
+    var now = new DateTime.now().millisecondsSinceEpoch;
     if (now != _prevTimestamp) _counter = 0;
     _prevTimestamp = now;
-    return 'mailer-?=_${_counter++}-${DateTime.now().millisecondsSinceEpoch}';
+    return 'mailer-?=_${_counter++}-$now';
   }
 
   @override
@@ -75,6 +75,11 @@ abstract class _IRContentPart extends _IRContent {
   }
 }
 
+Iterable<T> _follow<T>(T t, Iterable<T> ts) sync* {
+  yield t;
+  yield* ts;
+}
+
 class _IRContentPartMixed extends _IRContentPart {
   _IRContentPartMixed(Message message, List<_IRHeader> header) {
     var attachments = message.attachments ?? [];
@@ -84,12 +89,13 @@ class _IRContentPartMixed extends _IRContentPart {
 
     if (_active) {
       _header = header;
-      _header.add(_IRHeaderContentType(_boundary, _MultipartType.mixed));
-      _IRContent contentAlternative = _IRContentPartAlternative(message, []);
-      var contentAttachments = attached.map((a) => _IRContentAttachment(a));
-      _content = [contentAlternative].followedBy(contentAttachments);
+      _header.add(new _IRHeaderContentType(_boundary, _MultipartType.mixed));
+      _IRContent contentAlternative =
+          new _IRContentPartAlternative(message, []);
+      var contentAttachments = attached.map((a) => new _IRContentAttachment(a));
+      _content = _follow(contentAlternative, contentAttachments);
     } else {
-      _content = [_IRContentPartAlternative(message, header)];
+      _content = [new _IRContentPartAlternative(message, header)];
     }
   }
 }
@@ -103,16 +109,17 @@ class _IRContentPartAlternative extends _IRContentPart {
 
     if (_active) {
       _header = header;
-      _header.add(_IRHeaderContentType(_boundary, _MultipartType.alternative));
-      var contentTxt = _IRContentText(message.text, _IRTextType.plain, []);
-      var contentRelated = _IRContentPartRelated(message, []);
+      _header
+          .add(new _IRHeaderContentType(_boundary, _MultipartType.alternative));
+      var contentTxt = new _IRContentText(message.text, _IRTextType.plain, []);
+      var contentRelated = new _IRContentPartRelated(message, []);
       _content = [contentTxt, contentRelated];
     } else if (message.text != null) {
       // text only
-      _content = [_IRContentText(message.text, _IRTextType.plain, header)];
+      _content = [new _IRContentText(message.text, _IRTextType.plain, header)];
     } else {
       // html only
-      _content = [_IRContentPartRelated(message, header)];
+      _content = [new _IRContentPartRelated(message, header)];
     }
   }
 }
@@ -126,13 +133,13 @@ class _IRContentPartRelated extends _IRContentPart {
 
     if (_active) {
       _header = header;
-      _header.add(_IRHeaderContentType(_boundary, _MultipartType.related));
+      _header.add(new _IRHeaderContentType(_boundary, _MultipartType.related));
       _IRContent contentHtml =
-          _IRContentText(message.html, _IRTextType.html, []);
-      var contentAttachments = embedded.map((a) => _IRContentAttachment(a));
-      _content = [contentHtml].followedBy(contentAttachments);
+          new _IRContentText(message.html, _IRTextType.html, []);
+      var contentAttachments = embedded.map((a) => new _IRContentAttachment(a));
+      _content = _follow(contentHtml, contentAttachments);
     } else {
-      _content = [_IRContentText(message.html, _IRTextType.html, header)];
+      _content = [new _IRContentText(message.html, _IRTextType.html, header)];
     }
   }
 }
@@ -144,16 +151,16 @@ class _IRContentAttachment extends _IRContent {
     final contentType = _attachment.contentType;
     final filename = _attachment.fileName;
 
-    _header.add(_IRHeaderText('content-type', contentType));
-    _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
+    _header.add(new _IRHeaderText('content-type', contentType));
+    _header.add(new _IRHeaderText('content-transfer-encoding', 'base64'));
 
     if ((_attachment.cid ?? '').isNotEmpty) {
-      _header.add(_IRHeaderText('content-id', _attachment.cid));
+      _header.add(new _IRHeaderText('content-id', _attachment.cid));
     }
 
     String fnSuffix = '';
     if ((filename ?? '').isNotEmpty) fnSuffix = '; filename="$filename"';
-    _header.add(_IRHeaderText('content-disposition',
+    _header.add(new _IRHeaderText('content-disposition',
         '${_describeEnum(_attachment.location)}$fnSuffix'));
   }
 
@@ -171,8 +178,8 @@ class _IRContentText extends _IRContent {
   _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
     _header = header;
     var type = _describeEnum(textType);
-    _header.add(_IRHeaderText('content-type', 'text/$type; charset=utf-8'));
-    _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
+    _header.add(new _IRHeaderText('content-type', 'text/$type; charset=utf-8'));
+    _header.add(new _IRHeaderText('content-transfer-encoding', 'base64'));
     // ToDo convert to canonical form Text
 
     _text = text ?? '';
@@ -180,7 +187,8 @@ class _IRContentText extends _IRContent {
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
-    return _out64(Stream.fromIterable([_text]).transform(utf8.encoder),
+    return _out64(
+        new Stream.fromIterable([_text]).transform(convert.utf8.encoder),
         irMetaInformation);
   }
 }

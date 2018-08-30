@@ -74,5 +74,5 @@ class Message {
   List<Attachment> attachments = [];
 
   Iterable<Address> _asAddresses(Iterable<dynamic> as) =>
-      as.map((a) => a is String ? Address(a) : a as Address);
+      as.map((a) => a is String ? new Address(a) : a as Address);
 }

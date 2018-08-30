@@ -15,14 +15,14 @@ class SmtpTransport {
   SmtpTransport(this.smtpOptions);
 
   Future send(Envelope message) async {
-    final SmtpServer smtpServer = SmtpServer(smtpOptions.hostName,
+    final SmtpServer smtpServer = new SmtpServer(smtpOptions.hostName,
         port: smtpOptions.port,
         allowInsecure: true,
         username: smtpOptions.username,
         password: smtpOptions.password,
         ignoreBadCertificate: smtpOptions.ignoreBadCertificate,
         ssl: smtpOptions.secured);
-    SmtpClient client = SmtpClient(smtpServer);
+    SmtpClient client = new SmtpClient(smtpServer);
 
     return client.send(message);
   }

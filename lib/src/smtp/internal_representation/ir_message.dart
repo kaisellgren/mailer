@@ -7,7 +7,7 @@ class IRMessage {
   // Possibly throws.
   IRMessage(this._message) {
     var headers = _buildHeaders(_message);
-    _content = _IRContentPartMixed(_message, headers);
+    _content = new _IRContentPartMixed(_message, headers);
   }
 
   Iterable<String> get envelopeTos {
@@ -30,5 +30,5 @@ class IRMessage {
       _message.envelopeFrom ?? _message.fromAsAddress?.mailAddress ?? '';
 
   Stream<List<int>> data(Capabilities capabilities) =>
-      _content.out(_IRMetaInformation(capabilities));
+      _content.out(new _IRMetaInformation(capabilities));
 }

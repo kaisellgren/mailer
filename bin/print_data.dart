@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:mailer/mailer.dart';
 import 'package:mailer/src/smtp/capabilities.dart';
 import 'package:mailer/src/smtp/internal_representation/internal_representation.dart';
@@ -21,14 +21,14 @@ main(List<String> rawArgs) async {
     tos.add(username.contains('@') ? username : username + '@gmail.com');
 
   Iterable<Address> toAd(Iterable<String> addresses) =>
-      (addresses ?? []).map((a) => Address(a, 'some name'));
+      (addresses ?? <String>[]).map((a) => new Address(a, 'some name'));
 
   Iterable<Attachment> toAt(Iterable<String> attachments) =>
-      (attachments ?? []).map((a) => FileAttachment(File(a)));
+      (attachments ?? <String>[]).map((a) => new FileAttachment(new File(a)));
 
   // Create our message.
-  final message = Message()
-    ..from = Address('$username@gmail.com')
+  final message = new Message()
+    ..from = new Address('$username@gmail.com')
     ..recipients.addAll(toAd(tos))
     ..ccRecipients.addAll(args[ccArgs])
     ..bccRecipients.addAll(args[bccArgs])
@@ -38,13 +38,13 @@ main(List<String> rawArgs) async {
     ..attachments.addAll(toAt(args[attachArgs]))
   ;
 
-  var irMessage = IRMessage(message);
-  const capabilities = Capabilities();
+  var irMessage = new IRMessage(message);
+  const capabilities = const Capabilities();
   var data = irMessage.data(capabilities);
 
-  var streamDone = Completer();
+  var streamDone = new Completer();
   print('DATA');
-  data.listen((d) => stdout.write(utf8.decode(d))).onDone(() => streamDone.complete());
+  data.listen((d) => stdout.write(convert.utf8.decode(d))).onDone(() => streamDone.complete());
   await streamDone.future;
   print('-- DATA DONE --');
 }

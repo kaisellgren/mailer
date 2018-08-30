@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:mime/mime.dart' as mime;
 import 'package:path/path.dart';
 
@@ -63,12 +63,12 @@ class StringAttachment extends Attachment {
   StringAttachment(this._data, {String contentType, String fileName}) {
     if (contentType == null) {
       this.contentType = mime.lookupMimeType(fileName ?? 'unknown',
-          headerBytes: utf8.encode(_data));
+          headerBytes: convert.utf8.encode(_data));
     }
     this.fileName = fileName;
   }
 
   @override
   // There will be only one element in the stream: the utf8 encoded string.
-  Stream<List<int>> asStream() => Stream.fromIterable([utf8.encode(_data)]);
+  Stream<List<int>> asStream() => new Stream.fromIterable([convert.utf8.encode(_data)]);
 }

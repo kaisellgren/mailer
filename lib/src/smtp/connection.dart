@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:async/async.dart';
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
 import 'package:mailer/smtp_server.dart';
+
 import 'exceptions.dart';
 import 'server_response.dart';
 
@@ -20,7 +23,7 @@ import 'server_response.dart';
  * This wouldn't work if we stored connection information in the client itself.
  **/
 
-final _logger = Logger('Connection');
+final _logger = new Logger('Connection');
 
 class Connection {
   final SmtpServer _server;
@@ -31,7 +34,7 @@ class Connection {
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
 
-  Future<void> sendStream(Stream<List<int>> s) => _socket.addStream(s);
+  Future<Null> sendStream(Stream<List<int>> s) => _socket.addStream(s);
 
   /// Returns the next message from server.  An exception is thrown if
   /// [acceptedRespCodes] is not empty and the response code form the server
@@ -65,7 +68,7 @@ class Connection {
     while (currentLine == null ||
         (currentLine.length > 3 && currentLine[3] != ' ')) {
       if (!(await _socketIn.hasNext)) {
-        throw SmtpClientCommunicationException(
+        throw new SmtpClientCommunicationException(
             "Socket was closed even though a response was expected.");
       }
       currentLine = await _socketIn.next;
@@ -83,14 +86,14 @@ class Connection {
       var msg =
           'After sending $command, response did not start with any of: $acceptedRespCodes';
       _logger.warning(msg);
-      throw SmtpClientCommunicationException(msg);
+      throw new SmtpClientCommunicationException(msg);
     }
 
-    return ServerResponse(responseCode, messages);
+    return new ServerResponse(responseCode, messages);
   }
 
   /// Upgrades the connection to use TLS.
-  Future<void> upgradeConnection() async {
+  Future<Null> upgradeConnection() async {
     // SecureSocket.secure suggests to call socketSubscription.pause().
     // A StreamQueue always pauses unless we explicitly call next().
     // So we don't need to call pause() ourselves.
@@ -100,7 +103,7 @@ class Connection {
   }
 
   /// Initializes a connection to the given server.
-  Future<void> connect() async {
+  Future<Null> connect() async {
     _logger.finer("Connecting to ${_server.host} at port ${_server.port}.");
 
     // Secured connection was demanded by the user.
@@ -115,7 +118,7 @@ class Connection {
     _setSocketIn();
   }
 
-  Future<void> close() async {
+  Future<Null> close() async {
     if (_socketIn != null) await _socketIn.cancel();
     if (_socket != null) await _socket.close();
   }
@@ -124,14 +127,14 @@ class Connection {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
-    _socketIn = StreamQueue<String>(
-        _socket.transform(utf8.decoder).transform(const LineSplitter()));
+    _socketIn = new StreamQueue<String>(
+        _socket.transform(convert.utf8.decoder).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
     if (!_server.allowInsecure && !isSecure) {
       _socket.close();
-      throw SmtpUnsecureException("Aborting because connection is not secure");
+      throw new SmtpUnsecureException("Aborting because connection is not secure");
     }
   }
 }

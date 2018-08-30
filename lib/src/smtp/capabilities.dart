@@ -17,7 +17,7 @@ class Capabilities {
 
   factory Capabilities.fromResponse(Iterable<String> ehloMessage) {
     final List<String> capabilities =
-        List.unmodifiable(ehloMessage.map((m) => m.toUpperCase()));
+        new List.unmodifiable(ehloMessage.map((m) => m.toUpperCase()));
 
     var startTls = false;
     var smtpUtf8 = false;
@@ -36,6 +36,6 @@ class Capabilities {
       }
     });
 
-    return Capabilities._values(startTls, smtpUtf8, plain, login, capabilities);
+    return new Capabilities._values(startTls, smtpUtf8, plain, login, capabilities);
   }
 }

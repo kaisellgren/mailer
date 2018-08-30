@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:intl/intl.dart';
 
 import 'conversion.dart';
@@ -10,14 +10,13 @@ import '../../entities/attachment.dart';
 import '../../entities/message.dart';
 import '../../entities/problem.dart';
 
-
 part 'ir_content.dart';
 part 'ir_header.dart';
 part 'ir_message.dart';
 
 // "An 'encoded-word' may not be more than 75 characters long, including
 // 'charset', 'encoding', 'encoded-text', and delimiters."
-const maxEncodedLength = 75;  // as per RFC2047
+const maxEncodedLength = 75; // as per RFC2047
 const splitOverLength = 80;
 const maxLineLength = 800;
 

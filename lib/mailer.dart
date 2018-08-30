@@ -9,6 +9,6 @@ export 'src/entities.dart';
 export 'legacy.dart';
 
 Future<List<SendReport>> send(Message message, SmtpServer smtpServer) {
-  var client = SmtpClient(smtpServer);
+  var client = new SmtpClient(smtpServer);
   return client.send(message);
 }

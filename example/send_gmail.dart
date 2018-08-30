@@ -31,14 +31,14 @@ main(List<String> rawArgs) async {
   final smtpServer = gmail(username, args.rest[1]);
 
   Iterable<Address> toAd(Iterable<String> addresses) =>
-      (addresses ?? []).map((a) => Address(a));
+      (addresses ?? <String>[]).map((a) => new Address(a));
 
   Iterable<Attachment> toAt(Iterable<String> attachments) =>
-      (attachments ?? []).map((a) => FileAttachment(File(a)));
+      (attachments ?? <String>[]).map((a) => new FileAttachment(new File(a)));
 
   // Create our message.
-  final message = Message()
-    ..from = Address('$username@gmail.com')
+  final message = new Message()
+    ..from = new Address('$username@gmail.com')
     ..recipients.addAll(toAd(tos))
     ..ccRecipients.addAll(toAd(args[ccArgs]))
     ..bccRecipients.addAll(toAd(args[bccArgs]))

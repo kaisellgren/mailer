@@ -3,12 +3,12 @@ part of 'internal_representation.dart';
 abstract class _IRHeader extends _IROutput {
   final String _name;
 
-  static final List<int> _b64prefix = utf8.encode(' =?utf-8?B?');
-  static final List<int> _b64postfix = utf8.encode('?=$eol');
+  static final List<int> _b64prefix = convert.utf8.encode(' =?utf-8?B?');
+  static final List<int> _b64postfix = convert.utf8.encode('?=$eol');
   static final _b64Length = _b64prefix.length + _b64postfix.length;
 
   Stream<List<int>> _outValue(String value) =>
-      Stream.fromIterable([_name, ': ', value, eol].map(utf8.encode));
+      new Stream.fromIterable([_name, ': ', value, eol].map(convert.utf8.encode));
 
   // Outputs value encoded as base64.
   // Every chunk starts with ' ' and ends with eol.
@@ -24,12 +24,12 @@ abstract class _IRHeader extends _IROutput {
     // At least 10 chars (random length).
     if (availableLength < 10) availableLength = 10;
 
-    var splitData = split(utf8.encode(value), availableLength);
+    var splitData = split(convert.utf8.encode(value), availableLength);
 
-    yield utf8.encode('$_name: $eol');
+    yield convert.utf8.encode('$_name: $eol');
     for (var d in splitData) {
       yield _b64prefix;
-      yield utf8.encode(base64.encode(d));
+      yield convert.utf8.encode(convert.base64.encode(d));
       yield _b64postfix;
     }
   }
@@ -54,7 +54,7 @@ class _IRHeaderText extends _IRHeader {
     if (_value.length > maxLineLength ||
         // Make sure that text which looks like an encoded text is encoded.
         _value.contains('=?') ||
-        (!utf8Allowed && _value.contains(RegExp(r'[^\x20-\x7E]')))) {
+        (!utf8Allowed && _value.contains(new RegExp(r'[^\x20-\x7E]')))) {
       return _outValueB64(_value);
     }
     return _outValue(_value);
@@ -109,7 +109,7 @@ class _IRHeaderDate extends _IRHeader {
   final DateTime _dateTime;
 
   static final DateFormat _dateFormat =
-      DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000');
+      new DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000');
 
   _IRHeaderDate(String name, this._dateTime) : super(name);
 
@@ -119,7 +119,7 @@ class _IRHeaderDate extends _IRHeader {
 }
 
 Iterable<_IRHeader> _buildHeaders(Message message) {
-  const noCustom = ['content-type', 'mime-version'];
+  const noCustom = const ['content-type', 'mime-version'];
 
   final headers = <_IRHeader>[];
   var msgHeader = message.headers;
@@ -130,48 +130,48 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
     if (noCustom.contains(name)) return;
 
     if (value is String && value.contains('@')) {
-      headers.add(_IRHeaderAddress(name, Address(value)));
+      headers.add(new _IRHeaderAddress(name, new Address(value)));
     } else if (value is String) {
-      headers.add(_IRHeaderText(name, value));
+      headers.add(new _IRHeaderText(name, value));
     } else if (value is DateTime) {
-      headers.add(_IRHeaderDate(name, value));
+      headers.add(new _IRHeaderDate(name, value));
     } else if (value is Address) {
-      headers.add(_IRHeaderAddress(name, value));
+      headers.add(new _IRHeaderAddress(name, value));
     } else if (value is Iterable<Address>) {
-      headers.add(_IRHeaderAddresses(name, value));
+      headers.add(new _IRHeaderAddresses(name, value));
     } else if (value is Iterable<String> &&
         value.every((s) => (s ?? '').contains('@'))) {
-      headers.add(_IRHeaderAddresses(name, value.map((a) => Address(a))));
+      headers.add(new _IRHeaderAddresses(name, value.map((a) => new Address(a))));
     } else {
-      throw IRProblemException(
-          Problem('INVALID_HEADER', 'Type of value for $name is invalid'));
+      throw new IRProblemException(
+          new Problem('INVALID_HEADER', 'Type of value for $name is invalid'));
     }
-    headers.add(_IRHeaderText(name, value));
+    headers.add(new _IRHeaderText(name, value));
   });
 
   if (!msgHeader.containsKey('subject') && message.subject != null)
-    headers.add(_IRHeaderText('subject', message.subject));
+    headers.add(new _IRHeaderText('subject', message.subject));
 
   if (!msgHeader.containsKey('from'))
-    headers.add(_IRHeaderAddress('from', message.fromAsAddress));
+    headers.add(new _IRHeaderAddress('from', message.fromAsAddress));
 
   if (!msgHeader.containsKey('to')) {
     var tos = message.recipientsAsAddresses ?? [];
-    if (tos.isNotEmpty) headers.add(_IRHeaderAddresses('to', tos));
+    if (tos.isNotEmpty) headers.add(new _IRHeaderAddresses('to', tos));
   }
 
   if (!msgHeader.containsKey('cc')) {
     var ccs = message.ccsAsAddresses ?? [];
-    if (ccs.isNotEmpty) headers.add(_IRHeaderAddresses('cc', ccs));
+    if (ccs.isNotEmpty) headers.add(new _IRHeaderAddresses('cc', ccs));
   }
 
   if (!msgHeader.containsKey('date'))
-    headers.add(_IRHeaderDate('date', DateTime.now()));
+    headers.add(new _IRHeaderDate('date', new DateTime.now()));
 
   if (!msgHeader.containsKey('x-mailer'))
-    headers.add(_IRHeaderText('x-mailer', 'Dart Mailer library 2'));
+    headers.add(new _IRHeaderText('x-mailer', 'Dart Mailer library 2'));
 
-  headers.add(_IRHeaderText('mime-version', '1.0'));
+  headers.add(new _IRHeaderText('mime-version', '1.0'));
 
   return headers;
 }
