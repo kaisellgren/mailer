@@ -180,15 +180,22 @@ class _IRContentText extends _IRContent {
     var type = _describeEnum(textType);
     _header.add(new _IRHeaderText('content-type', 'text/$type; charset=utf-8'));
     _header.add(new _IRHeaderText('content-transfer-encoding', 'base64'));
-    // ToDo convert to canonical form Text
 
     _text = text ?? '';
   }
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
+    addEol(String s) async* {
+      yield s;
+      yield eol;
+    }
+
     return _out64(
-        new Stream.fromIterable([_text]).transform(convert.utf8.encoder),
+        new Stream.fromIterable([_text])
+            .transform(new dart_convert.LineSplitter())
+            .asyncExpand(addEol) // Replace all eols with \r\n → canonical form.
+            .transform(convert.utf8.encoder),
         irMetaInformation);
   }
 }

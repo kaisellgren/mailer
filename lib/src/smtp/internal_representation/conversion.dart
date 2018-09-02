@@ -76,10 +76,10 @@ Stream<List<int>> _splitS(
   return sc.stream;
 }
 
-// Replace `implements StreamTransformer` with `extends StreamTransformerBase`
+// Replace `_StreamTransformerBase` with `StreamTransformerBase`
 // when dart1 is no longer supported.
-// Also remove _CastStreamTransformer class.
-class StreamSplitter implements StreamTransformer<List<int>, List<int>> {
+// Also remove the _* helper classes.
+class StreamSplitter extends _StreamTransformerBase<List<int>, List<int>> {
   final int maxLength;
   final int splitOverLength;
 
@@ -88,9 +88,14 @@ class StreamSplitter implements StreamTransformer<List<int>, List<int>> {
   @override
   Stream<List<int>> bind(Stream<List<int>> stream) =>
       _splitS(stream, splitOverLength, maxLength);
+}
 
+abstract class _StreamTransformerBase<SS, ST>
+    implements StreamTransformer<SS, ST> {
   @override
-  StreamTransformer<RS, RT> cast<RS, RT>() => new _CastStreamTransformer<List<int>, List<int>, RS, RT>(this);
+  StreamTransformer<RS, RT> cast<RS, RT>() => throw new UnimplementedError(
+      'This dart2 functionality is not implemented');
+//      new _CastStreamTransformer<SS, ST, RS, RT>(this);
 }
 
 // Copied from dart2 StreamTransformer

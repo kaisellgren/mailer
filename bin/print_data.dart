@@ -32,9 +32,10 @@ main(List<String> rawArgs) async {
     ..recipients.addAll(toAd(tos))
     ..ccRecipients.addAll(args[ccArgs])
     ..bccRecipients.addAll(args[bccArgs])
-    ..subject = 'Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}Test Dart äåäåé®þüúí Mailer library :: ${new DateTime.now()}'
-    ..text = 'This is the plain text'
-    ..html = '<h1>Test</h1><p>Hey! Here\'s some HTML content</p>'
+    ..subject =
+        'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
+    ..text = 'This is the plain text.\nThis is line 2 of the text part.'
+    ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
     ..attachments.addAll(toAt(args[attachArgs]))
   ;
 
