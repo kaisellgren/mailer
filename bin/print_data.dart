@@ -16,7 +16,7 @@ main(List<String> rawArgs) async {
     username = username.substring(0, username.length - 10);
   }
 
-  List<String> tos = args[toArgs] ?? [];
+  List<String> tos = args[toArgs] as List<String> ?? [];
   if (tos.isEmpty)
     tos.add(username.contains('@') ? username : username + '@gmail.com');
 
@@ -30,13 +30,13 @@ main(List<String> rawArgs) async {
   final message = new Message()
     ..from = new Address('$username@gmail.com')
     ..recipients.addAll(toAd(tos))
-    ..ccRecipients.addAll(args[ccArgs])
-    ..bccRecipients.addAll(args[bccArgs])
+    ..ccRecipients.addAll(args[ccArgs] as Iterable<dynamic>)
+    ..bccRecipients.addAll(args[bccArgs] as Iterable<dynamic>)
     ..subject =
         'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
-    ..attachments.addAll(toAt(args[attachArgs]))
+    ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>))
   ;
 
   var irMessage = new IRMessage(message);
@@ -72,7 +72,7 @@ ArgResults parseArgs(List<String> rawArgs) {
     exit(1);
   }
 
-  var attachments = args[attachArgs] ?? [];
+  var attachments = args[attachArgs] as Iterable<String> ?? [];
   for (var f in attachments) {
     File attachFile = new File(f);
     if (!attachFile.existsSync()) {

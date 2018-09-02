@@ -81,14 +81,14 @@ Iterable<T> _follow<T>(T t, Iterable<T> ts) sync* {
 }
 
 class _IRContentPartMixed extends _IRContentPart {
-  _IRContentPartMixed(Message message, List<_IRHeader> header) {
+  _IRContentPartMixed(Message message, Iterable<_IRHeader> header) {
     var attachments = message.attachments ?? [];
     var attached = attachments.where((a) => a.location == Location.attachment);
 
     _active = attached.isNotEmpty;
 
     if (_active) {
-      _header = header;
+      _header.addAll(header);
       _header.add(new _IRHeaderContentType(_boundary, _MultipartType.mixed));
       _IRContent contentAlternative =
           new _IRContentPartAlternative(message, []);
@@ -101,14 +101,14 @@ class _IRContentPartMixed extends _IRContentPart {
 }
 
 class _IRContentPartAlternative extends _IRContentPart {
-  _IRContentPartAlternative(Message message, List<_IRHeader> header) {
+  _IRContentPartAlternative(Message message, Iterable<_IRHeader> header) {
     var attachments = message.attachments ?? [];
     var hasEmbedded = attachments.any((a) => a.location == Location.inline);
 
     _active = message.text != null && (message.html != null || hasEmbedded);
 
     if (_active) {
-      _header = header;
+      _header.addAll(header);
       _header
           .add(new _IRHeaderContentType(_boundary, _MultipartType.alternative));
       var contentTxt = new _IRContentText(message.text, _IRTextType.plain, []);
@@ -125,14 +125,14 @@ class _IRContentPartAlternative extends _IRContentPart {
 }
 
 class _IRContentPartRelated extends _IRContentPart {
-  _IRContentPartRelated(Message message, List<_IRHeader> header) {
+  _IRContentPartRelated(Message message, Iterable<_IRHeader> header) {
     var attachments = message.attachments ?? [];
     var embedded = attachments.where((a) => a.location == Location.inline);
 
     _active = embedded.isNotEmpty;
 
     if (_active) {
-      _header = header;
+      _header.addAll(header);
       _header.add(new _IRHeaderContentType(_boundary, _MultipartType.related));
       _IRContent contentHtml =
           new _IRContentText(message.html, _IRTextType.html, []);
@@ -175,8 +175,8 @@ enum _IRTextType { plain, html }
 class _IRContentText extends _IRContent {
   String _text;
 
-  _IRContentText(String text, _IRTextType textType, List<_IRHeader> header) {
-    _header = header;
+  _IRContentText(String text, _IRTextType textType, Iterable<_IRHeader> header) {
+    _header.addAll(header);
     var type = _describeEnum(textType);
     _header.add(new _IRHeaderText('content-type', 'text/$type; charset=utf-8'));
     _header.add(new _IRHeaderText('content-transfer-encoding', 'base64'));

@@ -9,7 +9,7 @@ import 'package:mailer/smtp_server/gmail.dart';
 main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
 
-  if (args[verboseArg]) {
+  if (args[verboseArg] as bool) {
     Logger.root.level = Level.ALL;
     Logger.root.onRecord.listen((LogRecord rec) {
       print('${rec.level.name}: ${rec.time}: ${rec.message}');
@@ -21,7 +21,7 @@ main(List<String> rawArgs) async {
     username = username.substring(0, username.length - 10);
   }
 
-  List<String> tos = args[toArgs] ?? [];
+  List<String> tos = args[toArgs] as List<String> ?? [];
   if (tos.isEmpty)
     tos.add(username.contains('@') ? username : username + '@gmail.com');
 
@@ -40,13 +40,13 @@ main(List<String> rawArgs) async {
   final message = new Message()
     ..from = new Address('$username@gmail.com')
     ..recipients.addAll(toAd(tos))
-    ..ccRecipients.addAll(toAd(args[ccArgs]))
-    ..bccRecipients.addAll(toAd(args[bccArgs]))
+    ..ccRecipients.addAll(toAd(args[ccArgs] as Iterable<String>))
+    ..bccRecipients.addAll(toAd(args[bccArgs] as Iterable<String>))
     ..subject =
         'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
-    ..attachments.addAll(toAt(args[attachArgs]));
+    ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>));
 
   final sendReports = await send(message, smtpServer);
   sendReports.forEach((sr) {
@@ -85,7 +85,7 @@ ArgResults parseArgs(List<String> rawArgs) {
     exit(1);
   }
 
-  var attachments = args[attachArgs] ?? [];
+  var attachments = args[attachArgs] as Iterable<String> ?? [];
   for (var f in attachments) {
     File attachFile = new File(f);
     if (!attachFile.existsSync()) {

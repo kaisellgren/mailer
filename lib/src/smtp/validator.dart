@@ -10,9 +10,12 @@ bool _printableCharsOnly(String s) {
 }
 
 /// [address] can either be an [Address] or String.
-bool _validAddress(dynamic address) {
-  if (address is String) address = new Address(address);
-  if (address == null) return false;
+bool _validAddress(dynamic addressIn) {
+  Address address;
+  if (addressIn is String) address = new Address(addressIn);
+  else address = addressIn as Address;
+
+  if (addressIn == null) return false;
   return _printableCharsOnly(address.name ?? '') &&
       _validMailAddress(address.mailAddress);
 }
@@ -49,9 +52,13 @@ List<Problem> validate(Message message) {
   validate(_validAddress(message.from), 'FROM_ADDRESS',
       'The from address is invalid.  (${message.from})');
   counter = 0;
-  message.recipients.forEach((a) {
+  message.recipients.forEach((aIn) {
     counter++;
-    if (a is String) a = new Address(a);
+    Address a;
+
+    if (aIn is String) a = new Address(aIn);
+    else a = aIn as Address;
+
     validate(
         a != null && (a.mailAddress ?? '').isNotEmpty,
         'FROM_ADDRESS_EMPTY',

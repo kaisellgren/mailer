@@ -95,17 +95,4 @@ abstract class _StreamTransformerBase<SS, ST>
   @override
   StreamTransformer<RS, RT> cast<RS, RT>() => throw new UnimplementedError(
       'This dart2 functionality is not implemented');
-//      new _CastStreamTransformer<SS, ST, RS, RT>(this);
-}
-
-// Copied from dart2 StreamTransformer
-class _CastStreamTransformer<SS, ST, TS, TT>
-    implements StreamTransformer<TS, TT> {
-  final StreamTransformer<SS, ST> _source;
-  _CastStreamTransformer(this._source);
-
-  StreamTransformer<RS, RT> cast<RS, RT>() =>
-      new _CastStreamTransformer<SS, ST, RS, RT>(_source);
-  Stream<TT> bind(Stream<TS> stream) =>
-      _source.bind(stream.cast<SS>()).cast<TT>();
 }

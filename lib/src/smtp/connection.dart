@@ -34,7 +34,7 @@ class Connection {
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
 
-  Future<Null> sendStream(Stream<List<int>> s) => _socket.addStream(s);
+  Future sendStream(Stream<List<int>> s) => _socket.addStream(s);
 
   /// Returns the next message from server.  An exception is thrown if
   /// [acceptedRespCodes] is not empty and the response code form the server

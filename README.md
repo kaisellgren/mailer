@@ -1,5 +1,5 @@
-Mailer
-==
+# Mailer
+
 
 **Mailer** is an easy to use library for composing and sending emails in Dart.
 
@@ -13,11 +13,7 @@ Mailer supports file attachments, HTML emails and multiple transport methods.
 * Secure (filters and sanitizes all fields context-wise)
 * Use any SMTP server like Gmail, Live, SendGrid, Amazon SES
 * SSL/TLS support
-* Pre-configured services (Gmail, Live, Mail.ru, etc.). Just fill in your username and password.
-
-## Filing bug tickets
-
-Please call `printDebugInformation()` from the mailer package and send the output along with your helpful explanation of what went wrong.
+* Pre-configured services (Gmail, Yahoo, Hotmail, etc.). Just fill in your username and password.
 
 ## TODO
 

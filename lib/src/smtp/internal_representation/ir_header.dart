@@ -5,7 +5,7 @@ abstract class _IRHeader extends _IROutput {
 
   static final List<int> _b64prefix = convert.utf8.encode(' =?utf-8?B?');
   static final List<int> _b64postfix = convert.utf8.encode('?=$eol');
-  static final _b64Length = _b64prefix.length + _b64postfix.length;
+  static final int _b64Length = _b64prefix.length + _b64postfix.length;
 
   Stream<List<int>> _outValue(String value) =>
       new Stream.fromIterable([_name, ': ', value, eol].map(convert.utf8.encode));
@@ -146,7 +146,6 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
       throw new IRProblemException(
           new Problem('INVALID_HEADER', 'Type of value for $name is invalid'));
     }
-    headers.add(new _IRHeaderText(name, value));
   });
 
   if (!msgHeader.containsKey('subject') && message.subject != null)

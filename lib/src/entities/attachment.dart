@@ -70,5 +70,6 @@ class StringAttachment extends Attachment {
 
   @override
   // There will be only one element in the stream: the utf8 encoded string.
-  Stream<List<int>> asStream() => new Stream.fromIterable([convert.utf8.encode(_data)]);
+  Stream<List<int>> asStream() =>
+      new Stream.fromIterable([convert.utf8.encode(_data)]);
 }
