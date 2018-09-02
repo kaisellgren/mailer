@@ -1,6 +1,3 @@
-## 1.1.5
-* Updated for Dart 2, including updating dependency versions.
-
 ## 1.1.4
 * Remove extra trailing `\r\n` from messages as some servers may interpret it as an empty
  command and send back an error code after success code
