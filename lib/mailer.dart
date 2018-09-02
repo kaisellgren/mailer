@@ -1,28 +1,14 @@
-library mailer;
-
-import 'dart:io';
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:intl/intl.dart';
-import 'package:path/path.dart';
-import 'package:mime/mime.dart';
-import 'package:logging/logging.dart';
+import 'smtp_server.dart';
 
-import 'src/util.dart';
+import 'src/entities.dart';
+import 'src/smtp/smtp_client.dart';
 
-part 'src/address.dart';
-part 'src/envelope.dart';
-part 'src/transport.dart';
-part 'src/attachment.dart';
-part 'src/sendmail_transport.dart';
-part 'src/smtp/helper_options.dart';
-part 'src/smtp/smtp_client.dart';
-part 'src/smtp/smtp_options.dart';
-part 'src/smtp/smtp_transport.dart';
+export 'src/entities.dart';
+export 'legacy.dart';
 
-var _logger = new Logger('mailer');
-
-printDebugInformation() {
-  _logger.onRecord.listen(print);
+Future<List<SendReport>> send(Message message, SmtpServer smtpServer) {
+  var client = new SmtpClient(smtpServer);
+  return client.send(message);
 }

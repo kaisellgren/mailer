@@ -1,20 +1,15 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import 'package:logging/logging.dart';
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
+import 'package:mailer/src/smtp/capabilities.dart';
+import 'package:mailer/src/smtp/internal_representation/internal_representation.dart';
 
 /// Test mailer by sending email to yourself
 main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
-
-  if (args[verboseArg]) {
-    Logger.root.level = Level.ALL;
-    Logger.root.onRecord.listen((LogRecord rec) {
-      print('${rec.level.name}: ${rec.time}: ${rec.message}');
-    });
-  }
 
   String username = args.rest[0];
   if (username.endsWith('@gmail.com')) {
@@ -25,13 +20,8 @@ main(List<String> rawArgs) async {
   if (tos.isEmpty)
     tos.add(username.contains('@') ? username : username + '@gmail.com');
 
-  // If you want to use an arbitrary SMTP server, go with `new SmtpServer()`.
-  // The gmail function is just for convenience. There are similar functions for
-  // other providers.
-  final smtpServer = gmail(username, args.rest[1]);
-
   Iterable<Address> toAd(Iterable<String> addresses) =>
-      (addresses ?? <String>[]).map((a) => new Address(a));
+      (addresses ?? <String>[]).map((a) => new Address(a, 'some name'));
 
   Iterable<Attachment> toAt(Iterable<String> attachments) =>
       (attachments ?? <String>[]).map((a) => new FileAttachment(new File(a)));
@@ -40,36 +30,33 @@ main(List<String> rawArgs) async {
   final message = new Message()
     ..from = new Address('$username@gmail.com')
     ..recipients.addAll(toAd(tos))
-    ..ccRecipients.addAll(toAd(args[ccArgs]))
-    ..bccRecipients.addAll(toAd(args[bccArgs]))
+    ..ccRecipients.addAll(args[ccArgs])
+    ..bccRecipients.addAll(args[bccArgs])
     ..subject =
         'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
-    ..attachments.addAll(toAt(args[attachArgs]));
+    ..attachments.addAll(toAt(args[attachArgs]))
+  ;
 
-  final sendReports = await send(message, smtpServer);
-  sendReports.forEach((sr) {
-    if (sr.sent)
-      print('Message sent');
-    else {
-      print('Message not sent.');
-      for (var p in sr.validationProblems) {
-        print('Problem: ${p.code}: ${p.msg}');
-      }
-    }
-  });
+  var irMessage = new IRMessage(message);
+  const capabilities = const Capabilities();
+  var data = irMessage.data(capabilities);
+
+  var streamDone = new Completer();
+  print('DATA');
+  data.listen((d) => stdout.write(convert.utf8.decode(d))).onDone(() => streamDone.complete());
+  await streamDone.future;
+  print('-- DATA DONE --');
 }
 
 const toArgs = 'to';
 const attachArgs = 'attach';
 const ccArgs = 'cc';
 const bccArgs = 'bcc';
-const verboseArg = 'verbose';
 
 ArgResults parseArgs(List<String> rawArgs) {
   var parser = new ArgParser()
-    ..addFlag('verbose', abbr: 'v', help: 'Display logging output.')
     ..addMultiOption(toArgs,
         abbr: 't',
         help: 'The addresses to which the email is sent.\n'
@@ -93,6 +80,7 @@ ArgResults parseArgs(List<String> rawArgs) {
       exit(1);
     }
   }
+
   return args;
 }
 

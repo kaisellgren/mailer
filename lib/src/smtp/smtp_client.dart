@@ -1,352 +1,175 @@
-part of mailer;
+import 'dart:async';
+import 'package:dart2_constant/convert.dart' as convert;
+import 'package:logging/logging.dart';
+import 'package:mailer/smtp_server.dart';
+import 'internal_representation/internal_representation.dart';
+import '../entities/message.dart';
+import '../entities/send_report.dart';
+import 'connection.dart';
+import 'capabilities.dart';
+import 'exceptions.dart';
+import 'package:mailer/src/entities/problem.dart';
+import 'validator.dart';
 
-typedef void SmtpResponseAction(String message);
+final Logger _logger = new Logger('smtp-client');
 
-/**
- * An SMTP client for sending out emails.
- */
 class SmtpClient {
-  SmtpOptions options;
+  final Connection _c;
+  final SmtpServer _smtpServer;
 
-  /**
-   * A function to run if some data arrives from the server.
-   */
-  SmtpResponseAction _currentAction;
+  SmtpClient(this._smtpServer) : _c = new Connection(_smtpServer);
 
-  bool _ignoreData = false;
+  /// Returns the capabilities of the server if ehlo was successful.  null if
+  /// `helo` is necessary.
+  Future<Capabilities> _doEhlo() async {
+    var respEhlo =
+        await _c.send('EHLO ${_smtpServer.name}', acceptedRespCodes: null);
 
-  Socket _connection;
+    if (!respEhlo.responseCode.startsWith('2')) {
+      return null;
+    }
 
-  bool _connectionOpen = false;
+    var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
 
-  /**
-   * A list of supported authentication protocols.
-   */
-  List<String> supportedAuthentications = [];
+    if (!capabilities.startTls || _c.isSecure) {
+      return capabilities;
+    }
 
-  /**
-   * When the connection is idling, it's ready to take in a new message.
-   */
-  Stream onIdle;
-  StreamController _onIdleController = new StreamController();
+    // Use a secure socket.  Server announced STARTTLS.
+    // The server supports TLS and we haven't switched to it yet,
+    // so let's do it.
+    var tlsResp = await _c.send('STARTTLS', acceptedRespCodes: null);
+    if (!tlsResp.responseCode.startsWith('2')) {
+      // Even though server announced STARTTLS, it now chickens out.
+      return null;
+    }
 
-  /**
-   * This stream emits whenever an email has been sent.
-   *
-   * The returned object is an [Envelope] containing the details of what has been emailed.
-   */
-  Stream<Envelope> onSend;
-  StreamController _onSendController = new StreamController();
+    // Replace _socket with an encrypted version.
+    await _c.upgradeConnection();
 
-  /**
-   * Sometimes the response comes in pieces. We store each piece here.
-   */
-  List<int> _remainder = [];
-
-  Envelope _envelope;
-
-  SmtpClient(this.options) {
-    onIdle = _onIdleController.stream.asBroadcastStream();
-    onSend = _onSendController.stream.asBroadcastStream();
+    // Restart EHLO process.  This time on a secure connection.
+    return _doEhlo();
   }
 
-  /**
-   * Initializes a connection to the given server.
-   */
-  Future _connect({secured: false}) {
-    return new Future(() {
-      // Secured connection was demanded by the user.
-      if (secured || options.secured)
-        return SecureSocket.connect(options.hostName, options.port,
-            onBadCertificate: (_) => options.ignoreBadCertificate);
+  Future<Capabilities> _doEhloHelo() async {
+    var ehlo = await _doEhlo();
 
-      return Socket.connect(options.hostName, options.port);
-    }).then((socket) {
-      _logger
-          .finer("Connecting to ${options.hostName} at port ${options.port}.");
+    if (ehlo != null) {
+      return ehlo;
+    }
 
-      _connectionOpen = true;
-
-      _connection = socket;
-      _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done
-          .then((_) => _connectionOpen = false)
-          .catchError(_onSendController.addError);
-    });
+    // EHLO not accepted.  Let's try HELO.
+    await _c.send('HELO ${_smtpServer.name}');
+    return new Capabilities();
   }
 
-  /**
-   * Sends out an email.
-   */
-  Future send(Envelope envelope) {
-    return new Future(() {
-      if (envelope._isDelivered) {
-        throw 'You cannot send an envelope that has already been sent! Make sure you are not reusing an existing envelope, but instead creating new envelopes.';
+  Future<Null> _doAuthentication(Capabilities capabilities) async {
+    if (_smtpServer.username == null) {
+      return;
+    }
+
+    if (!capabilities.authLogin) {
+      throw new SmtpClientCommunicationException(
+          'The server does not support LOGIN authentication method.');
+    }
+
+    var username = _smtpServer.username;
+    var password = _smtpServer.password;
+
+    // 'Username:' in base64 is: VXN...
+    await _c.send('AUTH LOGIN',
+        acceptedRespCodes: ['334'], expect: 'VXNlcm5hbWU6');
+    // 'Password:' in base64 is: UGF...
+    await _c.send(convert.base64.encode(username.codeUnits),
+        acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
+    var loginResp = await _c
+        .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
+    if (!loginResp.responseCode.startsWith('2')) {
+      throw new SmtpClientAuthenticationException(
+          'Incorrect username ($username) / password');
+    }
+  }
+
+  Future<List<SendReport>> send(Message message) async {
+    final List<SendReport> sendReports = [];
+
+    // Don't even try to connect to the server, if message-validation fails.
+    var problems = validate(message);
+    if (problems.isNotEmpty) {
+      sendReports
+          .add(new SendReport(message, false, validationProblems: problems));
+      return sendReports;
+    }
+
+    IRMessage irMessage;
+    try {
+      // Constructor might throw IRProblemException.
+      irMessage = new IRMessage(message);
+    } on IRProblemException catch (e) {
+      sendReports
+          .add(new SendReport(message, false, validationProblems: [e.problem]));
+      return sendReports;
+    }
+
+    try {
+      await _c.connect();
+
+      // Greeting (Don't send anything.  We first wait for a 2xx message.)
+      await _c.send(null);
+
+      // EHLO / HELO
+      var capabilities = await _doEhloHelo();
+
+      _c.verifySecuredConnection();
+
+      // Authenticate
+      await _doAuthentication(capabilities);
+
+      Iterable<String> envelopeTos = irMessage.envelopeTos;
+
+      if (envelopeTos.isEmpty) {
+        _logger.info('Mail without recipients.  Not sending. ($message)');
+        sendReports.add(new SendReport(message, false, validationProblems: [
+          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
+        ]));
+        return sendReports;
       }
 
-      envelope._isDelivered = true;
+      // Make sure that the server knows, that we are sending a new mail.
+      // This also allows us to simply `continue;` to the next mail in case
+      // something goes wrong.
+      // await _c.send('RSET');  // We currently reconnect for every msg.
 
-      onIdle.listen((_) {
-        _currentAction = _actionMail;
-        sendCommand('MAIL FROM:<${Address.sanitize(_envelope.from)}>');
-      });
+      // Tell the server the envelope from address (might be different to the
+      // 'From: ' header!)
 
-      _envelope = envelope;
-      _currentAction = _actionGreeting;
+      bool smtputf8 = capabilities.smtpUtf8;
+      await _c.send(
+          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
 
-      return _connect().then((_) {
-        var completer = new Completer();
+      // Give the server all recipients.
+      // TODO what if only one address fails?
+      await Future.forEach(
+          envelopeTos, (recipient) => _c.send('RCPT TO:<$recipient>'));
 
-        var timeout = new Timer(const Duration(seconds: 60), () {
-          _close();
-          completer.completeError('Timed out sending an email.');
-        });
+      // Finally send the actual mail.
+      await _c.send('DATA', acceptedRespCodes: ['2', '3']);
 
-        onSend.listen((Envelope mail) {
-          if (mail == envelope) {
-            timeout.cancel();
-            completer.complete(mail);
-          }
-        }, onError: (e) {
-          _close();
-          timeout.cancel();
-          if (!completer.isCompleted) {
-            completer.completeError('Failed to send an email: $e');
-            _logger.finest('Failed to send email', e);
-          } else {
-            _logger.finest('Failed after sending email', e);
-          }
-        }, cancelOnError: true);
+      await _c.sendStream(irMessage.data(capabilities));
 
-        return completer.future;
-      });
-    });
-  }
+      await _c.send('.', acceptedRespCodes: ['2', '3']);
 
-  /**
-   * Sends a command to the SMTP server.
-   */
-  void sendCommand(String command) {
-    _logger.fine('> $command');
-    _connection.write('$command\r\n');
-  }
+      await _c.send('QUIT', waitForResponse: false);
 
-  /**
-   * Closes the connection.
-   */
-  void _close() {
-    _connection.close();
-  }
-
-  /**
-   * This [onData] handler reads the message that the server sent us.
-   */
-  void _onData(List<int> chunk) {
-    if (_ignoreData || chunk == null || chunk.length == 0) return;
-
-    _remainder.addAll(chunk);
-
-    // If the message comes in pieces, it does not end with \n.
-    if (_remainder.last != 0x0A) return;
-
-    var message = new String.fromCharCodes(_remainder);
-
-    // A multi line reply, wait until ending.
-    if (new RegExp(r'(?:^|\n)\d{3}-[^\n]+\n$').hasMatch(message)) return;
-
-    _remainder.clear();
-
-    _logger.fine(message);
-
-    if (_currentAction != null) {
-      try {
-        _currentAction(message);
-      } catch (e) {
-        _onSendController.addError(e);
-      }
-    }
-  }
-
-  /**
-   * Upgrades the connection to use TLS.
-   */
-  void _upgradeConnection(callback) {
-    SecureSocket
-        .secure(_connection,
-            onBadCertificate: (_) => options.ignoreBadCertificate)
-        .then((SecureSocket secured) {
-      _connection = secured;
-      _connection.listen(_onData, onError: _onSendController.addError);
-      _connection.done
-          .then((_) => _connectionOpen = false)
-          .catchError(_onSendController.addError);
-      callback();
-    });
-  }
-
-  void _actionGreeting(String message) {
-    if (message.startsWith('220') == false) {
-      _logger.severe('Invalid greeting from server: $message');
-      return;
+      sendReports.add(new SendReport(message, true));
+    } catch (exception) {
+      sendReports.add(new SendReport(message, false, validationProblems: [
+        new Problem('UNKNOWN', 'Received an exception: $exception')
+      ]));
+    } finally {
+      await _c.close();
     }
 
-    _currentAction = _actionEHLO;
-    sendCommand('EHLO ${options.name}');
-  }
-
-  void _actionEHLO(String message) {
-    // EHLO wasn't cool? Let's go with HELO.
-    if (message.startsWith('2') == false) {
-      _currentAction = _actionHELO;
-      sendCommand('HELO ${options.name}');
-      return;
-    }
-
-    // The server supports TLS and we haven't switched to it yet, so let's do it.
-    if (_connection is! SecureSocket &&
-        new RegExp('[ \\-]STARTTLS\\r?\$',
-                caseSensitive: false, multiLine: true)
-            .hasMatch(message)) {
-      sendCommand('STARTTLS');
-      _currentAction = _actionStartTLS;
-      return;
-    }
-
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)PLAIN', caseSensitive: false)
-        .hasMatch(message)) supportedAuthentications.add('PLAIN');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)LOGIN', caseSensitive: false)
-        .hasMatch(message)) supportedAuthentications.add('LOGIN');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)CRAM-MD5', caseSensitive: false)
-        .hasMatch(message)) supportedAuthentications.add('CRAM-MD5');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)XOAUTH', caseSensitive: false)
-        .hasMatch(message)) supportedAuthentications.add('XOAUTH');
-    if (new RegExp('AUTH(?:\\s+[^\\n]*\\s+|\\s+)XOAUTH2', caseSensitive: false)
-        .hasMatch(message)) supportedAuthentications.add('XOAUTH2');
-
-    _authenticateUser();
-  }
-
-  void _actionHELO(String message) {
-    if (message.startsWith('2') == false) {
-      _logger.severe('Invalid response for EHLO/HELO: $message');
-      return;
-    }
-
-    supportedAuthentications.add('LOGIN');
-
-    _authenticateUser();
-  }
-
-  void _actionStartTLS(String message) {
-    if (message.startsWith('2') == false) {
-      _currentAction = _actionHELO;
-      sendCommand('HELO ${options.name}');
-      return;
-    }
-
-    _upgradeConnection(() {
-      _currentAction = _actionEHLO;
-      sendCommand('EHLO ${options.name}');
-    });
-  }
-
-  void _authenticateUser() {
-    if (options.username == null) {
-      _currentAction = _actionIdle;
-      _onIdleController.add(true);
-      return;
-    }
-
-    if (!supportedAuthentications.contains('LOGIN')) {
-      throw 'The server does not support LOGIN authentication method. Available authentication methods are: $supportedAuthentications';
-    }
-
-    _currentAction = _actionAuthenticateLoginUser;
-    sendCommand('AUTH LOGIN');
-  }
-
-  void _actionAuthenticateLoginUser(String message) {
-    if (message.startsWith('334 VXNlcm5hbWU6') == false) {
-      throw 'Invalid logic sequence while waiting for "334 VXNlcm5hbWU6": $message';
-    }
-
-    _currentAction = _actionAuthenticateLoginPassword;
-    sendCommand(BASE64.encode(options.username.codeUnits));
-  }
-
-  void _actionAuthenticateLoginPassword(String message) {
-    if (message.startsWith('334 UGFzc3dvcmQ6') == false) {
-      throw 'Invalid logic sequence while waiting for "334 UGFzc3dvcmQ6": $message';
-    }
-
-    _currentAction = _actionAuthenticateComplete;
-    sendCommand(BASE64.encode(options.password.codeUnits));
-  }
-
-  void _actionAuthenticateComplete(String message) {
-    if (message.startsWith('2') == false) throw 'Invalid login: $message';
-
-    _currentAction = _actionIdle;
-    _onIdleController.add(true);
-  }
-
-  var _recipientIndex = 0;
-
-  void _actionMail(String message) {
-    if (message.startsWith('2') == false)
-      throw 'Mail from command failed: $message';
-
-    var recipient;
-
-    // We are processing the last recipient.
-    if (_recipientIndex == _envelope.recipients.length - 1) {
-      _recipientIndex = 0;
-
-      _currentAction = _actionRecipient;
-      recipient = _envelope.recipients[_recipientIndex];
-    }
-
-    // There are more recipients to process. We need to send RCPT TO multiple times.
-    else {
-      _currentAction = _actionMail;
-      recipient = _envelope.recipients[++_recipientIndex];
-    }
-
-    sendCommand('RCPT TO:<${Address.sanitize(recipient)}>');
-  }
-
-  void _actionRecipient(String message) {
-    if (message.startsWith('2') == false) {
-      _logger.severe('Recipient failure: $message');
-      return;
-    }
-
-    _currentAction = _actionData;
-    sendCommand('DATA');
-  }
-
-  void _actionData(String message) {
-    // The response should be either 354 or 250.
-    if (message.startsWith('2') == false && message.startsWith('3') == false)
-      throw 'Data command failed: $message';
-
-    _currentAction = _actionFinishEnvelope;
-    _envelope.getContents().then(sendCommand);
-  }
-
-  _actionFinishEnvelope(String message) {
-    if (message.startsWith('2') == false)
-      throw 'Could not send email: $message';
-
-    _currentAction = _actionIdle;
-    _onSendController.add(_envelope);
-    _envelope = null;
-    _close();
-  }
-
-  void _actionIdle(String message) {
-    if (int.parse(message.substring(0, 1)) > 3) throw 'Error: $message';
-
-    throw 'We should never get here -- bug? Message: $message';
+    return sendReports;
   }
 }
