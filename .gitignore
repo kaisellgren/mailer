@@ -6,4 +6,4 @@ packages
 .pub/
 .packages
 *.iml
-.dart_tool/
+.dart_tool
