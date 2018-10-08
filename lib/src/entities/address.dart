@@ -4,4 +4,3 @@ class Address {
 
   Address([this.mailAddress, this.name]);
 }
-

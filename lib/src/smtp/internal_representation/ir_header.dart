@@ -7,8 +7,8 @@ abstract class _IRHeader extends _IROutput {
   static final List<int> _b64postfix = convert.utf8.encode('?=$eol');
   static final int _b64Length = _b64prefix.length + _b64postfix.length;
 
-  Stream<List<int>> _outValue(String value) =>
-      new Stream.fromIterable([_name, ': ', value, eol].map(convert.utf8.encode));
+  Stream<List<int>> _outValue(String value) => new Stream.fromIterable(
+      [_name, ': ', value, eol].map(convert.utf8.encode));
 
   // Outputs value encoded as base64.
   // Every chunk starts with ' ' and ends with eol.
@@ -49,7 +49,8 @@ class _IRHeaderText extends _IRHeader {
   // https://mothereff.in/regexpu
   // `string.match(/^[^\p{Cc}\p{Cf}\p{Zl}\p{Zp}]*$/u);`
   // as suggested by: https://stackoverflow.com/questions/12052825/regular-expression-for-all-printable-characters-in-javascript
-  final _isPrintableRegExp = new RegExp(r'^(?:[ -~\xA0-\xAC\xAE-\u05FF\u0606-\u061B\u061D-\u06DC\u06DE-\u070E\u0710-\u08E1\u08E3-\u180D\u180F-\u200A\u2010-\u2027\u202F-\u205F\u2065\u2070-\uD7FF\uE000-\uFEFE\uFF00-\uFFF8\uFFFC-\uFFFF]|[\uD800-\uD803\uD805-\uD82E\uD830-\uD833\uD835-\uDB3F\uDB41-\uDBFF][\uDC00-\uDFFF]|\uD804[\uDC00-\uDCBC\uDCBE-\uDCCC\uDCCE-\uDFFF]|\uD82F[\uDC00-\uDC9F\uDCA4-\uDFFF]|\uD834[\uDC00-\uDD72\uDD7B-\uDFFF]|\uDB40[\uDC00\uDC02-\uDC1F\uDC80-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])*$');
+  final _isPrintableRegExp = new RegExp(
+      r'^(?:[ -~\xA0-\xAC\xAE-\u05FF\u0606-\u061B\u061D-\u06DC\u06DE-\u070E\u0710-\u08E1\u08E3-\u180D\u180F-\u200A\u2010-\u2027\u202F-\u205F\u2065\u2070-\uD7FF\uE000-\uFEFE\uFF00-\uFFF8\uFFFC-\uFFFF]|[\uD800-\uD803\uD805-\uD82E\uD830-\uD833\uD835-\uDB3F\uDB41-\uDBFF][\uDC00-\uDFFF]|\uD804[\uDC00-\uDCBC\uDCBE-\uDCCC\uDCCE-\uDFFF]|\uD82F[\uDC00-\uDC9F\uDCA4-\uDFFF]|\uD834[\uDC00-\uDD72\uDD7B-\uDFFF]|\uDB40[\uDC00\uDC02-\uDC1F\uDC80-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF])*$');
 
   _IRHeaderText(String name, this._value) : super(name);
 
@@ -76,7 +77,6 @@ Iterable<String> _addressToString(Iterable<Address> addresses) {
     return '$fromName <${a.mailAddress}>';
   });
 }
-
 
 class _IRHeaderAddress extends _IRHeader {
   Address _address;
@@ -148,7 +148,8 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
       headers.add(new _IRHeaderAddresses(name, value));
     } else if (value is Iterable<String> &&
         value.every((s) => (s ?? '').contains('@'))) {
-      headers.add(new _IRHeaderAddresses(name, value.map((a) => new Address(a))));
+      headers
+          .add(new _IRHeaderAddresses(name, value.map((a) => new Address(a))));
     } else {
       throw new IRProblemException(
           new Problem('INVALID_HEADER', 'Type of value for $name is invalid'));

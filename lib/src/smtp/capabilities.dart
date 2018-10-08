@@ -36,6 +36,7 @@ class Capabilities {
       }
     });
 
-    return new Capabilities._values(startTls, smtpUtf8, plain, login, capabilities);
+    return new Capabilities._values(
+        startTls, smtpUtf8, plain, login, capabilities);
   }
 }
