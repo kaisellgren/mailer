@@ -1,3 +1,9 @@
+## 2.0.2
+* added smtp configuration for mailgun.org
+
+## >1.1.4 \<2.0.2
+Please see README and commits.
+
 ## 1.1.4
 * Remove extra trailing `\r\n` from messages as some servers may interpret it as an empty
  command and send back an error code after success code
