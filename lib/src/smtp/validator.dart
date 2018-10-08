@@ -3,7 +3,8 @@ import '../entities/message.dart';
 import '../entities/problem.dart';
 
 // https://stackoverflow.com/questions/12052825/regular-expression-for-all-printable-characters-in-javascript
-final RegExp _printableCharsRegExp = new RegExp(r'^[\u0020-\u007e\u00a0-\u00ff]*$');
+final RegExp _printableCharsRegExp =
+    new RegExp(r'^[\u0020-\u007e\u00a0-\u00ff]*$');
 
 bool _printableCharsOnly(String s) {
   return _printableCharsRegExp.hasMatch(s);
@@ -12,8 +13,10 @@ bool _printableCharsOnly(String s) {
 /// [address] can either be an [Address] or String.
 bool _validAddress(dynamic addressIn) {
   Address address;
-  if (addressIn is String) address = new Address(addressIn);
-  else address = addressIn as Address;
+  if (addressIn is String)
+    address = new Address(addressIn);
+  else
+    address = addressIn as Address;
 
   if (addressIn == null) return false;
   return _printableCharsOnly(address.name ?? '') &&
@@ -56,8 +59,10 @@ List<Problem> validate(Message message) {
     counter++;
     Address a;
 
-    if (aIn is String) a = new Address(aIn);
-    else a = aIn as Address;
+    if (aIn is String)
+      a = new Address(aIn);
+    else
+      a = aIn as Address;
 
     validate(
         a != null && (a.mailAddress ?? '').isNotEmpty,

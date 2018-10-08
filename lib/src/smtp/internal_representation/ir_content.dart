@@ -175,7 +175,8 @@ enum _IRTextType { plain, html }
 class _IRContentText extends _IRContent {
   String _text;
 
-  _IRContentText(String text, _IRTextType textType, Iterable<_IRHeader> header) {
+  _IRContentText(
+      String text, _IRTextType textType, Iterable<_IRHeader> header) {
     _header.addAll(header);
     var type = _describeEnum(textType);
     _header.add(new _IRHeaderText('content-type', 'text/$type; charset=utf-8'));

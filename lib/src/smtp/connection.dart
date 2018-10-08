@@ -127,14 +127,16 @@ class Connection {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
-    _socketIn = new StreamQueue<String>(
-        _socket.transform(convert.utf8.decoder).transform(const LineSplitter()));
+    _socketIn = new StreamQueue<String>(_socket
+        .transform(convert.utf8.decoder)
+        .transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
     if (!_server.allowInsecure && !isSecure) {
       _socket.close();
-      throw new SmtpUnsecureException("Aborting because connection is not secure");
+      throw new SmtpUnsecureException(
+          "Aborting because connection is not secure");
     }
   }
 }
