@@ -1,5 +1,11 @@
 import 'dart:io';
 
+export 'smtp_server/gmail.dart';
+export 'smtp_server/hotmail.dart';
+export 'smtp_server/mailgun.dart';
+export 'smtp_server/yahoo.dart';
+
+
 class SmtpServer {
   final String name;
   final String host;
