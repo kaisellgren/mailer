@@ -22,6 +22,7 @@ Please create merge requests for missing configurations.
 
 * Copy `lib/smtp_server/gmail.dart` to `lib/smtp_server/xxx.dart`
 * Adapt the code.  (See `lib/smtp_server.dart` for possible arguments)
+* Export the newly created SMTP server in `lib/smtp_server.dart`
 * Create a pull request.
 
 In a lot of cases you will find a configuration in `legacy.dart`

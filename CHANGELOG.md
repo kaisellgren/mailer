@@ -1,3 +1,6 @@
+## 2.1.0
+* provide smtp_servers in smtp_server.dart
+
 ## 2.0.2
 * added smtp configuration for mailgun.org
 
