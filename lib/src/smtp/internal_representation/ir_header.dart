@@ -8,7 +8,7 @@ abstract class _IRHeader extends _IROutput {
   static final int _b64Length = _b64prefix.length + _b64postfix.length;
 
   Stream<List<int>> _outValue(String value) => new Stream.fromIterable(
-      [_name, ': ', value, eol].map(convert.utf8.encode));
+      [_name, ': ', value ?? '', eol].map(convert.utf8.encode));
 
   // Outputs value encoded as base64.
   // Every chunk starts with ' ' and ends with eol.
@@ -58,7 +58,7 @@ class _IRHeaderText extends _IRHeader {
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
     bool utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
 
-    if (_value.length > maxLineLength ||
+    if ((_value?.length ?? 0) > maxLineLength ||
         !_isPrintableRegExp.hasMatch(_value) ||
         // Make sure that text which looks like an encoded text is encoded.
         _value.contains('=?') ||

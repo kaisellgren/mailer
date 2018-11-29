@@ -37,6 +37,11 @@ class FileAttachment extends Attachment {
   FileAttachment(this._file, {String contentType, String fileName}) {
     if (contentType == null) {
       this.contentType = mime.lookupMimeType(_file.path);
+    } else {
+      this.contentType = contentType;
+    }
+    if (this.contentType == null) {
+      this.contentType = 'application/octet-stream';
     }
     this.fileName = fileName ?? basename(_file.path);
   }
@@ -62,8 +67,13 @@ class StringAttachment extends Attachment {
 
   StringAttachment(this._data, {String contentType, String fileName}) {
     if (contentType == null) {
-      this.contentType = mime.lookupMimeType(fileName ?? 'unknown',
+      this.contentType = mime.lookupMimeType(fileName ?? 'abc.txt',
           headerBytes: convert.utf8.encode(_data));
+    } else {
+      this.contentType = contentType;
+    }
+    if (this.contentType == null) {
+      this.contentType = 'text/plain';
     }
     this.fileName = fileName;
   }

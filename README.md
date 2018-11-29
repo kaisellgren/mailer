@@ -5,6 +5,18 @@
 
 Mailer supports file attachments and HTML emails.
 
+
+## mailer2 and mailer3
+
+`mailer2` and `mailer3` on pub.dart are forks of this project.
+
+`mailer` had some issues and we only recently (dart2 support) started
+to work on issues / PRs.
+
+Currently `mailer` should include all known bug-fixes and AFAIK there is
+no reason to use `mailer2` or `mailer3`.
+
+
 ## Dart2 support
 
 Support for dart2 has been added in version ^1.2.0  
