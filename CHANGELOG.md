@@ -1,3 +1,9 @@
+## 2.1.1
+* if a header value is `null` send empty string instead.
+* if mime library fails to identify content use `text/plain` and `application/octet-stream`  
+  as defaults.
+* mention mailer2 and mailer3 in README
+
 ## 2.1.0
 * provide smtp_servers in smtp_server.dart
 
