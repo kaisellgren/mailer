@@ -1,3 +1,6 @@
+## 2.1.2
+* improve exception when server response does not match.
+
 ## 2.1.1
 * if a header value is `null` send empty string instead.
 * if mime library fails to identify content use `text/plain` and `application/octet-stream`  

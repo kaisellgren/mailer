@@ -78,13 +78,15 @@ class Connection {
 
     responseCode = currentLine.substring(0, 3);
 
-    _logger.fine(messages.map((m) => '< $responseCode $m').join('\n'));
+    var mString = messages.map((m) => '< $responseCode $m').join('\n');
+    _logger.fine(mString);
 
     if (acceptedRespCodes != null &&
         acceptedRespCodes.isNotEmpty &&
         !acceptedRespCodes.any((start) => responseCode.startsWith(start))) {
       var msg =
-          'After sending $command, response did not start with any of: $acceptedRespCodes';
+          'After sending $command, response did not start with any of: $acceptedRespCodes.';
+      msg += '\nResponse from server: $mString';
       _logger.warning(msg);
       throw new SmtpClientCommunicationException(msg);
     }
