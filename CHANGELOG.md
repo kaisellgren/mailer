@@ -1,5 +1,20 @@
-## 1.1.5
-* Updated for Dart 2, including updating dependency versions.
+## 2.1.2
+* improve exception when server response does not match.
+
+## 2.1.1
+* if a header value is `null` send empty string instead.
+* if mime library fails to identify content use `text/plain` and `application/octet-stream`  
+  as defaults.
+* mention mailer2 and mailer3 in README
+
+## 2.1.0
+* provide smtp_servers in smtp_server.dart
+
+## 2.0.2
+* added smtp configuration for mailgun.org
+
+## >1.1.4 \<2.0.2
+Please see README and commits.
 
 ## 1.1.4
 * Remove extra trailing `\r\n` from messages as some servers may interpret it as an empty
