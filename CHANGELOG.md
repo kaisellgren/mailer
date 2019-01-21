@@ -1,3 +1,6 @@
+## 2.2.0
+* add qq smtp server definition
+
 ## 2.1.2
 * improve exception when server response does not match.
 
