@@ -3,9 +3,33 @@ import 'dart:async';
 
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
+import 'package:mailer/src/smtp/exceptions.dart';
+import 'package:mailer/src/smtp/smtp_client.dart';
 import "package:test/test.dart";
 import 'dart:convert' as JSON;
 
+SmtpServer correctSmtpServer;
+SmtpServer incorrectCredentials = gmail("mister@gmail.com", "wrongpass");
+
+void main() async {
+  correctSmtpServer = await configureCorrectSmtpServer();
+
+  test('Sending email', () async {
+
+    List<SendReport> reports = await send(createMessage(correctSmtpServer),
+                                          correctSmtpServer,
+                                          timeout: Duration(seconds: 10));
+    expect(reports.last.sent, true);
+  }, skip: true);
+
+  test('SmtpClient.checkCredentials() throws SmtpClientAuthenticationException', () async {
+    SmtpClient smtpClient = SmtpClient(incorrectCredentials);
+    expect(smtpClient.checkCredentials(timeout: const Duration(seconds: 5)),
+           throwsA(TypeMatcher<SmtpClientAuthenticationException>()));
+
+  }, skip: false);
+
+}
 
 Future<SmtpServer> configureCorrectSmtpServer() async {
   var config = File('test/smtpserver.json');
@@ -21,24 +45,11 @@ Future<SmtpServer> configureCorrectSmtpServer() async {
   );
 }
 
-Message createMessage(SmtpServer smtpServer, int number) {
+Message createMessage(SmtpServer smtpServer) {
   // Message to myself
   return new Message()
     ..from = new Address(smtpServer.username)
     ..recipients.add(smtpServer.username)
-    ..subject = 'Test[$number] Dart Mailer library :: 😀 :: ${new DateTime.now()}'
+    ..subject = 'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.';
-}
-
-void main() async {
-  final SmtpServer correctSmtpServer = await configureCorrectSmtpServer();
-
-  test('Sending email', () async {
-
-    List<SendReport> reports = await send(createMessage(correctSmtpServer, 1),
-                                          correctSmtpServer,
-                                          timeout: Duration(seconds: 10));
-    expect(reports.last.sent, true);
-  });
-
 }

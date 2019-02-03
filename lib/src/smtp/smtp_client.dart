@@ -89,6 +89,30 @@ class SmtpClient {
     }
   }
 
+  /// Convenience method for testing SmtpServer configuration.
+  ///
+  /// Throws following exceptions if the configuration is incorrect or there is
+  /// no internet connection:
+  /// [SmtpClientAuthenticationException],
+  /// [SmtpException],
+  /// [SocketException]
+  /// others
+  Future checkCredentials({Duration timeout: const Duration(seconds: 10)}) async {
+    final Connection c = new Connection(_smtpServer, timeout: timeout);
+
+    try {
+      await c.connect();
+      await c.send(null);
+      var capabilities = await _doEhloHelo(c);
+
+      c.verifySecuredConnection();
+      await _doAuthentication(c, capabilities);
+
+    } finally {
+      c.close();
+    }
+  }
+
   Future<List<SendReport>> send(Message message,
       {Duration timeout = const Duration(seconds: 60)}) async {
 
