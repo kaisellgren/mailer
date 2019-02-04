@@ -10,6 +10,7 @@ import 'capabilities.dart';
 import 'exceptions.dart';
 import 'package:mailer/src/entities/problem.dart';
 import 'validator.dart';
+import 'dart:io';
 
 final Logger _logger = new Logger('smtp-client');
 
@@ -113,29 +114,26 @@ class SmtpClient {
     }
   }
 
-  Future<List<SendReport>> send(Message message,
+  /// The message should be validated before passing it to this function:
+  /// var validationProblems = validate(message);
+  /// if (validationProblems.isEmpty) sendOrThrow(message);
+  ///
+  /// Throws following exceptions:
+  /// [SmtpClientAuthenticationException],
+  /// [SmtpException],
+  /// [SocketException],
+  /// [IRProblemException]
+  Future<Null> sendOrThrow(Message message,
       {Duration timeout = const Duration(seconds: 60)}) async {
 
-    final List<SendReport> sendReports = [];
+    IRMessage irMessage = new IRMessage(message);
+    Iterable<String> envelopeTos = irMessage.envelopeTos;
+
+    if (envelopeTos.isEmpty) {
+      throw IRProblemException(new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
+    }
+
     final Connection c = new Connection(_smtpServer, timeout: timeout);
-
-    // Don't even try to connect to the server, if message-validation fails.
-    var problems = validate(message);
-    if (problems.isNotEmpty) {
-      sendReports
-          .add(new SendReport(message, false, validationProblems: problems));
-      return sendReports;
-    }
-
-    IRMessage irMessage;
-    try {
-      // Constructor might throw IRProblemException.
-      irMessage = new IRMessage(message);
-    } on IRProblemException catch (e) {
-      sendReports
-          .add(new SendReport(message, false, validationProblems: [e.problem]));
-      return sendReports;
-    }
 
     try {
       await c.connect();
@@ -150,16 +148,6 @@ class SmtpClient {
 
       // Authenticate
       await _doAuthentication(c, capabilities);
-
-      Iterable<String> envelopeTos = irMessage.envelopeTos;
-
-      if (envelopeTos.isEmpty) {
-        _logger.info('Mail without recipients.  Not sending. ($message)');
-        sendReports.add(new SendReport(message, false, validationProblems: [
-          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
-        ]));
-        return sendReports;
-      }
 
       // Make sure that the server knows, that we are sending a new mail.
       // This also allows us to simply `continue;` to the next mail in case
@@ -189,14 +177,57 @@ class SmtpClient {
 
       await c.send('QUIT', waitForResponse: false);
 
-      sendReports.add(new SendReport(message, true));
-    } catch (exception) {
-      sendReports.add(new SendReport(message, false, validationProblems: [
-        new Problem('UNKNOWN', 'Received an exception: $exception')
-      ]));
     } finally {
       await c.close();
     }
+
+  }
+
+  Future<List<SendReport>> send(Message message,
+      {Duration timeout = const Duration(seconds: 60)}) async {
+
+    final List<SendReport> sendReports = [];
+
+    /* TODO Message validation should be done outside of this function */
+    // Don't even try to connect to the server, if message-validation fails.
+    var validationProblems = validate(message);
+    if (validationProblems.isNotEmpty) {
+      sendReports
+          .add(new SendReport(message, false,
+                              validationProblems: validationProblems));
+      return sendReports;
+    }
+
+    bool sendSucceeded = false;
+    var problems = <Problem>[];
+
+    try {
+      sendOrThrow(message);
+      sendSucceeded = true;
+      
+    } on IRProblemException catch (e) {
+      sendReports
+          .add(new SendReport(message, false, validationProblems: [e.problem]));
+
+    } on SmtpClientAuthenticationException catch (e) {
+      problems.add(new Problem('AUTHENTICATION_ERROR', e.message));
+
+    } on SocketException catch (e) {
+      problems.add(new Problem('CONNECTON_ERROR',
+                               'Connection error: ${e.message}'));
+    } on SmtpClientException catch (e) {
+      problems.add(new Problem('SMTP_ERROR',
+                               'SMTP error: ${e.message}'));
+      _logger.severe("Send message error", e);
+    } catch (e) {
+      problems.add(new Problem('UNKNOWN',
+                               'Received an exception: $e'));
+      _logger.severe("Send message error", e);
+    }
+
+
+    sendReports.add(new SendReport(message, sendSucceeded, 
+                                   validationProblems: problems));
 
     return sendReports;
   }
