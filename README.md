@@ -68,13 +68,17 @@ See [gmail example](example/send_gmail.dart).
 import 'dart:io';
 
 import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
+import 'package:mailer/smtp_server.dart';
 
 main() async {
   String username = 'username@gmail.com';
   String password = 'password';
 
   final smtpServer = gmail(username, password);
+  // Use the SmtpServer class to configure an SMTP server:
+  // final smtpServer = new SmtpServer('smtp.domain.com');
+  // See the named arguments of SmtpServer for further configuration
+  // options.  
   
   // Create our message.
   final message = new Message()
