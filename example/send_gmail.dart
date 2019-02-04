@@ -38,7 +38,7 @@ main(List<String> rawArgs) async {
 
   // Create our message.
   final message = new Message()
-    ..from = new Address('$username@gmail.com')
+    ..from = new Address('$username@gmail.com', 'My name 😀')
     ..recipients.addAll(toAd(tos))
     ..ccRecipients.addAll(toAd(args[ccArgs] as Iterable<String>))
     ..bccRecipients.addAll(toAd(args[bccArgs] as Iterable<String>))

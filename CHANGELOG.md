@@ -1,3 +1,6 @@
+## 2.2.1
+* fix regular expression which is used to validate the name of an email address. 
+
 ## 2.2.0
 * add qq smtp server definition
 

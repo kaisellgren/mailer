@@ -1,13 +1,11 @@
+import 'package:mailer/src/utils.dart';
+
 import '../entities/address.dart';
 import '../entities/message.dart';
 import '../entities/problem.dart';
 
-// https://stackoverflow.com/questions/12052825/regular-expression-for-all-printable-characters-in-javascript
-final RegExp _printableCharsRegExp =
-    new RegExp(r'^[\u0020-\u007e\u00a0-\u00ff]*$');
-
 bool _printableCharsOnly(String s) {
-  return _printableCharsRegExp.hasMatch(s);
+  return isPrintableRegExp.hasMatch(s);
 }
 
 /// [address] can either be an [Address] or String.
