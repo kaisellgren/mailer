@@ -3,13 +3,14 @@ import 'dart:convert' as dart_convert;
 
 import 'package:dart2_constant/convert.dart' as convert;
 import 'package:intl/intl.dart';
+import 'package:mailer/src/utils.dart';
 
-import 'conversion.dart';
-import '../capabilities.dart';
 import '../../entities/address.dart';
 import '../../entities/attachment.dart';
 import '../../entities/message.dart';
 import '../../entities/problem.dart';
+import '../capabilities.dart';
+import 'conversion.dart';
 
 part 'ir_content.dart';
 part 'ir_header.dart';
