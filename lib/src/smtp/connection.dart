@@ -29,8 +29,9 @@ class Connection {
   final SmtpServer _server;
   Socket _socket;
   StreamQueue<String> _socketIn;
+  final Duration timeout;
 
-  Connection(this._server);
+  Connection(this._server, { this.timeout: const Duration(seconds: 60)});
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
 
@@ -111,11 +112,11 @@ class Connection {
     // Secured connection was demanded by the user.
     if (_server.ssl) {
       _socket = await SecureSocket.connect(_server.host, _server.port,
-          onBadCertificate: (_) => _server.ignoreBadCertificate);
+          onBadCertificate: (_) => _server.ignoreBadCertificate, timeout: timeout);
     } else {
-      _socket = await Socket.connect(_server.host, _server.port);
+      _socket = await Socket.connect(_server.host, _server.port, timeout: timeout);
     }
-    _socket.timeout(const Duration(seconds: 60));
+    _socket.timeout(timeout);
 
     _setSocketIn();
   }

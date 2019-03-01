@@ -10,20 +10,20 @@ import 'capabilities.dart';
 import 'exceptions.dart';
 import 'package:mailer/src/entities/problem.dart';
 import 'validator.dart';
+import 'dart:io';
 
 final Logger _logger = new Logger('smtp-client');
 
 class SmtpClient {
-  final Connection _c;
   final SmtpServer _smtpServer;
 
-  SmtpClient(this._smtpServer) : _c = new Connection(_smtpServer);
+  SmtpClient(this._smtpServer);
 
   /// Returns the capabilities of the server if ehlo was successful.  null if
   /// `helo` is necessary.
-  Future<Capabilities> _doEhlo() async {
+  Future<Capabilities> _doEhlo(Connection c) async {
     var respEhlo =
-        await _c.send('EHLO ${_smtpServer.name}', acceptedRespCodes: null);
+    await c.send('EHLO ${_smtpServer.name}', acceptedRespCodes: null);
 
     if (!respEhlo.responseCode.startsWith('2')) {
       return null;
@@ -31,39 +31,39 @@ class SmtpClient {
 
     var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
 
-    if (!capabilities.startTls || _c.isSecure) {
+    if (!capabilities.startTls || c.isSecure) {
       return capabilities;
     }
 
     // Use a secure socket.  Server announced STARTTLS.
     // The server supports TLS and we haven't switched to it yet,
     // so let's do it.
-    var tlsResp = await _c.send('STARTTLS', acceptedRespCodes: null);
+    var tlsResp = await c.send('STARTTLS', acceptedRespCodes: null);
     if (!tlsResp.responseCode.startsWith('2')) {
       // Even though server announced STARTTLS, it now chickens out.
       return null;
     }
 
     // Replace _socket with an encrypted version.
-    await _c.upgradeConnection();
+    await c.upgradeConnection();
 
     // Restart EHLO process.  This time on a secure connection.
-    return _doEhlo();
+    return _doEhlo(c);
   }
 
-  Future<Capabilities> _doEhloHelo() async {
-    var ehlo = await _doEhlo();
+  Future<Capabilities> _doEhloHelo(Connection c) async {
+    var ehlo = await _doEhlo(c);
 
     if (ehlo != null) {
       return ehlo;
     }
 
     // EHLO not accepted.  Let's try HELO.
-    await _c.send('HELO ${_smtpServer.name}');
+    await c.send('HELO ${_smtpServer.name}');
     return new Capabilities();
   }
 
-  Future<Null> _doAuthentication(Capabilities capabilities) async {
+  Future<Null> _doAuthentication(Connection c, Capabilities capabilities) async {
     if (_smtpServer.username == null) {
       return;
     }
@@ -77,12 +77,12 @@ class SmtpClient {
     var password = _smtpServer.password;
 
     // 'Username:' in base64 is: VXN...
-    await _c.send('AUTH LOGIN',
+    await c.send('AUTH LOGIN',
         acceptedRespCodes: ['334'], expect: 'VXNlcm5hbWU6');
     // 'Password:' in base64 is: UGF...
-    await _c.send(convert.base64.encode(username.codeUnits),
+    await c.send(convert.base64.encode(username.codeUnits),
         acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
-    var loginResp = await _c
+    var loginResp = await c
         .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
     if (!loginResp.responseCode.startsWith('2')) {
       throw new SmtpClientAuthenticationException(
@@ -90,50 +90,64 @@ class SmtpClient {
     }
   }
 
-  Future<List<SendReport>> send(Message message) async {
-    final List<SendReport> sendReports = [];
-
-    // Don't even try to connect to the server, if message-validation fails.
-    var problems = validate(message);
-    if (problems.isNotEmpty) {
-      sendReports
-          .add(new SendReport(message, false, validationProblems: problems));
-      return sendReports;
-    }
-
-    IRMessage irMessage;
-    try {
-      // Constructor might throw IRProblemException.
-      irMessage = new IRMessage(message);
-    } on IRProblemException catch (e) {
-      sendReports
-          .add(new SendReport(message, false, validationProblems: [e.problem]));
-      return sendReports;
-    }
+  /// Convenience method for testing SmtpServer configuration.
+  ///
+  /// Throws following exceptions if the configuration is incorrect or there is
+  /// no internet connection:
+  /// [SmtpClientAuthenticationException],
+  /// [SmtpException],
+  /// [SocketException]
+  /// others
+  Future checkCredentials({Duration timeout: const Duration(seconds: 10)}) async {
+    final Connection c = new Connection(_smtpServer, timeout: timeout);
 
     try {
-      await _c.connect();
+      await c.connect();
+      await c.send(null);
+      var capabilities = await _doEhloHelo(c);
+
+      c.verifySecuredConnection();
+      await _doAuthentication(c, capabilities);
+
+    } finally {
+      c.close();
+    }
+  }
+
+  /// The message should be validated before passing it to this function:
+  /// var validationProblems = validate(message);
+  /// if (validationProblems.isEmpty) sendOrThrow(message);
+  ///
+  /// Throws following exceptions:
+  /// [SmtpClientAuthenticationException],
+  /// [SmtpException],
+  /// [SocketException],
+  /// [IRProblemException]
+  Future<Null> sendOrThrow(Message message,
+      {Duration timeout = const Duration(seconds: 60)}) async {
+
+    IRMessage irMessage = new IRMessage(message);
+    Iterable<String> envelopeTos = irMessage.envelopeTos;
+
+    if (envelopeTos.isEmpty) {
+      throw IRProblemException(new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
+    }
+
+    final Connection c = new Connection(_smtpServer, timeout: timeout);
+
+    try {
+      await c.connect();
 
       // Greeting (Don't send anything.  We first wait for a 2xx message.)
-      await _c.send(null);
+      await c.send(null);
 
       // EHLO / HELO
-      var capabilities = await _doEhloHelo();
+      var capabilities = await _doEhloHelo(c);
 
-      _c.verifySecuredConnection();
+      c.verifySecuredConnection();
 
       // Authenticate
-      await _doAuthentication(capabilities);
-
-      Iterable<String> envelopeTos = irMessage.envelopeTos;
-
-      if (envelopeTos.isEmpty) {
-        _logger.info('Mail without recipients.  Not sending. ($message)');
-        sendReports.add(new SendReport(message, false, validationProblems: [
-          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.')
-        ]));
-        return sendReports;
-      }
+      await _doAuthentication(c, capabilities);
 
       // Make sure that the server knows, that we are sending a new mail.
       // This also allows us to simply `continue;` to the next mail in case
@@ -144,31 +158,76 @@ class SmtpClient {
       // 'From: ' header!)
 
       bool smtputf8 = capabilities.smtpUtf8;
-      await _c.send(
-          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
+      await c.send(
+          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8
+              ? ' SMTPUTF8'
+              : ''}');
 
       // Give the server all recipients.
       // TODO what if only one address fails?
       await Future.forEach(
-          envelopeTos, (recipient) => _c.send('RCPT TO:<$recipient>'));
+          envelopeTos, (recipient) => c.send('RCPT TO:<$recipient>'));
 
       // Finally send the actual mail.
-      await _c.send('DATA', acceptedRespCodes: ['2', '3']);
+      await c.send('DATA', acceptedRespCodes: ['2', '3']);
 
-      await _c.sendStream(irMessage.data(capabilities));
+      await c.sendStream(irMessage.data(capabilities));
 
-      await _c.send('.', acceptedRespCodes: ['2', '3']);
+      await c.send('.', acceptedRespCodes: ['2', '3']);
 
-      await _c.send('QUIT', waitForResponse: false);
+      await c.send('QUIT', waitForResponse: false);
 
-      sendReports.add(new SendReport(message, true));
-    } catch (exception) {
-      sendReports.add(new SendReport(message, false, validationProblems: [
-        new Problem('UNKNOWN', 'Received an exception: $exception')
-      ]));
     } finally {
-      await _c.close();
+      await c.close();
     }
+
+  }
+
+  Future<List<SendReport>> send(Message message,
+      {Duration timeout = const Duration(seconds: 60)}) async {
+
+    final List<SendReport> sendReports = [];
+
+    /* TODO Message validation should be done outside of this function */
+    // Don't even try to connect to the server, if message-validation fails.
+    var validationProblems = validate(message);
+    if (validationProblems.isNotEmpty) {
+      sendReports
+          .add(new SendReport(message, false,
+                              validationProblems: validationProblems));
+      return sendReports;
+    }
+
+    bool sendSucceeded = false;
+    var problems = <Problem>[];
+
+    try {
+      sendOrThrow(message);
+      sendSucceeded = true;
+      
+    } on IRProblemException catch (e) {
+      sendReports
+          .add(new SendReport(message, false, validationProblems: [e.problem]));
+
+    } on SmtpClientAuthenticationException catch (e) {
+      problems.add(new Problem('AUTHENTICATION_ERROR', e.message));
+
+    } on SocketException catch (e) {
+      problems.add(new Problem('CONNECTON_ERROR',
+                               'Connection error: ${e.message}'));
+    } on SmtpClientException catch (e) {
+      problems.add(new Problem('SMTP_ERROR',
+                               'SMTP error: ${e.message}'));
+      _logger.severe("Send message error", e);
+    } catch (e) {
+      problems.add(new Problem('UNKNOWN',
+                               'Received an exception: $e'));
+      _logger.severe("Send message error", e);
+    }
+
+
+    sendReports.add(new SendReport(message, sendSucceeded, 
+                                   validationProblems: problems));
 
     return sendReports;
   }
