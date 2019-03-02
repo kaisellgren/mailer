@@ -1,8 +1,11 @@
+import 'package:mailer/src/entities/problem.dart';
+
 abstract class SmtpClientException implements Exception {
   /// A short description of the problem.
   final String message;
+  final List<Problem> problems;
 
-  SmtpClientException(this.message);
+  SmtpClientException(this.message, {this.problems = const []});
 
   @override
   String toString() => message;
@@ -24,4 +27,9 @@ class SmtpClientCommunicationException extends SmtpClientException {
 /// and [SmtpOptions.securedOnly] is true.
 class SmtpUnsecureException extends SmtpClientException {
   SmtpUnsecureException(String message) : super(message);
+}
+
+class SmtpMessageValidationException extends SmtpClientException {
+  SmtpMessageValidationException(String message, List<Problem> problems)
+      : super(message, problems: problems);
 }

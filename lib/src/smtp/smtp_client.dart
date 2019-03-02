@@ -1,16 +1,18 @@
 import 'dart:async';
+import 'dart:io';
+
 import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
 import 'package:mailer/smtp_server.dart';
-import 'internal_representation/internal_representation.dart';
+import 'package:mailer/src/entities/problem.dart';
+
 import '../entities/message.dart';
 import '../entities/send_report.dart';
-import 'connection.dart';
 import 'capabilities.dart';
+import 'connection.dart';
 import 'exceptions.dart';
-import 'package:mailer/src/entities/problem.dart';
+import 'internal_representation/internal_representation.dart';
 import 'validator.dart';
-import 'dart:io';
 
 final Logger _logger = new Logger('smtp-client');
 
@@ -23,7 +25,7 @@ class SmtpClient {
   /// `helo` is necessary.
   Future<Capabilities> _doEhlo(Connection c) async {
     var respEhlo =
-    await c.send('EHLO ${_smtpServer.name}', acceptedRespCodes: null);
+        await c.send('EHLO ${_smtpServer.name}', acceptedRespCodes: null);
 
     if (!respEhlo.responseCode.startsWith('2')) {
       return null;
@@ -63,7 +65,8 @@ class SmtpClient {
     return new Capabilities();
   }
 
-  Future<Null> _doAuthentication(Connection c, Capabilities capabilities) async {
+  Future<Null> _doAuthentication(
+      Connection c, Capabilities capabilities) async {
     if (_smtpServer.username == null) {
       return;
     }
@@ -86,7 +89,7 @@ class SmtpClient {
         .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
     if (!loginResp.responseCode.startsWith('2')) {
       throw new SmtpClientAuthenticationException(
-          'Incorrect username ($username) / password');
+          'Incorrect username / password');
     }
   }
 
@@ -95,10 +98,10 @@ class SmtpClient {
   /// Throws following exceptions if the configuration is incorrect or there is
   /// no internet connection:
   /// [SmtpClientAuthenticationException],
-  /// [SmtpException],
+  /// [SmtpClientCommunicationException],
   /// [SocketException]
   /// others
-  Future checkCredentials({Duration timeout: const Duration(seconds: 10)}) async {
+  Future<Null> checkCredentials({Duration timeout}) async {
     final Connection c = new Connection(_smtpServer, timeout: timeout);
 
     try {
@@ -108,30 +111,21 @@ class SmtpClient {
 
       c.verifySecuredConnection();
       await _doAuthentication(c, capabilities);
-
     } finally {
       c.close();
     }
   }
 
   /// The message should be validated before passing it to this function:
-  /// var validationProblems = validate(message);
-  /// if (validationProblems.isEmpty) sendOrThrow(message);
   ///
   /// Throws following exceptions:
   /// [SmtpClientAuthenticationException],
-  /// [SmtpException],
+  /// [SmtpClientCommunicationException],
+  /// [SmtpUnsecureException],
   /// [SocketException],
-  /// [IRProblemException]
-  Future<Null> sendOrThrow(Message message,
-      {Duration timeout = const Duration(seconds: 60)}) async {
-
+  Future<Null> _send(Message message, {Duration timeout}) async {
     IRMessage irMessage = new IRMessage(message);
     Iterable<String> envelopeTos = irMessage.envelopeTos;
-
-    if (envelopeTos.isEmpty) {
-      throw IRProblemException(new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
-    }
 
     final Connection c = new Connection(_smtpServer, timeout: timeout);
 
@@ -159,9 +153,7 @@ class SmtpClient {
 
       bool smtputf8 = capabilities.smtpUtf8;
       await c.send(
-          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8
-              ? ' SMTPUTF8'
-              : ''}');
+          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
 
       // Give the server all recipients.
       // TODO what if only one address fails?
@@ -176,58 +168,64 @@ class SmtpClient {
       await c.send('.', acceptedRespCodes: ['2', '3']);
 
       await c.send('QUIT', waitForResponse: false);
-
     } finally {
       await c.close();
     }
-
   }
 
+  /// Throws following exceptions if [catchExceptions] is false:
+  /// [SmtpClientAuthenticationException],
+  /// [SmtpClientCommunicationException],
+  /// [SmtpUnsecureException],
+  /// [SocketException],
+  /// [SmtpMessageValidationException]
   Future<List<SendReport>> send(Message message,
-      {Duration timeout = const Duration(seconds: 60)}) async {
-
+      {Duration timeout, bool catchExceptions = true}) async {
     final List<SendReport> sendReports = [];
 
     /* TODO Message validation should be done outside of this function */
     // Don't even try to connect to the server, if message-validation fails.
     var validationProblems = validate(message);
     if (validationProblems.isNotEmpty) {
-      sendReports
-          .add(new SendReport(message, false,
-                              validationProblems: validationProblems));
-      return sendReports;
+      _logger.severe('Message validation error: '
+          '${validationProblems.map((p) => p.msg).join('|')}');
+      if (!catchExceptions) {
+        throw new SmtpMessageValidationException(
+            'Invalid message.', validationProblems);
+      } else {
+        sendReports.add(new SendReport(message, false,
+            validationProblems: validationProblems));
+        return sendReports;
+      }
     }
 
     bool sendSucceeded = false;
-    var problems = <Problem>[];
+    Problem problem;
 
-    try {
-      sendOrThrow(message);
+    if (!catchExceptions) {
+      _send(message);
       sendSucceeded = true;
-      
-    } on IRProblemException catch (e) {
-      sendReports
-          .add(new SendReport(message, false, validationProblems: [e.problem]));
-
-    } on SmtpClientAuthenticationException catch (e) {
-      problems.add(new Problem('AUTHENTICATION_ERROR', e.message));
-
-    } on SocketException catch (e) {
-      problems.add(new Problem('CONNECTON_ERROR',
-                               'Connection error: ${e.message}'));
-    } on SmtpClientException catch (e) {
-      problems.add(new Problem('SMTP_ERROR',
-                               'SMTP error: ${e.message}'));
-      _logger.severe("Send message error", e);
-    } catch (e) {
-      problems.add(new Problem('UNKNOWN',
-                               'Received an exception: $e'));
-      _logger.severe("Send message error", e);
+    } else {
+      try {
+        _send(message);
+        sendSucceeded = true;
+      } on SmtpClientAuthenticationException catch (e) {
+        problem = new Problem('AUTHENTICATION_ERROR', e.message);
+      } on SocketException catch (e) {
+        problem =
+            new Problem('CONNECTION_ERROR', 'Connection error: ${e.message}');
+      } on SmtpClientException catch (e) {
+        problem = new Problem('SMTP_ERROR', 'SMTP error: ${e.message}');
+      } catch (e) {
+        problem = new Problem('UNKNOWN', 'Received an exception: $e');
+      }
+    }
+    if (!sendSucceeded) {
+      _logger.severe("Send message error: $problem");
     }
 
-
-    sendReports.add(new SendReport(message, sendSucceeded, 
-                                   validationProblems: problems));
+    sendReports.add(
+        new SendReport(message, sendSucceeded, validationProblems: [problem]));
 
     return sendReports;
   }

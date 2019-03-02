@@ -144,8 +144,8 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
       headers
           .add(new _IRHeaderAddresses(name, value.map((a) => new Address(a))));
     } else {
-      throw new IRProblemException(
-          new Problem('INVALID_HEADER', 'Type of value for $name is invalid'));
+      throw new InvalidHeaderException(
+          'Type of value for $name is invalid');
     }
   });
 

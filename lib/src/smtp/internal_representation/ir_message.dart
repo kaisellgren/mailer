@@ -32,3 +32,8 @@ class IRMessage {
   Stream<List<int>> data(Capabilities capabilities) =>
       _content.out(new _IRMetaInformation(capabilities));
 }
+
+class InvalidHeaderException implements Exception {
+  String message;
+  InvalidHeaderException(this.message);
+}
