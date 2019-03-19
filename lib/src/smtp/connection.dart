@@ -25,7 +25,8 @@ class Connection {
   Socket _socket;
   StreamQueue<String> _socketIn;
 
-  Connection(this._server, {this.timeout: const Duration(seconds: 60)});
+  Connection(this._server, {Duration timeout})
+      : this.timeout = timeout ?? const Duration(seconds: 60);
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
 
