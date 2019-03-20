@@ -143,17 +143,12 @@ class SmtpClient {
       // Authenticate
       await _doAuthentication(c, capabilities);
 
-      // Make sure that the server knows, that we are sending a new mail.
-      // This also allows us to simply `continue;` to the next mail in case
-      // something goes wrong.
-      // await _c.send('RSET');  // We currently reconnect for every msg.
-
       // Tell the server the envelope from address (might be different to the
       // 'From: ' header!)
 
       bool smtputf8 = capabilities.smtpUtf8;
-      await c.send(
-          'MAIL FROM:<${irMessage.envelopeFrom}> ${smtputf8 ? ' SMTPUTF8' : ''}');
+      await c.send('MAIL FROM:<${irMessage.envelopeFrom}>' +
+          (smtputf8 ? ' SMTPUTF8' : ''));
 
       // Give the server all recipients.
       // TODO what if only one address fails?
@@ -202,24 +197,28 @@ class SmtpClient {
     bool sendSucceeded = false;
     Problem problem;
 
-    if (!catchExceptions) {
-      _send(message);
+    try {
+      await _send(message, timeout: timeout);
       sendSucceeded = true;
-    } else {
-      try {
-        _send(message);
-        sendSucceeded = true;
-      } on SmtpClientAuthenticationException catch (e) {
-        problem = new Problem('AUTHENTICATION_ERROR', e.message);
-      } on SocketException catch (e) {
-        problem =
-            new Problem('CONNECTION_ERROR', 'Connection error: ${e.message}');
-      } on SmtpClientException catch (e) {
-        problem = new Problem('SMTP_ERROR', 'SMTP error: ${e.message}');
-      } catch (e) {
-        problem = new Problem('UNKNOWN', 'Received an exception: $e');
+    } on SmtpClientAuthenticationException catch (e) {
+      problem = new Problem('AUTHENTICATION_ERROR', e.message);
+      if (!catchExceptions) rethrow;
+    } on SocketException catch (e) {
+      problem =
+          new Problem('CONNECTION_ERROR', 'Connection error: ${e.message}');
+      if (!catchExceptions) rethrow;
+    } on SmtpClientException catch (e) {
+      problem = new Problem('SMTP_ERROR', 'SMTP error: ${e.message}');
+      if (!catchExceptions) rethrow;
+    } catch (e) {
+      problem = new Problem('UNKNOWN', 'Received an exception: $e');
+      if (!catchExceptions) rethrow;
+    } finally {
+      if (problem != null) {
+        _logger.warning('Could not send mail: ${problem.code} (${problem.msg}');
       }
     }
+
     if (!sendSucceeded) {
       _logger.severe("Send message error: $problem");
     }

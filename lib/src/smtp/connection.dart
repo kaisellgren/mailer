@@ -48,7 +48,7 @@ class Connection {
     if (!waitForResponse) {
       // Even though we don't wait for a response, we still wait until the
       // command has been sent.
-      await _socket.flush();
+      await _socket.flush().timeout(timeout);
       return null;
     }
 
@@ -63,10 +63,12 @@ class Connection {
     // line.
     while (currentLine == null ||
         (currentLine.length > 3 && currentLine[3] != ' ')) {
-      if (!(await _socketIn.hasNext)) {
+      var hasNext = await _socketIn.hasNext.timeout(timeout);
+      if (!hasNext) {
         throw new SmtpClientCommunicationException(
             "Socket was closed even though a response was expected.");
       }
+
       // Let's timeout if we don't receive anything from the other side.
       // This is possible if we for instance connect to an SSL port where the
       // socket connection succeeds, but we never receive anything because we
@@ -123,8 +125,8 @@ class Connection {
   }
 
   Future<Null> close() async {
-    if (_socketIn != null) await _socketIn.cancel();
     if (_socket != null) await _socket.close();
+    if (_socketIn != null) await _socketIn.cancel(immediate: true);
   }
 
   void _setSocketIn() {
