@@ -132,8 +132,18 @@ class SmtpClient {
     try {
       await c.connect();
 
-      // Greeting (Don't send anything.  We first wait for a 2xx message.)
-      await c.send(null);
+      try {
+        // Greeting (Don't send anything.  We first wait for a 2xx message.)
+        await c.send(null);
+      } on TimeoutException {
+        if (!c.isSecure) {
+          throw new SmtpNoGreetingException(
+              'Timed out while waiting for greeting (try ssl).');
+        } else {
+          throw new SmtpNoGreetingException(
+              'Timed out while waiting for greeting.');
+        }
+      }
 
       // EHLO / HELO
       var capabilities = await _doEhloHelo(c);

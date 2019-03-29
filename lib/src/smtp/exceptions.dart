@@ -33,3 +33,7 @@ class SmtpMessageValidationException extends SmtpClientException {
   SmtpMessageValidationException(String message, List<Problem> problems)
       : super(message, problems: problems);
 }
+
+class SmtpNoGreetingException extends SmtpClientException {
+  SmtpNoGreetingException(String message) : super(message);
+}
