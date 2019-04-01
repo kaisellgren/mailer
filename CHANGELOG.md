@@ -1,3 +1,9 @@
+## 2.3.0
+* add timeout option.  (https://github.com/pjkroll)
+* add `catchExceptions` flag (currently true, but default will change to false)
+  improve exceptions.
+* remove username from authentication failure exception (see issue #79)
+
 ## 2.2.1
 * fix regular expression which is used to validate the name of an email address. 
 

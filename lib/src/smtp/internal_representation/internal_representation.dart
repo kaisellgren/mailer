@@ -8,7 +8,6 @@ import 'package:mailer/src/utils.dart';
 import '../../entities/address.dart';
 import '../../entities/attachment.dart';
 import '../../entities/message.dart';
-import '../../entities/problem.dart';
 import '../capabilities.dart';
 import 'conversion.dart';
 
@@ -34,12 +33,6 @@ class _IRMetaInformation {
   final Capabilities capabilities;
 
   _IRMetaInformation(this.capabilities);
-}
-
-class IRProblemException implements Exception {
-  final Problem problem;
-
-  IRProblemException(this.problem);
 }
 
 abstract class _IROutput {

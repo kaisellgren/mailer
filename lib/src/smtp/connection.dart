@@ -15,22 +15,18 @@ import 'server_response.dart';
  *
  * This includes the socket, smtp-options, but also other objects, relevant
  * for an smtp session, like an input queue.
- *
- * By passing this object around, we will be thread safe.
- * As sending mail is a Future, it is conceivable to send a lot of mails in
- * parallel using the same client, and then Future.wait for all mails to finish.
- *
- * This wouldn't work if we stored connection information in the client itself.
  **/
 
 final _logger = new Logger('Connection');
 
 class Connection {
   final SmtpServer _server;
+  final Duration timeout;
   Socket _socket;
   StreamQueue<String> _socketIn;
 
-  Connection(this._server);
+  Connection(this._server, {Duration timeout})
+      : this.timeout = timeout ?? const Duration(seconds: 60);
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
 
@@ -52,7 +48,7 @@ class Connection {
     if (!waitForResponse) {
       // Even though we don't wait for a response, we still wait until the
       // command has been sent.
-      await _socket.flush();
+      await _socket.flush().timeout(timeout);
       return null;
     }
 
@@ -67,11 +63,17 @@ class Connection {
     // line.
     while (currentLine == null ||
         (currentLine.length > 3 && currentLine[3] != ' ')) {
-      if (!(await _socketIn.hasNext)) {
+      var hasNext = await _socketIn.hasNext.timeout(timeout);
+      if (!hasNext) {
         throw new SmtpClientCommunicationException(
             "Socket was closed even though a response was expected.");
       }
-      currentLine = await _socketIn.next;
+
+      // Let's timeout if we don't receive anything from the other side.
+      // This is possible if we for instance connect to an SSL port where the
+      // socket connection succeeds, but we never receive anything because we
+      // are stuck in the SSL negotiation process.
+      currentLine = await _socketIn.next.timeout(timeout);
 
       messages.add(currentLine.substring(4));
     }
@@ -111,18 +113,20 @@ class Connection {
     // Secured connection was demanded by the user.
     if (_server.ssl) {
       _socket = await SecureSocket.connect(_server.host, _server.port,
-          onBadCertificate: (_) => _server.ignoreBadCertificate);
+          onBadCertificate: (_) => _server.ignoreBadCertificate,
+          timeout: timeout);
     } else {
-      _socket = await Socket.connect(_server.host, _server.port);
+      _socket =
+          await Socket.connect(_server.host, _server.port, timeout: timeout);
     }
-    _socket.timeout(const Duration(seconds: 60));
+    _socket.timeout(timeout);
 
     _setSocketIn();
   }
 
   Future<Null> close() async {
-    if (_socketIn != null) await _socketIn.cancel();
     if (_socket != null) await _socket.close();
+    if (_socketIn != null) await _socketIn.cancel(immediate: true);
   }
 
   void _setSocketIn() {

@@ -89,8 +89,11 @@ main() async {
     ..subject = 'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
-  
-  final sendReports = await send(message, smtpServer);
+
+  // Use [catchExceptions]: true to prevent [send] from throwing.
+  // Note that the default for [catchExceptions] will change from true to false
+  // in the future!
+  final sendReports = await send(message, smtpServer, catchExceptions: false);
   
   // DONE
   
@@ -113,7 +116,7 @@ main() async {
       ..text = 'This is the plain text.\nThis is line 2 of the text part.'
       ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
     
-  final sendReports2 = await send(equivalentMessage, smtpServer);
+  final sendReports2 = await send(equivalentMessage, smtpServer, catchExceptions: false);
 }
 ```
 

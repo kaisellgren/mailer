@@ -1,3 +1,4 @@
+import 'package:mailer/src/smtp/internal_representation/internal_representation.dart';
 import 'package:mailer/src/utils.dart';
 
 import '../entities/address.dart';
@@ -71,5 +72,17 @@ List<Problem> validate(Message message) {
           'A recipient address is invalid.  ($a).');
     }
   });
+  try {
+    IRMessage irMessage = new IRMessage(message);
+    if (irMessage.envelopeTos.isEmpty) {
+      res.add(
+          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
+    }
+  } on InvalidHeaderException catch (e) {
+    res.add(new Problem('INVALID_HEADER', e.message));
+  } catch (e) {
+    res.add(new Problem(
+        'INVALID_MESSAGE', 'Could not build internal representation.'));
+  }
   return res;
 }

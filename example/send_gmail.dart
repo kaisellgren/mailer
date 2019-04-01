@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:args/args.dart';
 import 'package:logging/logging.dart';
 import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
+import 'package:mailer/smtp_server.dart';
 
 /// Test mailer by sending email to yourself
 main(List<String> rawArgs) async {
@@ -47,7 +47,8 @@ main(List<String> rawArgs) async {
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
     ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>));
 
-  final sendReports = await send(message, smtpServer);
+  final sendReports =
+      await send(message, smtpServer, timeout: new Duration(seconds: 15));
   sendReports.forEach((sr) {
     if (sr.sent)
       print('Message sent');
