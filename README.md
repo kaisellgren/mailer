@@ -68,13 +68,17 @@ See [gmail example](example/send_gmail.dart).
 import 'dart:io';
 
 import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
+import 'package:mailer/smtp_server.dart';
 
 main() async {
   String username = 'username@gmail.com';
   String password = 'password';
 
   final smtpServer = gmail(username, password);
+  // Use the SmtpServer class to configure an SMTP server:
+  // final smtpServer = new SmtpServer('smtp.domain.com');
+  // See the named arguments of SmtpServer for further configuration
+  // options.  
   
   // Create our message.
   final message = new Message()
@@ -85,8 +89,11 @@ main() async {
     ..subject = 'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
-  
-  final sendReports = await send(message, smtpServer);
+
+  // Use [catchExceptions]: true to prevent [send] from throwing.
+  // Note that the default for [catchExceptions] will change from true to false
+  // in the future!
+  final sendReports = await send(message, smtpServer, catchExceptions: false);
   
   // DONE
   
@@ -109,7 +116,7 @@ main() async {
       ..text = 'This is the plain text.\nThis is line 2 of the text part.'
       ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
     
-  final sendReports2 = await send(equivalentMessage, smtpServer);
+  final sendReports2 = await send(equivalentMessage, smtpServer, catchExceptions: false);
 }
 ```
 
