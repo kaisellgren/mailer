@@ -7,6 +7,7 @@ import 'src/smtp/smtp_client.dart';
 
 export 'src/entities.dart';
 export 'legacy.dart';
+export 'src/smtp/smtp_client.dart';
 
 Future<List<SendReport>> send(Message message, SmtpServer smtpServer,
                              {Duration timeout}) {

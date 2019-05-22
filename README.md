@@ -117,6 +117,21 @@ main() async {
       ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
     
   final sendReports2 = await send(equivalentMessage, smtpServer, catchExceptions: false);
+  
+  // Sending multiple messages with the same connection
+  //
+  // Create a smtp client that will persist the connection
+  var client = SmtpPersistentClient(smtpServer);
+  
+  // Send the first message
+  await client.send(message);
+  
+  // send the equivalent message
+  await client.send(equivalentMessage);
+  
+  // close the connection
+  await client.close();
+  
 }
 ```
 

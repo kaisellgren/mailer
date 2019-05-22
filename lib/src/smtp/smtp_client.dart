@@ -239,3 +239,84 @@ class SmtpClient {
     return sendReports;
   }
 }
+
+class SmtpPersistentClient extends SmtpClient {
+  final _initiated = Completer();
+  Connection _connection;
+  Capabilities _capabilities;
+  bool _smtputf8;
+  final Duration timeout;
+
+  SmtpPersistentClient(SmtpServer smtpServer, {
+    this.timeout
+  }) : super(smtpServer) {
+    _startConnection();
+  }
+  _startConnection() async {
+    _connection = Connection(_smtpServer, timeout: timeout);
+    await _connection.connect();
+
+    try {
+      // Greeting (Don't send anything.  We first wait for a 2xx message.)
+      await _connection.send(null);
+    } on TimeoutException {
+      if (!_connection.isSecure) {
+        throw new SmtpNoGreetingException(
+            'Timed out while waiting for greeting (try ssl).');
+      } else {
+        throw new SmtpNoGreetingException(
+            'Timed out while waiting for greeting.');
+      }
+    }
+
+    // EHLO / HELO
+    _capabilities = await _doEhloHelo(_connection);
+
+    _connection.verifySecuredConnection();
+
+    // Authenticate
+    await _doAuthentication(_connection, _capabilities);
+
+    _smtputf8 = _capabilities.smtpUtf8;
+
+    _initiated.complete(null);
+  }
+
+  @override
+  /// The message should be validated before passing it to this function:
+  ///
+  /// Throws following exceptions:
+  /// [SmtpClientAuthenticationException],
+  /// [SmtpClientCommunicationException],
+  /// [SmtpUnsecureException],
+  /// [SocketException],
+  Future<Null> _send(Message message, {Duration timeout}) async {
+    IRMessage irMessage = new IRMessage(message);
+    Iterable<String> envelopeTos = irMessage.envelopeTos;
+
+    await _initiated.future;
+
+    await _connection.send('MAIL FROM:<${irMessage.envelopeFrom}>' +
+        (_smtputf8 ? ' SMTPUTF8' : ''));
+
+    // Give the server all recipients.
+    // TODO what if only one address fails?
+    await Future.forEach(
+        envelopeTos, (recipient) => _connection
+        .send('RCPT TO:<$recipient>'));
+
+    // Finally send the actual mail.
+    await _connection.send('DATA', acceptedRespCodes: ['2', '3']);
+
+    await _connection.sendStream(irMessage.data(_capabilities));
+
+    await _connection.send('.', acceptedRespCodes: ['2', '3']);
+  }
+
+  close() async {
+    if (_connection != null) {
+      await _connection.send('QUIT', waitForResponse: false);
+      await _connection.close();
+    }
+  }
+}
