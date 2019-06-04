@@ -1,5 +1,3 @@
-import 'dart:io';
-
 export 'smtp_server/gmail.dart';
 export 'smtp_server/hotmail.dart';
 export 'smtp_server/mailgun.dart';
@@ -8,7 +6,6 @@ export 'smtp_server/yahoo.dart';
 
 
 class SmtpServer {
-  final String name;
   final String host;
   final int port;
   final bool ignoreBadCertificate;
@@ -18,12 +15,11 @@ class SmtpServer {
   final String password;
 
   SmtpServer(this.host,
-      {this.port: 587,
+      {this.port = 587,
       String name,
-      this.ignoreBadCertificate: false,
-      this.ssl: false,
-      this.allowInsecure: false,
+      this.ignoreBadCertificate = false,
+      this.ssl = false,
+      this.allowInsecure = false,
       this.username,
-      this.password})
-      : this.name = name ?? Platform.localHostname;
+      this.password});
 }

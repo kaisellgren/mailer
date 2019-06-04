@@ -1,3 +1,10 @@
+## 3.0.0
+* NO BUGFIXES.  There is no need to update!
+* change default of `catchExceptions` to false
+* change return value of `send` from `List<SendReport>` to `SendReport`
+* add persistent connection (idea from https://github.com/jodinathan)
+* remove dart 1 compatible code.  mailer does require dart 2.2.2 now.
+
 ## 2.3.0
 * add timeout option.  (https://github.com/pjkroll)
 * add `catchExceptions` flag (currently true, but default will change to false)

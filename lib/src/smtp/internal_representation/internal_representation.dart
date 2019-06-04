@@ -1,7 +1,6 @@
 import 'dart:async';
-import 'dart:convert' as dart_convert;
+import 'dart:convert' as convert;
 
-import 'package:dart2_constant/convert.dart' as convert;
 import 'package:intl/intl.dart';
 import 'package:mailer/src/utils.dart';
 
