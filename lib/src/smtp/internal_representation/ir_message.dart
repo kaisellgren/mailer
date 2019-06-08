@@ -13,11 +13,12 @@ class IRMessage {
   Iterable<String> get envelopeTos {
     // All recipients.
     Iterable<String> envelopeTos = _message.envelopeTos ?? [];
+
     if (envelopeTos.isEmpty) {
       envelopeTos = [
-        ..._message.recipientsAsAddresses ?? [],
-        ..._message.ccsAsAddresses ?? [],
-        ..._message.bccsAsAddresses ?? []
+        ..._message.recipientsAsAddresses,
+        ..._message.ccsAsAddresses,
+        ..._message.bccsAsAddresses
       ].where((a) => a?.mailAddress != null).map((a) => a.mailAddress);
     }
     return envelopeTos;

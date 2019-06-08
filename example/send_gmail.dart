@@ -43,19 +43,43 @@ main(List<String> rawArgs) async {
     ..recipients.addAll(toAd(tos))
     ..ccRecipients.addAll(toAd(args[ccArgs] as Iterable<String>))
     ..bccRecipients.addAll(toAd(args[bccArgs] as Iterable<String>))
-    ..subject = 'Test Dart Mailer library :: 😀 :: ${DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
     ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>));
 
   try {
     final sendReport =
-    await send(message, smtpServer, timeout: Duration(seconds: 15));
+        await send(message, smtpServer, timeout: Duration(seconds: 15));
     print('Message sent: ' + sendReport.toString());
   } on MailerException catch (e) {
     print('Message not sent.');
     for (var p in e.problems) {
       print('Problem: ${p.code}: ${p.msg}');
+    }
+  }
+
+  print('Now sending using a persistent connection');
+  PersistentConnection connection =
+      PersistentConnection(smtpServer, timeout: Duration(seconds: 15));
+  // Send multiple mails on one connection:
+  try {
+    for (int i = 0; i < 3; i++) {
+      message.subject =
+          'Test Dart Mailer library :: 😀 :: ${DateTime.now()} / $i';
+      final sendReport = await connection.send(message);
+      print('Message sent: ' + sendReport.toString());
+    }
+  } on MailerException catch (e) {
+    print('Message not sent.');
+    for (var p in e.problems) {
+      print('Problem: ${p.code}: ${p.msg}');
+    }
+  } catch (e) {
+    print('Other exception: $e');
+  }
+  finally {
+    if (connection != null) {
+      await connection.close();
     }
   }
 }

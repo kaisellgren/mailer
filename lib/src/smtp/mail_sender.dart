@@ -17,35 +17,33 @@ class _MailSendTask {
   Completer<SendReport> completer;
 }
 
-class PersistentConnectionSender {
+class PersistentConnection {
   Connection _connection;
 
   final mailSendTasksController = new StreamController<_MailSendTask>();
   Stream<_MailSendTask> get mailSendTasks => mailSendTasksController.stream;
 
-  PersistentConnectionSender(SmtpServer smtpServer, {Duration timeout}) {
+  PersistentConnection(SmtpServer smtpServer, {Duration timeout}) {
     mailSendTasks.listen((_MailSendTask task) async {
-      if (_connection == null) {
-        _connection = await client.connect(smtpServer, timeout);
-      }
-
-      if (task.message == null) {
-        try {
-          await _connection.close();
-          _connection = null;
+      _logger.finer('New mail sending task.  ${task.message?.subject}');
+      try {
+        if (task.message == null) {
+          // Close connection.
+          if (_connection != null) {
+            await client.close(_connection);
+          }
           task.completer.complete(null);
-        } catch (e) {
-          _logger.warning('Exception while closing connection', e);
-          _connection = null;
-          task.completer.completeError(e);
+          return;
         }
-      } else {
-        try {
-          var report = await _send(task.message, _connection, timeout);
-          task.completer.complete(report);
-        } catch (e) {
-          task.completer.completeError(e);
+
+        if (_connection == null) {
+          _connection = await client.connect(smtpServer, timeout);
         }
+        var report = await _send(task.message, _connection, timeout);
+        task.completer.complete(report);
+      } catch (e) {
+        _logger.fine('Completing with error: $e');
+        task.completer.completeError(e);
       }
     });
   }
@@ -56,6 +54,7 @@ class PersistentConnectionSender {
   /// [SmtpClientCommunicationException],
   /// [SocketException]
   Future<SendReport> send(Message message) {
+    _logger.finer('Adding message to mailSendQueue');
     var mailTask = _MailSendTask()
       ..message = message
       ..completer = Completer();
@@ -69,6 +68,7 @@ class PersistentConnectionSender {
   /// [SmtpClientCommunicationException],
   /// [SocketException]
   Future<void> close() async {
+    _logger.finer('Adding "close"-message to mailSendQueue');
     var closeTask = _MailSendTask()..completer = Completer();
     mailSendTasksController.add(closeTask);
     try {
@@ -88,7 +88,7 @@ Future<SendReport> send(Message message, SmtpServer smtpServer,
     {Duration timeout}) async {
   _validate(message);
   var connection = await client.connect(smtpServer, timeout);
-  var sendReport = _send(message, connection, timeout);
+  var sendReport = await _send(message, connection, timeout);
   await client.close(connection);
   return sendReport;
 }

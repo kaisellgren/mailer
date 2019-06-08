@@ -150,9 +150,9 @@ Future<void> sendSingleMessage(
 
   // Tell the server the envelope from address (might be different to the
   // 'From: ' header!)
-  bool smtputf8 = capabilities.smtpUtf8;
+  bool smtpUtf8 = capabilities.smtpUtf8;
   await c.send(
-      'MAIL FROM:<${irMessage.envelopeFrom}>' + (smtputf8 ? ' SMTPUTF8' : ''));
+      'MAIL FROM:<${irMessage.envelopeFrom}>' + (smtpUtf8 ? ' SMTPUTF8' : ''));
 
   // Give the server all recipients.
   // TODO what if only one address fails?
