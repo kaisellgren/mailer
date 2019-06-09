@@ -4,7 +4,6 @@ export 'smtp_server/mailgun.dart';
 export 'smtp_server/qq.dart';
 export 'smtp_server/yahoo.dart';
 
-
 class SmtpServer {
   final String host;
   final int port;
@@ -13,6 +12,7 @@ class SmtpServer {
   final bool allowInsecure;
   final String username;
   final String password;
+  final String xoauth2Token;
 
   SmtpServer(this.host,
       {this.port = 587,
@@ -21,5 +21,6 @@ class SmtpServer {
       this.ssl = false,
       this.allowInsecure = false,
       this.username,
-      this.password});
+      this.password,
+      this.xoauth2Token});
 }

@@ -109,7 +109,7 @@ class Connection {
   }
 
   /// Upgrades the connection to use TLS.
-  Future<Null> upgradeConnection() async {
+  Future<void> upgradeConnection() async {
     // SecureSocket.secure suggests to call socketSubscription.pause().
     // A StreamQueue always pauses unless we explicitly call next().
     // So we don't need to call pause() ourselves.
@@ -119,7 +119,7 @@ class Connection {
   }
 
   /// Initializes a connection to the given server.
-  Future<Null> connect() async {
+  Future<void> connect() async {
     _connectionOpenStart = DateTime.now();
     _logger.finer("Connecting to ${server.host} at port ${server.port}.");
 
@@ -137,7 +137,7 @@ class Connection {
     _setSocketIn();
   }
 
-  Future<Null> close() async {
+  Future<void> close() async {
     if (_socket != null) await _socket.close();
     if (_socketIn != null) await _socketIn.cancel(immediate: true);
   }

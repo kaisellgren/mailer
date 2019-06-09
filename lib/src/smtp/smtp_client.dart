@@ -58,12 +58,8 @@ Future<void> _doEhloHelo(Connection c, {String clientName}) async {
   c.capabilities = new Capabilities();
 }
 
-Future<Null> _doAuthentication(Connection c) async {
+Future<bool> _doAuthLogin(Connection c) async {
   var capabilities = c.capabilities;
-  if (c.server.username == null) {
-    return;
-  }
-
   if (!capabilities.authLogin) {
     throw new SmtpClientCommunicationException(
         'The server does not support LOGIN authentication method.');
@@ -80,9 +76,35 @@ Future<Null> _doAuthentication(Connection c) async {
       acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
   var loginResp = await c
       .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
-  if (!loginResp.responseCode.startsWith('2')) {
+  return loginResp.responseCode.startsWith('2');
+}
+
+Future<bool> _doAuthXoauth2(Connection c) async {
+  var capabilities = c.capabilities;
+  if (!capabilities.authXoauth2) {
+    throw new SmtpClientCommunicationException(
+        'The server does not support XOAUTH2 authentication method.');
+  }
+
+  var token = c.server.xoauth2Token;
+
+  // See https://developers.google.com/gmail/imap/xoauth2-protocol
+  var loginResp = await c.send('AUTH XOAUTH2 $token', acceptedRespCodes: []);
+  return loginResp.responseCode.startsWith('2');
+}
+
+Future<void> _doAuthentication(Connection c) async {
+  bool loginOk = true;
+
+  if (c.server.username != null) {
+    loginOk = await _doAuthLogin(c);
+  } else if (c.server.xoauth2Token != null) {
+    loginOk = await _doAuthXoauth2(c);
+  }
+
+  if (!loginOk) {
     throw new SmtpClientAuthenticationException(
-        'Incorrect username / password');
+        'Incorrect username / password / credentials');
   }
 }
 

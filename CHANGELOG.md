@@ -4,6 +4,7 @@
 * change return value of `send` from `List<SendReport>` to `SendReport`
 * add persistent connection (idea from https://github.com/jodinathan)
 * remove dart 1 compatible code.  mailer does require dart 2.2.2 now.
+* add xoauth2 authentication method
 
 ## 2.3.0
 * add timeout option.  (https://github.com/pjkroll)

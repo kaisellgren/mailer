@@ -3,6 +3,7 @@ class Capabilities {
   final bool smtpUtf8;
   final bool authPlain;
   final bool authLogin;
+  final bool authXoauth2;
   final List<String> all;
 
   const Capabilities()
@@ -10,10 +11,11 @@ class Capabilities {
         smtpUtf8 = false,
         authPlain = true,
         authLogin = false,
+        authXoauth2 = false,
         all = const <String>[];
 
-  const Capabilities._values(
-      this.startTls, this.smtpUtf8, this.authPlain, this.authLogin, this.all);
+  const Capabilities._values(this.startTls, this.smtpUtf8, this.authPlain,
+      this.authLogin, this.authXoauth2, this.all);
 
   factory Capabilities.fromResponse(Iterable<String> ehloMessage) {
     final List<String> capabilities =
@@ -23,6 +25,7 @@ class Capabilities {
     var smtpUtf8 = false;
     var plain = false;
     var login = false;
+    var xoauth2 = false;
 
     capabilities.forEach((cap) {
       if (cap.contains('STARTTLS')) {
@@ -33,9 +36,11 @@ class Capabilities {
         var authMethods = cap.split(' ').skip(1); // First is 'AUTH'
         plain = authMethods.contains('PLAIN');
         login = authMethods.contains('LOGIN');
+        xoauth2 = authMethods.contains('XOAUTH2');
       }
     });
 
-    return Capabilities._values(startTls, smtpUtf8, plain, login, capabilities);
+    return Capabilities._values(
+        startTls, smtpUtf8, plain, login, xoauth2, capabilities);
   }
 }
