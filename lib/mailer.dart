@@ -9,7 +9,8 @@ export 'src/entities.dart';
 export 'legacy.dart';
 
 Future<List<SendReport>> send(Message message, SmtpServer smtpServer,
-                             {Duration timeout}) {
+    {bool catchExceptions, Duration timeout}) {
   var client = new SmtpClient(smtpServer);
-  return client.send(message, timeout: timeout);
+  return client.send(message,
+      catchExceptions: catchExceptions, timeout: timeout);
 }

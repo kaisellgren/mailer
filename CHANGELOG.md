@@ -1,3 +1,6 @@
+## 2.4.0
+* add `catchExceptions` flag to `send` command.  (issue #90)
+
 ## 2.3.0
 * add timeout option.  (https://github.com/pjkroll)
 * add `catchExceptions` flag (currently true, but default will change to false)
