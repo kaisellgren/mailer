@@ -5,9 +5,9 @@ import 'dart:io';
 import 'package:async/async.dart';
 import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
+import 'package:mailer/exceptions.dart';
 import 'package:mailer/smtp_server.dart';
 
-import 'exceptions.dart';
 import 'server_response.dart';
 
 /**
@@ -33,7 +33,7 @@ class Connection {
   Future sendStream(Stream<List<int>> s) => _socket.addStream(s);
 
   /// Returns the next message from server.  An exception is thrown if
-  /// [acceptedRespCodes] is not empty and the response code form the server
+  /// [acceptedRespCodes] is not empty and the response code from the server
   /// does not start with any of the strings in [acceptedRespCodes];
   Future<ServerResponse> send(String command,
       {List<String> acceptedRespCodes = const ['2'],

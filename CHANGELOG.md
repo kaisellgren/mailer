@@ -1,3 +1,6 @@
+## 2.5.0
+* move exceptions outside `src`.
+
 ## 2.4.0
 * add `catchExceptions` flag to `send` command.  (issue #90)
 

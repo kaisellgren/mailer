@@ -8,6 +8,13 @@ import 'src/smtp/smtp_client.dart';
 export 'src/entities.dart';
 export 'legacy.dart';
 
+/// Throws following exceptions if [catchExceptions] is false:
+/// [SmtpClientAuthenticationException],
+/// [SmtpClientCommunicationException],
+/// [SmtpUnsecureException],
+/// [SmtpMessageValidationException],
+/// [SocketException]    // Connection dropped
+/// Please report other exceptions you encounter.
 Future<List<SendReport>> send(Message message, SmtpServer smtpServer,
     {bool catchExceptions, Duration timeout}) {
   var client = new SmtpClient(smtpServer);
