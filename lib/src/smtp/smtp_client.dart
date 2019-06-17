@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
-import 'package:mailer/exceptions.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:mailer/src/entities/problem.dart';
 
@@ -11,6 +10,7 @@ import '../entities/message.dart';
 import '../entities/send_report.dart';
 import 'capabilities.dart';
 import 'connection.dart';
+import 'exceptions.dart';
 import 'internal_representation/internal_representation.dart';
 import 'validator.dart';
 
