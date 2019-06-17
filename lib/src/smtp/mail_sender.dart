@@ -52,7 +52,8 @@ class PersistentConnection {
   /// [SmtpClientAuthenticationException],
   /// [SmtpUnsecureException],
   /// [SmtpClientCommunicationException],
-  /// [SocketException]
+  /// [SocketException]     // Connection dropped
+  /// Please report other exceptions you encounter.
   Future<SendReport> send(Message message) {
     _logger.finer('Adding message to mailSendQueue');
     var mailTask = _MailSendTask()
