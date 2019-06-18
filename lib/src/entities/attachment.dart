@@ -20,7 +20,7 @@ enum Location {
 ///
 /// When [location] is set to [Location.inline] The attachment (usually image)
 /// can be referenced using:
-/// `cid:yourCid`.  For instance: `<img src="cid:mylogo" />`
+/// `cid:yourCid`.  For instance: `<img src="cid:yourCid" />`
 abstract class Attachment {
   String cid;
   Location location = Location.attachment;

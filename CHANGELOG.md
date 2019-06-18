@@ -1,10 +1,13 @@
 ## 3.0.0
-* NO BUGFIXES.  There is no need to update!
+* NO BUGFIXES.  There is no *need* to update!
+* remove dart 1 compatible code.  mailer does require dart 2.2.2 now.
 * change default of `catchExceptions` to false
 * change return value of `send` from `List<SendReport>` to `SendReport`
 * add persistent connection (idea from https://github.com/jodinathan)
-* remove dart 1 compatible code.  mailer does require dart 2.2.2 now.
 * add xoauth2 authentication method
+
+## 2.5.0
+* export exceptions.
 
 ## 2.4.0
 * add `catchExceptions` flag to `send` command.  (issue #90)

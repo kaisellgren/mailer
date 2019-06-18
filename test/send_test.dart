@@ -1,11 +1,10 @@
-import 'dart:io';
 import 'dart:async';
+import 'dart:io';
 
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
-import 'package:mailer/src/smtp/exceptions.dart';
+import 'package:mailer/src/smtp/smtp_client.dart';
 import "package:test/test.dart";
-import 'dart:convert';
 
 SmtpServer correctSmtpServer;
 SmtpServer incorrectCredentials = gmail("mister@gmail.com", "wrongpass");
