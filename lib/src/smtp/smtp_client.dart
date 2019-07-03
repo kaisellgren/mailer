@@ -7,6 +7,7 @@ import 'package:mailer/smtp_server.dart';
 import '../entities/message.dart';
 import 'capabilities.dart';
 import 'connection.dart';
+import 'exceptions.dart';
 import 'internal_representation/internal_representation.dart';
 
 /// Returns the capabilities of the server if ehlo was successful.  null if

@@ -1,9 +1,9 @@
 import 'dart:async';
+import 'dart:convert' as convert;
 import 'dart:io';
 
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
-import 'package:mailer/src/smtp/smtp_client.dart';
 import "package:test/test.dart";
 
 SmtpServer correctSmtpServer;
@@ -28,7 +28,7 @@ void main() async {
 
 Future<SmtpServer> configureCorrectSmtpServer() async {
   var config = File('test/smtpserver.json');
-  final json = jsonDecode(await config.readAsString());
+  final json = convert.json.decode(await config.readAsString());
 
   return SmtpServer(
     json['host'] as String,
