@@ -68,6 +68,7 @@ class PersistentConnection {
   /// [SmtpUnsecureException],
   /// [SmtpClientCommunicationException],
   /// [SocketException]
+  /// Please report other exceptions you encounter.
   Future<void> close() async {
     _logger.finer('Adding "close"-message to mailSendQueue');
     var closeTask = _MailSendTask()..completer = Completer();
@@ -85,6 +86,7 @@ class PersistentConnection {
 /// [SmtpClientCommunicationException],
 /// [SocketException]
 /// [SmtpMessageValidationException]
+/// Please report other exceptions you encounter.
 Future<SendReport> send(Message message, SmtpServer smtpServer,
     {Duration timeout}) async {
   _validate(message);
@@ -122,6 +124,7 @@ void _validate(Message message) async {
 /// Throws following exceptions:
 /// [SmtpClientCommunicationException],
 /// [SocketException]
+/// Please report other exceptions you encounter.
 Future<SendReport> _send(
     Message message, Connection connection, Duration timeout) async {
   DateTime messageSendStart = DateTime.now();
