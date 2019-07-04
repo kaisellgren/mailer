@@ -7,21 +7,19 @@ class IRMessage {
   // Possibly throws.
   IRMessage(this._message) {
     var headers = _buildHeaders(_message);
-    _content = new _IRContentPartMixed(_message, headers);
+    _content = _IRContentPartMixed(_message, headers);
   }
 
   Iterable<String> get envelopeTos {
     // All recipients.
-    Iterable<String> envelopeTos = _message.envelopeTos ?? <String>[];
+    Iterable<String> envelopeTos = _message.envelopeTos ?? [];
+
     if (envelopeTos.isEmpty) {
       envelopeTos = [
-        _message.recipientsAsAddresses ?? [],
-        _message.ccsAsAddresses ?? [],
-        _message.bccsAsAddresses ?? []
-      ]
-          .expand((_) => _)
-          .where((a) => a?.mailAddress != null)
-          .map((a) => a.mailAddress);
+        ..._message.recipientsAsAddresses,
+        ..._message.ccsAsAddresses,
+        ..._message.bccsAsAddresses
+      ].where((a) => a?.mailAddress != null).map((a) => a.mailAddress);
     }
     return envelopeTos;
   }
@@ -30,7 +28,7 @@ class IRMessage {
       _message.envelopeFrom ?? _message.fromAsAddress?.mailAddress ?? '';
 
   Stream<List<int>> data(Capabilities capabilities) =>
-      _content.out(new _IRMetaInformation(capabilities));
+      _content.out(_IRMetaInformation(capabilities));
 }
 
 class InvalidHeaderException implements Exception {

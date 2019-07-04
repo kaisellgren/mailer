@@ -1,11 +1,11 @@
 import 'package:mailer/src/entities/problem.dart';
 
-abstract class SmtpClientException implements Exception {
+abstract class MailerException implements Exception {
   /// A short description of the problem.
   final String message;
   final List<Problem> problems;
 
-  SmtpClientException(this.message, {this.problems = const []});
+  MailerException(this.message, {this.problems = const []});
 
   @override
   String toString() => message;
@@ -13,27 +13,27 @@ abstract class SmtpClientException implements Exception {
 
 /// This exception is thrown when the server either doesn't accept
 /// the authentication type or the username password is incorrect.
-class SmtpClientAuthenticationException extends SmtpClientException {
+class SmtpClientAuthenticationException extends MailerException {
   SmtpClientAuthenticationException(String message) : super(message);
 }
 
 /// This exception is thrown when the server unexpectedly returns a response
 /// code which differs to our accepted response codes (usually 2xx).
-class SmtpClientCommunicationException extends SmtpClientException {
+class SmtpClientCommunicationException extends MailerException {
   SmtpClientCommunicationException(String message) : super(message);
 }
 
 /// This exception is thrown when no secure connection can be established
 /// and [SmtpOptions.securedOnly] is true.
-class SmtpUnsecureException extends SmtpClientException {
+class SmtpUnsecureException extends MailerException {
   SmtpUnsecureException(String message) : super(message);
 }
 
-class SmtpMessageValidationException extends SmtpClientException {
+class SmtpMessageValidationException extends MailerException {
   SmtpMessageValidationException(String message, List<Problem> problems)
       : super(message, problems: problems);
 }
 
-class SmtpNoGreetingException extends SmtpClientException {
+class SmtpNoGreetingException extends MailerException {
   SmtpNoGreetingException(String message) : super(message);
 }

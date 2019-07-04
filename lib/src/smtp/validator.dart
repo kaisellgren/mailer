@@ -1,9 +1,9 @@
+import 'package:mailer/src/entities/problem.dart';
 import 'package:mailer/src/smtp/internal_representation/internal_representation.dart';
 import 'package:mailer/src/utils.dart';
 
 import '../entities/address.dart';
 import '../entities/message.dart';
-import '../entities/problem.dart';
 
 bool _printableCharsOnly(String s) {
   return isPrintableRegExp.hasMatch(s);
@@ -11,11 +11,8 @@ bool _printableCharsOnly(String s) {
 
 /// [address] can either be an [Address] or String.
 bool _validAddress(dynamic addressIn) {
-  Address address;
-  if (addressIn is String)
-    address = new Address(addressIn);
-  else
-    address = addressIn as Address;
+  Address address =
+      addressIn is String ? Address(addressIn) : addressIn as Address;
 
   if (addressIn == null) return false;
   return _printableCharsOnly(address.name ?? '') &&
@@ -33,7 +30,7 @@ List<Problem> validate(Message message) {
 
   var validate = (bool isValid, String code, String msg) {
     if (!isValid) {
-      res.add(new Problem(code, msg));
+      res.add(Problem(code, msg));
     }
   };
 
@@ -58,10 +55,7 @@ List<Problem> validate(Message message) {
     counter++;
     Address a;
 
-    if (aIn is String)
-      a = new Address(aIn);
-    else
-      a = aIn as Address;
+    a = aIn is String ? Address(aIn) : aIn as Address;
 
     validate(
         a != null && (a.mailAddress ?? '').isNotEmpty,
@@ -73,16 +67,15 @@ List<Problem> validate(Message message) {
     }
   });
   try {
-    IRMessage irMessage = new IRMessage(message);
+    IRMessage irMessage = IRMessage(message);
     if (irMessage.envelopeTos.isEmpty) {
-      res.add(
-          new Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
+      res.add(Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
     }
   } on InvalidHeaderException catch (e) {
-    res.add(new Problem('INVALID_HEADER', e.message));
+    res.add(Problem('INVALID_HEADER', e.message));
   } catch (e) {
-    res.add(new Problem(
-        'INVALID_MESSAGE', 'Could not build internal representation.'));
+    res.add(
+        Problem('INVALID_MESSAGE', 'Could not build internal representation.'));
   }
   return res;
 }

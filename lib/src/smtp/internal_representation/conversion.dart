@@ -1,6 +1,5 @@
 import 'dart:async';
-
-import 'package:dart2_constant/convert.dart' as convert;
+import 'dart:convert' as convert;
 
 const String eol = '\r\n';
 
@@ -17,8 +16,8 @@ bool _isMultiByteContinuationByte(int b) {
 /// If [maxLength] is provided returns chunks where the maximum length is
 /// at most [maxLength].  (Overrides constructor argument).
 ///
-/// If [maxLength] < 4 and there is a longer multibyte character the returned
-/// chunk will be the complete multibyte and therefore possibly too long.
+/// If [maxLength] < 4 and there is a longer multiByte character the returned
+/// chunk will be the complete multiByte and therefore possibly too long.
 Iterable<List<int>> split(List<int> data, int maxLength,
     {bool avoidUtf8Cut = true}) sync* {
   int start = 0;
@@ -37,10 +36,12 @@ Iterable<List<int>> split(List<int> data, int maxLength,
     }
 
     if (e == start) {
-      // We must return the complete multibyte, even though it's longer than
+      // We must return the complete multiByte, even though it's longer than
       // the requested size.
       e = start + 1;
-      while (_isMultiByteContinuationByte(data[e])) e++;
+      while (_isMultiByteContinuationByte(data[e])) {
+        e++;
+      }
     }
 
     yield data.sublist(start, e);
@@ -52,7 +53,7 @@ Stream<List<int>> _splitS(
     Stream<List<int>> dataS, int splitOver, int maxLength) {
   int currentLineLength = 0;
 
-  var sc = new StreamController<List<int>>();
+  var sc = StreamController<List<int>>();
   void processData(List<int> data) {
     if (data.length + currentLineLength > maxLength) {
       int targetLength = maxLength ~/ 2;
@@ -76,10 +77,7 @@ Stream<List<int>> _splitS(
   return sc.stream;
 }
 
-// Replace `_StreamTransformerBase` with `StreamTransformerBase`
-// when dart1 is no longer supported.
-// Also remove the _* helper classes.
-class StreamSplitter extends _StreamTransformerBase<List<int>, List<int>> {
+class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
   final int maxLength;
   final int splitOverLength;
 
@@ -88,11 +86,4 @@ class StreamSplitter extends _StreamTransformerBase<List<int>, List<int>> {
   @override
   Stream<List<int>> bind(Stream<List<int>> stream) =>
       _splitS(stream, splitOverLength, maxLength);
-}
-
-abstract class _StreamTransformerBase<SS, ST>
-    implements StreamTransformer<SS, ST> {
-  @override
-  StreamTransformer<RS, RT> cast<RS, RT>() => throw new UnimplementedError(
-      'This dart2 functionality is not implemented');
 }

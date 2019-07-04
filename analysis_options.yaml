@@ -13,3 +13,5 @@ linter:
     - avoid_empty_else
     - cancel_subscriptions
     - close_sinks
+
+include: package:pedantic/analysis_options.yaml
