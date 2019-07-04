@@ -36,7 +36,7 @@ Please create merge requests for missing configurations.
 * Export the newly created SMTP server in `lib/smtp_server.dart`
 * Create a pull request.
 
-In a lot of cases you will find a configuration in `legacy.dart`
+In a lot of cases you will find a configuration in [legacy.dart](https://github.com/kaisellgren/mailer/blob/v2/lib/legacy.dart)
 
 ## Features
 
