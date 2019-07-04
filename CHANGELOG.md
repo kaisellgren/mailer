@@ -1,3 +1,6 @@
+## 2.5.1
+* assign `catchExceptions` if null 
+
 ## 2.5.0
 * export exceptions.
 
