@@ -64,8 +64,6 @@ Known headers (`list-unsubscribe`,...) should have their own subclass.
 See [gmail example](example/send_gmail.dart).
 
 ```dart
-import 'dart:io';
-
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
@@ -124,16 +122,16 @@ main() async {
   // Sending multiple messages with the same connection
   //
   // Create a smtp client that will persist the connection
-  var client = SmtpPersistentClient(smtpServer);
+  var connection = PersistentConnection(smtpServer);
   
   // Send the first message
-  await client.send(message);
+  await connection.send(message);
   
   // send the equivalent message
-  await client.send(equivalentMessage);
+  await connection.send(equivalentMessage);
   
   // close the connection
-  await client.close();
+  await connection.close();
   
 }
 ```
