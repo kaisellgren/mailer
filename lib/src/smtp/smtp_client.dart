@@ -186,6 +186,7 @@ class SmtpClient {
   /// [SmtpMessageValidationException]
   Future<List<SendReport>> send(Message message,
       {Duration timeout, bool catchExceptions = true}) async {
+    catchExceptions ??= true;
     final List<SendReport> sendReports = [];
 
     /* TODO Message validation should be done outside of this function */
