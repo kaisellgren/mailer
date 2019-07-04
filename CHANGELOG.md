@@ -6,6 +6,9 @@
 * add persistent connection (idea from https://github.com/jodinathan)
 * add xoauth2 authentication method (see examples)
 
+## 2.5.1
+* assign `catchExceptions` if null 
+
 ## 2.5.0
 * export exceptions.
 
