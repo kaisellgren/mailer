@@ -1,3 +1,6 @@
+## 3.0.1
+* allow older pedantic version to make mailer compatible with flutter.
+
 ## 3.0.0
 * NO BUGFIXES.  There is no *need* to update!
 * remove dart 1 compatible code.  mailer does require dart 2.2.2 or higer now.
