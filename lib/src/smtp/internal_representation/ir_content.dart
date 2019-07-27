@@ -24,8 +24,8 @@ abstract class _IRContent extends _IROutput {
       Stream<List<int>> content, _IRMetaInformation irMetaInformation) async* {
     yield* _outH(irMetaInformation);
     yield eol8;
-    yield* content
-        .transform(convert.base64.encoder)
+    yield* convert.base64.encoder
+        .bind(content)
         .transform(convert.ascii.encoder)
         .transform(new StreamSplitter(splitOverLength, maxLineLength));
     yield eol8;
