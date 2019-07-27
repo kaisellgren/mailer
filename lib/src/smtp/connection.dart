@@ -148,7 +148,7 @@ class Connection {
       _socketIn.cancel();
     }
     _socketIn = StreamQueue<String>(
-        _socket.transform(utf8.decoder).transform(const LineSplitter()));
+        utf8.decoder.bind(_socket).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
