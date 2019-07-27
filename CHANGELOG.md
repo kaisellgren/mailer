@@ -1,3 +1,7 @@
+## 3.0.2
+* some (dart) file operations changed the return type from `List<int>` to `Uint8List`
+  Implemented the proposed fixes from: https://groups.google.com/forum/#!topic/flutter-announce/LTe4SYU8-0Q
+
 ## 3.0.1
 * allow older pedantic version to make mailer compatible with flutter.
 
