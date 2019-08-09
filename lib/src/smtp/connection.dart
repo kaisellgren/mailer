@@ -133,9 +133,8 @@ class Connection {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
-    _socketIn = new StreamQueue<String>(_socket
-        .transform(convert.utf8.decoder)
-        .transform(const LineSplitter()));
+    _socketIn = StreamQueue<String>(
+        convert.utf8.decoder.bind(_socket).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
