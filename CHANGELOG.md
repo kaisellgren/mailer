@@ -1,3 +1,8 @@
+## 2.6.0
+* some (dart) file operations changed the return type from `List<int>` to `Uint8List`
+  Implemented the proposed fixes from: https://groups.google.com/forum/#!topic/flutter-announce/LTe4SYU8-0Q
+  Thanks https://github.com/amake
+
 ## 2.5.1
 * assign `catchExceptions` if null 
 
