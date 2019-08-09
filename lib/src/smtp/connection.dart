@@ -133,7 +133,7 @@ class Connection {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
-    _socketIn = StreamQueue<String>(
+    _socketIn = new StreamQueue<String>(
         convert.utf8.decoder.bind(_socket).transform(const LineSplitter()));
   }
 
