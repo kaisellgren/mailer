@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
-import "package:test/test.dart";
+import 'package:test/test.dart';
 
 SmtpServer correctSmtpServer;
-SmtpServer incorrectCredentials = gmail("mister@gmail.com", "wrongpass");
+SmtpServer incorrectCredentials = gmail('mister@gmail.com', 'wrongpass');
 
 void main() async {
   correctSmtpServer = await configureCorrectSmtpServer();
