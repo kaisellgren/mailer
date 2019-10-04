@@ -1,3 +1,6 @@
+## 2.6.1
+* fix splitting for base64 conversion
+
 ## 2.6.0
 * some (dart) file operations changed the return type from `List<int>` to `Uint8List`
   Implemented the proposed fixes from: https://groups.google.com/forum/#!topic/flutter-announce/LTe4SYU8-0Q
