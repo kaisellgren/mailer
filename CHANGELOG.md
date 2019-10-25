@@ -1,3 +1,6 @@
+## 3.0.4
+* fix null pointer when server doesn't support EHLO (#121)
+
 ## 3.0.3
 * fix splitting of text for base64 conversion.
 
