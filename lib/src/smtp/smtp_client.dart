@@ -10,13 +10,12 @@ import 'connection.dart';
 import 'exceptions.dart';
 import 'internal_representation/internal_representation.dart';
 
-/// Returns the capabilities of the server if ehlo was successful.  null if
-/// `helo` is necessary.
+/// Returns if ehlo was successful.
 Future<bool> _doEhlo(Connection c, String clientName) async {
   var respEhlo = await c.send('EHLO $clientName', acceptedRespCodes: null);
 
   if (!respEhlo.responseCode.startsWith('2')) {
-    return null;
+    return false;
   }
 
   var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
