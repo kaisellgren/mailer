@@ -1,3 +1,45 @@
+## 3.0.4
+* fix null pointer when server doesn't support EHLO (#121)
+
+## 3.0.3
+* fix splitting of text for base64 conversion.
+
+## 3.0.2
+* some (dart) file operations changed the return type from `List<int>` to `Uint8List`
+  Implemented the proposed fixes from: https://groups.google.com/forum/#!topic/flutter-announce/LTe4SYU8-0Q
+
+## 3.0.1
+* allow older pedantic version to make mailer compatible with flutter.
+
+## 3.0.0
+* NO BUGFIXES.  There is no *need* to update!
+* remove dart 1 compatible code.  mailer does require dart 2.2.2 or higer now.
+* remove `catchExceptions` flag.  mailer now always throws.
+* change return value of `send` from `List<SendReport>` to `SendReport`
+* add persistent connection (idea from https://github.com/jodinathan)
+* add xoauth2 authentication method (see examples)
+
+## 2.5.1
+* assign `catchExceptions` if null 
+
+## 2.5.0
+* export exceptions.
+
+## 2.4.0
+* add `catchExceptions` flag to `send` command.  (issue #90)
+
+## 2.3.0
+* add timeout option.  (https://github.com/pjkroll)
+* add `catchExceptions` flag (currently true, but default will change to false)
+  improve exceptions.
+* remove username from authentication failure exception (see issue #79)
+
+## 2.2.1
+* fix regular expression which is used to validate the name of an email address. 
+
+## 2.2.0
+* add qq smtp server definition
+
 ## 2.1.2
 * improve exception when server response does not match.
 

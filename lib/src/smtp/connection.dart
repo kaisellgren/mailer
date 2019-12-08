@@ -3,46 +3,55 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
+import 'package:mailer/src/smtp/exceptions.dart';
 import 'package:mailer/smtp_server.dart';
 
+import 'capabilities.dart';
 import 'exceptions.dart';
-import 'server_response.dart';
 
-/**
- * This class contains all relevant data for one smtp connection/session.
- *
- * This includes the socket, smtp-options, but also other objects, relevant
- * for an smtp session, like an input queue.
- *
- * By passing this object around, we will be thread safe.
- * As sending mail is a Future, it is conceivable to send a lot of mails in
- * parallel using the same client, and then Future.wait for all mails to finish.
- *
- * This wouldn't work if we stored connection information in the client itself.
- **/
+/// This class contains all relevant data for one smtp connection/session.
+///
+/// This includes the socket, smtp-options, but also other objects, relevant
+/// for an smtp session, like an input queue.
 
-final _logger = new Logger('Connection');
+final _logger = Logger('Connection');
+
+class ServerResponse {
+  final String responseCode;
+
+  /// Every line received from the server is one entry in the message list.
+  final List<String> responseLines;
+
+  ServerResponse(this.responseCode, this.responseLines);
+}
 
 class Connection {
-  final SmtpServer _server;
+  final SmtpServer server;
+  final Duration timeout;
+  DateTime _connectionOpenStart;
+
+  DateTime get connectionOpenStart => _connectionOpenStart;
+
+  Capabilities capabilities;
+
   Socket _socket;
   StreamQueue<String> _socketIn;
 
-  Connection(this._server);
+  Connection(this.server, {Duration timeout})
+      : this.timeout = timeout ?? const Duration(seconds: 60);
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
 
   Future sendStream(Stream<List<int>> s) => _socket.addStream(s);
 
   /// Returns the next message from server.  An exception is thrown if
-  /// [acceptedRespCodes] is not empty and the response code form the server
+  /// [acceptedRespCodes] is not empty and the response code from the server
   /// does not start with any of the strings in [acceptedRespCodes];
   Future<ServerResponse> send(String command,
       {List<String> acceptedRespCodes = const ['2'],
-      String expect: null,
-      bool waitForResponse: true}) async {
+      String expect,
+      bool waitForResponse = true}) async {
     // Send the new command.
     if (command != null) {
       _logger.fine('> $command');
@@ -52,7 +61,7 @@ class Connection {
     if (!waitForResponse) {
       // Even though we don't wait for a response, we still wait until the
       // command has been sent.
-      await _socket.flush();
+      await _socket.flush().timeout(timeout);
       return null;
     }
 
@@ -67,11 +76,17 @@ class Connection {
     // line.
     while (currentLine == null ||
         (currentLine.length > 3 && currentLine[3] != ' ')) {
-      if (!(await _socketIn.hasNext)) {
-        throw new SmtpClientCommunicationException(
+      var hasNext = await _socketIn.hasNext.timeout(timeout);
+      if (!hasNext) {
+        throw SmtpClientCommunicationException(
             "Socket was closed even though a response was expected.");
       }
-      currentLine = await _socketIn.next;
+
+      // Let's timeout if we don't receive anything from the other side.
+      // This is possible if we for instance connect to an SSL port where the
+      // socket connection succeeds, but we never receive anything because we
+      // are stuck in the SSL negotiation process.
+      currentLine = await _socketIn.next.timeout(timeout);
 
       messages.add(currentLine.substring(4));
     }
@@ -88,57 +103,58 @@ class Connection {
           'After sending $command, response did not start with any of: $acceptedRespCodes.';
       msg += '\nResponse from server: $mString';
       _logger.warning(msg);
-      throw new SmtpClientCommunicationException(msg);
+      throw SmtpClientCommunicationException(msg);
     }
 
-    return new ServerResponse(responseCode, messages);
+    return ServerResponse(responseCode, messages);
   }
 
   /// Upgrades the connection to use TLS.
-  Future<Null> upgradeConnection() async {
+  Future<void> upgradeConnection() async {
     // SecureSocket.secure suggests to call socketSubscription.pause().
     // A StreamQueue always pauses unless we explicitly call next().
     // So we don't need to call pause() ourselves.
     _socket = await SecureSocket.secure(_socket,
-        onBadCertificate: (_) => _server.ignoreBadCertificate);
+        onBadCertificate: (_) => server.ignoreBadCertificate);
     _setSocketIn();
   }
 
   /// Initializes a connection to the given server.
-  Future<Null> connect() async {
-    _logger.finer("Connecting to ${_server.host} at port ${_server.port}.");
+  Future<void> connect() async {
+    _connectionOpenStart = DateTime.now();
+    _logger.finer("Connecting to ${server.host} at port ${server.port}.");
 
     // Secured connection was demanded by the user.
-    if (_server.ssl) {
-      _socket = await SecureSocket.connect(_server.host, _server.port,
-          onBadCertificate: (_) => _server.ignoreBadCertificate);
+    if (server.ssl) {
+      _socket = await SecureSocket.connect(server.host, server.port,
+          onBadCertificate: (_) => server.ignoreBadCertificate,
+          timeout: timeout);
     } else {
-      _socket = await Socket.connect(_server.host, _server.port);
+      _socket =
+          await Socket.connect(server.host, server.port, timeout: timeout);
     }
-    _socket.timeout(const Duration(seconds: 60));
+    _socket.timeout(timeout);
 
     _setSocketIn();
   }
 
-  Future<Null> close() async {
-    if (_socketIn != null) await _socketIn.cancel();
+  Future<void> close() async {
     if (_socket != null) await _socket.close();
+    if (_socketIn != null) await _socketIn.cancel(immediate: true);
   }
 
   void _setSocketIn() {
     if (_socketIn != null) {
       _socketIn.cancel();
     }
-    _socketIn = new StreamQueue<String>(_socket
-        .transform(convert.utf8.decoder)
-        .transform(const LineSplitter()));
+    _socketIn = StreamQueue<String>(
+        utf8.decoder.bind(_socket).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {
-    if (!_server.allowInsecure && !isSecure) {
+    if (!server.allowInsecure && !isSecure) {
       _socket.close();
-      throw new SmtpUnsecureException(
-          "Aborting because connection is not secure");
+      throw SmtpUnsecureException("Aborting because connection is not secure");
     }
   }
 }

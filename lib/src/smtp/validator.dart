@@ -1,22 +1,18 @@
+import 'package:mailer/src/entities/problem.dart';
+import 'package:mailer/src/smtp/internal_representation/internal_representation.dart';
+import 'package:mailer/src/utils.dart';
+
 import '../entities/address.dart';
 import '../entities/message.dart';
-import '../entities/problem.dart';
-
-// https://stackoverflow.com/questions/12052825/regular-expression-for-all-printable-characters-in-javascript
-final RegExp _printableCharsRegExp =
-    new RegExp(r'^[\u0020-\u007e\u00a0-\u00ff]*$');
 
 bool _printableCharsOnly(String s) {
-  return _printableCharsRegExp.hasMatch(s);
+  return isPrintableRegExp.hasMatch(s);
 }
 
 /// [address] can either be an [Address] or String.
 bool _validAddress(dynamic addressIn) {
-  Address address;
-  if (addressIn is String)
-    address = new Address(addressIn);
-  else
-    address = addressIn as Address;
+  Address address =
+      addressIn is String ? Address(addressIn) : addressIn as Address;
 
   if (addressIn == null) return false;
   return _printableCharsOnly(address.name ?? '') &&
@@ -34,7 +30,7 @@ List<Problem> validate(Message message) {
 
   var validate = (bool isValid, String code, String msg) {
     if (!isValid) {
-      res.add(new Problem(code, msg));
+      res.add(Problem(code, msg));
     }
   };
 
@@ -59,10 +55,7 @@ List<Problem> validate(Message message) {
     counter++;
     Address a;
 
-    if (aIn is String)
-      a = new Address(aIn);
-    else
-      a = aIn as Address;
+    a = aIn is String ? Address(aIn) : aIn as Address;
 
     validate(
         a != null && (a.mailAddress ?? '').isNotEmpty,
@@ -73,5 +66,16 @@ List<Problem> validate(Message message) {
           'A recipient address is invalid.  ($a).');
     }
   });
+  try {
+    IRMessage irMessage = IRMessage(message);
+    if (irMessage.envelopeTos.isEmpty) {
+      res.add(Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
+    }
+  } on InvalidHeaderException catch (e) {
+    res.add(Problem('INVALID_HEADER', e.message));
+  } catch (e) {
+    res.add(
+        Problem('INVALID_MESSAGE', 'Could not build internal representation.'));
+  }
   return res;
 }

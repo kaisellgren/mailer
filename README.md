@@ -10,8 +10,7 @@ Mailer supports file attachments and HTML emails.
 
 `mailer2` and `mailer3` on pub.dart are forks of this project.
 
-`mailer` had some issues and we only recently (dart2 support) started
-to work on issues / PRs.
+`mailer` was not well maintained and `mailer2` and `mailer3` had some important fixes.
 
 Currently `mailer` should include all known bug-fixes and AFAIK there is
 no reason to use `mailer2` or `mailer3`.
@@ -37,7 +36,7 @@ Please create merge requests for missing configurations.
 * Export the newly created SMTP server in `lib/smtp_server.dart`
 * Create a pull request.
 
-In a lot of cases you will find a configuration in `legacy.dart`
+In a lot of cases you will find a configuration in [legacy.dart](https://github.com/kaisellgren/mailer/blob/v2/lib/legacy.dart)
 
 ## Features
 
@@ -65,29 +64,38 @@ Known headers (`list-unsubscribe`,...) should have their own subclass.
 See [gmail example](example/send_gmail.dart).
 
 ```dart
-import 'dart:io';
-
 import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server/gmail.dart';
+import 'package:mailer/smtp_server.dart';
 
 main() async {
   String username = 'username@gmail.com';
   String password = 'password';
 
   final smtpServer = gmail(username, password);
+  // Use the SmtpServer class to configure an SMTP server:
+  // final smtpServer = SmtpServer('smtp.domain.com');
+  // See the named arguments of SmtpServer for further configuration
+  // options.  
   
   // Create our message.
-  final message = new Message()
-    ..from = new Address(username, 'Your name')
+  final message = Message()
+    ..from = Address(username, 'Your name')
     ..recipients.add('destination@example.com')
     ..ccRecipients.addAll(['destCc1@example.com', 'destCc2@example.com'])
-    ..bccRecipients.add(new Address('bccAddress@example.com'))
-    ..subject = 'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
+    ..bccRecipients.add(Address('bccAddress@example.com'))
+    ..subject = 'Test Dart Mailer library :: 😀 :: ${DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
-  
-  final sendReports = await send(message, smtpServer);
-  
+
+  try {
+    final sendReport = await send(message, smtpServer);
+    print('Message sent: ' + sendReport.toString());
+  } on MailerException catch (e) {
+    print('Message not sent.');
+    for (var p in e.problems) {
+      print('Problem: ${p.code}: ${p.msg}');
+    }
+  }
   // DONE
   
   
@@ -100,16 +108,31 @@ main() async {
   // Creating and adding an Address object without a name part
   // `new Address('destination@example.com')` is equivalent to
   // adding the mail address as `String`.
-  final equivalentMessage = new Message()
-      ..from = new Address(username, 'Your name')
-      ..recipients.add(new Address('destination@example.com'))
-      ..ccRecipients.addAll([new Address('destCc1@example.com'), 'destCc2@example.com'])
+  final equivalentMessage = Message()
+      ..from = Address(username, 'Your name')
+      ..recipients.add(Address('destination@example.com'))
+      ..ccRecipients.addAll([Address('destCc1@example.com'), 'destCc2@example.com'])
       ..bccRecipients.add('bccAddress@example.com')
-      ..subject = 'Test Dart Mailer library :: 😀 :: ${new DateTime.now()}'
+      ..subject = 'Test Dart Mailer library :: 😀 :: ${DateTime.now()}'
       ..text = 'This is the plain text.\nThis is line 2 of the text part.'
       ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>";
     
-  final sendReports2 = await send(equivalentMessage, smtpServer);
+  final sendReport2 = await send(equivalentMessage, smtpServer);
+  
+  // Sending multiple messages with the same connection
+  //
+  // Create a smtp client that will persist the connection
+  var connection = PersistentConnection(smtpServer);
+  
+  // Send the first message
+  await connection.send(message);
+  
+  // send the equivalent message
+  await connection.send(equivalentMessage);
+  
+  // close the connection
+  await connection.close();
+  
 }
 ```
 
