@@ -1,8 +1,8 @@
 class Address {
-  String name;
-  String mailAddress;
+  final String name;
+  final String mailAddress;
 
-  Address([this.mailAddress, this.name]);
+  const Address([this.mailAddress, this.name]);
 
   @override
   String toString() {

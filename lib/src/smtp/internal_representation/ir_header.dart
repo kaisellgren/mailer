@@ -63,7 +63,7 @@ class _IRHeaderText extends _IRHeader {
 }
 
 Iterable<String> _addressToString(Iterable<Address> addresses)
-=> assress == null ? []: addresses.map((a) => a.toString());
+=> addresses == null ? []: addresses.map((a) => a.toString());
 
 class _IRHeaderAddress extends _IRHeader {
   Address _address;
