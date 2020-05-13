@@ -110,7 +110,7 @@ Future<void> checkCredentials(SmtpServer smtpServer, {Duration timeout}) async {
 }
 
 /// [SmtpMessageValidationException]
-void _validate(Message message) async {
+void _validate(Message message) {
   var validationProblems = validate(message);
   if (validationProblems.isNotEmpty) {
     _logger.severe('Message validation error: '
