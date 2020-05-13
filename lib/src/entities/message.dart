@@ -71,6 +71,6 @@ class Message {
   String html;
   List<Attachment> attachments = [];
 
-  Iterable<Address> _asAddresses(Iterable<dynamic> as) =>
-      (as ?? []).map((a) => a is String ? Address(a) : a as Address);
+  static Iterable<Address> _asAddresses(Iterable<dynamic> adrs) =>
+      adrs == null ? []: adrs.map((a) => a is String ? Address(a) : a as Address);
 }

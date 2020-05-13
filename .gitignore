@@ -8,3 +8,4 @@ packages
 *.iml
 .dart_tool
 /test/smtpserver.json
+.DS_Store
