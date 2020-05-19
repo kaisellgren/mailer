@@ -1,3 +1,6 @@
+## 3.1.0
+* The generation of the mailbox address is done via `Address.toString()`, so application can override it to provide its own sanitization, if necessary.
+
 ## 3.0.4
 * fix null pointer when server doesn't support EHLO (#121)
 
