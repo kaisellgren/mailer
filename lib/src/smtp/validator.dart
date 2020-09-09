@@ -9,14 +9,20 @@ bool _printableCharsOnly(String s) {
   return isPrintableRegExp.hasMatch(s);
 }
 
-/// [address] can either be an [Address] or String.
+/// [addressIn] can either be an [Address] or String.
 bool _validAddress(dynamic addressIn) {
-  Address address =
-      addressIn is String ? Address(addressIn) : addressIn as Address;
-
   if (addressIn == null) return false;
-  return _printableCharsOnly(address.name ?? '') &&
-      _validMailAddress(address.mailAddress);
+
+  String address;
+  if (addressIn is Address) {
+    //We can't validate [Address.name] directly, since the implementation
+    //of [Address.toString] might sanitize it.
+    if (!_printableCharsOnly(addressIn.toString())) return false;
+    address = addressIn.mailAddress;
+  } else {
+    address = addressIn as String;
+  }
+  return _validMailAddress(address);
 }
 
 bool _validMailAddress(String ma) {
@@ -26,13 +32,13 @@ bool _validMailAddress(String ma) {
 }
 
 List<Problem> validate(Message message) {
-  List<Problem> res = <Problem>[];
+  var res = <Problem>[];
 
-  var validate = (bool isValid, String code, String msg) {
+  void validate(bool isValid, String code, String msg) {
     if (!isValid) {
       res.add(Problem(code, msg));
     }
-  };
+  }
 
   validate(
       _validMailAddress(

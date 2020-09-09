@@ -62,14 +62,8 @@ class _IRHeaderText extends _IRHeader {
   }
 }
 
-Iterable<String> _addressToString(Iterable<Address> addresses) {
-  if (addresses == null) return [];
-  return addresses.map((a) {
-    var fromName = a.name ?? '';
-    // ToDo base64 fromName (add _IRMetaInformation as argument)
-    return '$fromName <${a.mailAddress}>';
-  });
-}
+Iterable<String> _addressToString(Iterable<Address> addresses)
+=> addresses == null ? []: addresses.map((a) => a.toString());
 
 class _IRHeaderAddress extends _IRHeader {
   Address _address;

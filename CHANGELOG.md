@@ -1,3 +1,6 @@
+## 3.2.0
+* The generation of the mailbox address is done via `Address.toString()`, so application can override it to provide its own sanitization, if necessary.
+
 ## 3.1.0
 * Improve gmail integration utilities.
 * Discourage use of username/password authentication through deprecation.
