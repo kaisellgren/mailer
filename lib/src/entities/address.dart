@@ -1,6 +1,6 @@
 class Address {
-  final String name;
-  final String mailAddress;
+  String name;
+  String mailAddress;
 
   const Address([this.mailAddress, this.name]);
 
