@@ -1,3 +1,7 @@
+## 3.1.0
+* Improve gmail integration utilities.
+* Discourage use of username/password authentication through deprecation.
+
 ## 3.0.4
 * fix null pointer when server doesn't support EHLO (#121)
 
