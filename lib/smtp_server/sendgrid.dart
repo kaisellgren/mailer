@@ -1,4 +1,4 @@
-import 'package:mailer/smtp_server.dart';
+import '../smtp_server.dart';
 
 SmtpServer sendgrid(String username, String password) =>
     SmtpServer('smtp.sendgrid.net',
