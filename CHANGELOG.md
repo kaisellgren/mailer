@@ -1,3 +1,7 @@
+## 3.3.0
+* add sendgrid smtp server
+  Thanks: https://github.com/rohanthacker
+
 ## 3.2.1
 * Fix compile time bug. 😳
 
