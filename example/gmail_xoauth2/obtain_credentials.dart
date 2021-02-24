@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import "package:http/http.dart" as http;
-import "package:googleapis_auth/auth_io.dart";
+import 'package:http/http.dart' as http;
+import 'package:googleapis_auth/auth_io.dart';
 
 const scopes = ['https://mail.google.com'];
 
+// ignore: always_declare_return_types
 main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
   final identifier = args[argId] as String;
@@ -42,9 +43,9 @@ main(List<String> rawArgs) async {
 }
 
 void prompt(String url) {
-  print("Please go to the following URL and grant access:");
-  print("  => $url");
-  print("");
+  print('Please go to the following URL and grant access:');
+  print('  => $url');
+  print('');
 }
 
 const argId = 'id';
@@ -76,7 +77,7 @@ ArgResults parseArgs(List<String> rawArgs) {
       username == null ||
       username.isEmpty) {
     print(parser.usage);
-    throw new Exception('Missing argument');
+    throw Exception('Missing argument');
   }
   return argResults;
 }

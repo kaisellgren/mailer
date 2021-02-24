@@ -14,7 +14,7 @@ part of 'internal_representation.dart';
 enum _MultipartType { alternative, mixed, related }
 
 abstract class _IRContent extends _IROutput {
-  List<_IRHeader> _header = [];
+  final List<_IRHeader> _header = [];
 
   Stream<List<int>> _outH(_IRMetaInformation metaInformation) async* {
     for (var hs in _header.map((h) => h.out(metaInformation))) {
@@ -37,7 +37,7 @@ abstract class _IRContent extends _IROutput {
 
 abstract class _IRContentPart extends _IRContent {
   bool _active = false;
-  String _boundary = _buildBoundary();
+  final String _boundary = _buildBoundary();
   Iterable<_IRContent> _content;
 
   List<int> _boundaryStart(String boundary) => to8('--$boundary$eol');
@@ -158,7 +158,7 @@ class _IRContentAttachment extends _IRContent {
       _header.add(_IRHeaderText('content-id', _attachment.cid));
     }
 
-    String fnSuffix = '';
+    var fnSuffix = '';
     if ((filename ?? '').isNotEmpty) fnSuffix = '; filename="$filename"';
     _header.add(_IRHeaderText('content-disposition',
         '${_describeEnum(_attachment.location)}$fnSuffix'));

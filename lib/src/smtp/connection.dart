@@ -39,6 +39,7 @@ class Connection {
   StreamQueue<String> _socketIn;
 
   Connection(this.server, {Duration timeout})
+      // ignore: unnecessary_this
       : this.timeout = timeout ?? const Duration(seconds: 60);
 
   bool get isSecure => _socket != null && _socket is SecureSocket;
@@ -79,7 +80,7 @@ class Connection {
       var hasNext = await _socketIn.hasNext.timeout(timeout);
       if (!hasNext) {
         throw SmtpClientCommunicationException(
-            "Socket was closed even though a response was expected.");
+            'Socket was closed even though a response was expected.');
       }
 
       // Let's timeout if we don't receive anything from the other side.
@@ -122,7 +123,7 @@ class Connection {
   /// Initializes a connection to the given server.
   Future<void> connect() async {
     _connectionOpenStart = DateTime.now();
-    _logger.finer("Connecting to ${server.host} at port ${server.port}.");
+    _logger.finer('Connecting to ${server.host} at port ${server.port}.');
 
     // Secured connection was demanded by the user.
     if (server.ssl) {
@@ -154,7 +155,7 @@ class Connection {
   void verifySecuredConnection() {
     if (!server.allowInsecure && !isSecure) {
       _socket.close();
-      throw SmtpUnsecureException("Aborting because connection is not secure");
+      throw SmtpUnsecureException('Aborting because connection is not secure');
     }
   }
 }

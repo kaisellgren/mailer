@@ -6,7 +6,7 @@ import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
 /// Test mailer by sending email to yourself
-main(List<String> rawArgs) async {
+void main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
 
   if (args[verboseArg] as bool) {
@@ -16,12 +16,12 @@ main(List<String> rawArgs) async {
     });
   }
 
-  String username = args.rest[0];
+  var username = args.rest[0];
   if (username.endsWith('@gmail.com')) {
     username = username.substring(0, username.length - 10);
   }
 
-  List<String> tos = args[toArgs] as List<String> ?? [];
+  var tos = args[toArgs] as List<String> ?? [];
   if (tos.isEmpty) {
     tos.add(username.contains('@') ? username : username + '@gmail.com');
   }
@@ -59,11 +59,11 @@ main(List<String> rawArgs) async {
   }
 
   print('Now sending using a persistent connection');
-  PersistentConnection connection =
+  var connection =
       PersistentConnection(smtpServer, timeout: Duration(seconds: 15));
   // Send multiple mails on one connection:
   try {
-    for (int i = 0; i < 3; i++) {
+    for (var i = 0; i < 3; i++) {
       message.subject =
           'Test Dart Mailer library :: 😀 :: ${DateTime.now()} / $i';
       final sendReport = await connection.send(message);
@@ -110,7 +110,7 @@ ArgResults parseArgs(List<String> rawArgs) {
 
   var attachments = args[attachArgs] as Iterable<String> ?? [];
   for (var f in attachments) {
-    File attachFile = File(f);
+    var attachFile = File(f);
     if (!attachFile.existsSync()) {
       showUsage(parser, 'Failed to find file to attach: ${attachFile.path}');
       exit(1);
@@ -119,7 +119,7 @@ ArgResults parseArgs(List<String> rawArgs) {
   return args;
 }
 
-showUsage(ArgParser parser, [String message]) {
+void showUsage(ArgParser parser, [String message]) {
   if (message != null) {
     print(message);
     print('');

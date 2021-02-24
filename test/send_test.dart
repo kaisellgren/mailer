@@ -13,7 +13,7 @@ void main() async {
   correctSmtpServer = await configureCorrectSmtpServer();
 
   test('Sending email', () async {
-    SendReport report = await send(
+    var report = await send(
         createMessage(correctSmtpServer), correctSmtpServer,
         timeout: Duration(seconds: 10));
     expect(report != null, true);

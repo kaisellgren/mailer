@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import "package:googleapis_auth/auth_io.dart";
-import "package:http/http.dart" as http;
+import 'package:googleapis_auth/auth_io.dart';
+import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
 const scopes = ['https://mail.google.com'];
 
-main(List<String> rawArgs) async {
+void main(List<String> rawArgs) async {
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((LogRecord rec) {
     print('${rec.level.name}: ${rec.time}: ${rec.message}');
@@ -29,7 +29,7 @@ main(List<String> rawArgs) async {
   var clientId = ClientId(identifier, secret);
 
   final client = http.Client();
-  AccessCredentials credentials = AccessCredentials(
+  var credentials = AccessCredentials(
       AccessToken('Bearer', 'EXPIRED', DateTime.utc(2000)),
       refreshToken,
       scopes,
@@ -71,7 +71,7 @@ ArgResults parseArgs(List<String> rawArgs) {
   var file = argResults[argFile] as String;
   if (toAddress == null || toAddress.isEmpty || file == null || file.isEmpty) {
     print(parser.usage);
-    throw new Exception('Missing argument');
+    throw Exception('Missing argument');
   }
   return argResults;
 }

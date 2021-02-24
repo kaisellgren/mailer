@@ -18,7 +18,7 @@ Future<bool> _doEhlo(Connection c, String clientName) async {
     return false;
   }
 
-  var capabilities = new Capabilities.fromResponse(respEhlo.responseLines);
+  var capabilities = Capabilities.fromResponse(respEhlo.responseLines);
 
   if (!capabilities.startTls || c.isSecure) {
     c.capabilities = capabilities;
@@ -54,13 +54,13 @@ Future<void> _doEhloHelo(Connection c, {String clientName}) async {
 
   // EHLO not accepted.  Let's try HELO.
   await c.send('HELO $clientName');
-  c.capabilities = new Capabilities();
+  c.capabilities = Capabilities();
 }
 
 Future<bool> _doAuthLogin(Connection c) async {
   var capabilities = c.capabilities;
   if (!capabilities.authLogin) {
-    throw new SmtpClientCommunicationException(
+    throw SmtpClientCommunicationException(
         'The server does not support LOGIN authentication method.');
   }
 
@@ -81,7 +81,7 @@ Future<bool> _doAuthLogin(Connection c) async {
 Future<bool> _doAuthXoauth2(Connection c) async {
   var capabilities = c.capabilities;
   if (!capabilities.authXoauth2) {
-    throw new SmtpClientCommunicationException(
+    throw SmtpClientCommunicationException(
         'The server does not support XOAUTH2 authentication method.');
   }
 
@@ -93,7 +93,7 @@ Future<bool> _doAuthXoauth2(Connection c) async {
 }
 
 Future<void> _doAuthentication(Connection c) async {
-  bool loginOk = true;
+  var loginOk = true;
 
   if (c.server.username != null) {
     loginOk = await _doAuthLogin(c);
@@ -102,13 +102,13 @@ Future<void> _doAuthentication(Connection c) async {
   }
 
   if (!loginOk) {
-    throw new SmtpClientAuthenticationException(
+    throw SmtpClientAuthenticationException(
         'Incorrect username / password / credentials');
   }
 }
 
 Future<Connection> connect(SmtpServer smtpServer, Duration timeout) async {
-  final Connection c = new Connection(smtpServer, timeout: timeout);
+  final c = Connection(smtpServer, timeout: timeout);
 
   try {
     await c.connect();
@@ -118,10 +118,10 @@ Future<Connection> connect(SmtpServer smtpServer, Duration timeout) async {
       await c.send(null);
     } on TimeoutException {
       if (!c.isSecure) {
-        throw new SmtpNoGreetingException(
+        throw SmtpNoGreetingException(
             'Timed out while waiting for greeting (try ssl).');
       } else {
-        throw new SmtpNoGreetingException(
+        throw SmtpNoGreetingException(
             'Timed out while waiting for greeting.');
       }
     }
@@ -164,14 +164,14 @@ Future<void> close(Connection connection) async {
 /// [SocketException],
 Future<void> sendSingleMessage(
     Message message, Connection c, Duration timeout) async {
-  IRMessage irMessage = IRMessage(message);
-  Iterable<String> envelopeTos = irMessage.envelopeTos;
+  var irMessage = IRMessage(message);
+  var envelopeTos = irMessage.envelopeTos;
 
   var capabilities = c.capabilities;
 
   // Tell the server the envelope from address (might be different to the
   // 'From: ' header!)
-  bool smtpUtf8 = capabilities.smtpUtf8;
+  var smtpUtf8 = capabilities.smtpUtf8;
   await c.send(
       'MAIL FROM:<${irMessage.envelopeFrom}>' + (smtpUtf8 ? ' SMTPUTF8' : ''));
 

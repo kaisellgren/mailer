@@ -43,13 +43,13 @@ abstract class _IRHeader extends _IROutput {
 }
 
 class _IRHeaderText extends _IRHeader {
-  String _value;
+  final String _value;
 
   _IRHeaderText(String name, this._value) : super(name);
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
-    bool utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
+    var utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
 
     if ((_value?.length ?? 0) > maxLineLength ||
         !isPrintableRegExp.hasMatch(_value) ||
@@ -66,7 +66,7 @@ Iterable<String> _addressToString(Iterable<Address> addresses)
 => addresses == null ? []: addresses.map((a) => a.toString());
 
 class _IRHeaderAddress extends _IRHeader {
-  Address _address;
+  final Address _address;
 
   _IRHeaderAddress(String name, this._address) : super(name);
 
@@ -76,7 +76,7 @@ class _IRHeaderAddress extends _IRHeader {
 }
 
 class _IRHeaderAddresses extends _IRHeader {
-  Iterable<Address> _addresses;
+  final Iterable<Address> _addresses;
 
   _IRHeaderAddresses(String name, this._addresses) : super(name);
 
@@ -86,8 +86,8 @@ class _IRHeaderAddresses extends _IRHeader {
 }
 
 class _IRHeaderContentType extends _IRHeader {
-  String _boundary;
-  _MultipartType _multipartType;
+  final String _boundary;
+  final _MultipartType _multipartType;
 
   _IRHeaderContentType(this._boundary, this._multipartType)
       : super('content-type');
@@ -113,7 +113,7 @@ class _IRHeaderDate extends _IRHeader {
 }
 
 Iterable<_IRHeader> _buildHeaders(Message message) {
-  const noCustom = const ['content-type', 'mime-version'];
+  const noCustom = ['content-type', 'mime-version'];
 
   final headers = <_IRHeader>[];
   var msgHeader = message.headers;

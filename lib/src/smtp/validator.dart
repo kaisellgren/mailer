@@ -45,7 +45,7 @@ List<Problem> validate(Message message) {
           message.envelopeFrom ?? message.fromAsAddress.mailAddress),
       'ENV_FROM',
       'Envelope mail address is invalid.  ${message.envelopeFrom}');
-  int counter = 0;
+  var counter = 0;
   (message.envelopeTos ?? <String>[]).forEach((a) {
     counter++;
     validate((a != null && a.isNotEmpty), 'ENV_TO_EMPTY',
@@ -73,7 +73,7 @@ List<Problem> validate(Message message) {
     }
   });
   try {
-    IRMessage irMessage = IRMessage(message);
+    var irMessage = IRMessage(message);
     if (irMessage.envelopeTos.isEmpty) {
       res.add(Problem('NO_RECIPIENTS', 'Mail does not have any recipients.'));
     }

@@ -9,7 +9,7 @@ import 'connection.dart';
 import 'exceptions.dart';
 import 'smtp_client.dart' as client;
 
-final Logger _logger = new Logger('mailer_sender');
+final Logger _logger = Logger('mailer_sender');
 
 class _MailSendTask {
   // If [message] is `null` close connection.
@@ -20,7 +20,7 @@ class _MailSendTask {
 class PersistentConnection {
   Connection _connection;
 
-  final mailSendTasksController = new StreamController<_MailSendTask>();
+  final mailSendTasksController = StreamController<_MailSendTask>();
   Stream<_MailSendTask> get mailSendTasks => mailSendTasksController.stream;
 
   PersistentConnection(SmtpServer smtpServer, {Duration timeout}) {
@@ -36,9 +36,7 @@ class PersistentConnection {
           return;
         }
 
-        if (_connection == null) {
-          _connection = await client.connect(smtpServer, timeout);
-        }
+        _connection ??= await client.connect(smtpServer, timeout);
         var report = await _send(task.message, _connection, timeout);
         task.completer.complete(report);
       } catch (e) {
@@ -127,7 +125,7 @@ void _validate(Message message) {
 /// Please report other exceptions you encounter.
 Future<SendReport> _send(
     Message message, Connection connection, Duration timeout) async {
-  DateTime messageSendStart = DateTime.now();
+  var messageSendStart = DateTime.now();
   DateTime messageSendEnd;
   try {
     await client.sendSingleMessage(message, connection, timeout);
