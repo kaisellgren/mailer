@@ -13,7 +13,7 @@ bool _printableCharsOnly(String s) {
 bool _validAddress(dynamic addressIn) {
   if (addressIn == null) return false;
 
-  String address;
+  String? address;
   if (addressIn is Address) {
     //We can't validate [Address.name] directly, since the implementation
     //of [Address.toString] might sanitize it.
@@ -22,7 +22,7 @@ bool _validAddress(dynamic addressIn) {
   } else {
     address = addressIn as String;
   }
-  return _validMailAddress(address);
+  return _validMailAddress(address!);
 }
 
 bool _validMailAddress(String ma) {
@@ -42,13 +42,13 @@ List<Problem> validate(Message message) {
 
   validate(
       _validMailAddress(
-          message.envelopeFrom ?? message.fromAsAddress.mailAddress),
+          message.envelopeFrom ?? message.fromAsAddress!.mailAddress!),
       'ENV_FROM',
       'Envelope mail address is invalid.  ${message.envelopeFrom}');
   var counter = 0;
   (message.envelopeTos ?? <String>[]).forEach((a) {
     counter++;
-    validate((a != null && a.isNotEmpty), 'ENV_TO_EMPTY',
+    validate((a.isNotEmpty), 'ENV_TO_EMPTY',
         'Envelope to address (pos: $counter) is null or empty');
     validate(
         _validMailAddress(a), 'ENV_TO', 'Envelope to address is invalid.  $a');
@@ -59,9 +59,9 @@ List<Problem> validate(Message message) {
   counter = 0;
   message.recipients.forEach((aIn) {
     counter++;
-    Address a;
+    Address? a;
 
-    a = aIn is String ? Address(aIn) : aIn as Address;
+    a = aIn is String ? Address(aIn) : aIn as Address?;
 
     validate(
         a != null && (a.mailAddress ?? '').isNotEmpty,

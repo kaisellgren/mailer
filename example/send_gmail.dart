@@ -21,7 +21,7 @@ void main(List<String> rawArgs) async {
     username = username.substring(0, username.length - 10);
   }
 
-  var tos = args[toArgs] as List<String> ?? [];
+  var tos = args[toArgs] as List<String>? ?? [];
   if (tos.isEmpty) {
     tos.add(username.contains('@') ? username : username + '@gmail.com');
   }
@@ -31,21 +31,21 @@ void main(List<String> rawArgs) async {
   // other providers.
   final smtpServer = gmail(username, args.rest[1]);
 
-  Iterable<Address> toAd(Iterable<String> addresses) =>
+  Iterable<Address> toAd(Iterable<String>? addresses) =>
       (addresses ?? []).map((a) => Address(a));
 
-  Iterable<Attachment> toAt(Iterable<String> attachments) =>
+  Iterable<Attachment> toAt(Iterable<String>? attachments) =>
       (attachments ?? []).map((a) => FileAttachment(File(a)));
 
   // Create our message.
   final message = Message()
     ..from = Address('$username@gmail.com', 'My name 😀')
     ..recipients.addAll(toAd(tos))
-    ..ccRecipients.addAll(toAd(args[ccArgs] as Iterable<String>))
-    ..bccRecipients.addAll(toAd(args[bccArgs] as Iterable<String>))
+    ..ccRecipients.addAll(toAd(args[ccArgs] as Iterable<String>?))
+    ..bccRecipients.addAll(toAd(args[bccArgs] as Iterable<String>?))
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'
     ..html = "<h1>Test</h1>\n<p>Hey! Here's some HTML content</p>"
-    ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>));
+    ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>?));
 
   try {
     final sendReport =
@@ -76,11 +76,8 @@ void main(List<String> rawArgs) async {
     }
   } catch (e) {
     print('Other exception: $e');
-  }
-  finally {
-    if (connection != null) {
-      await connection.close();
-    }
+  } finally {
+    await connection.close();
   }
 }
 
@@ -108,7 +105,7 @@ ArgResults parseArgs(List<String> rawArgs) {
     exit(1);
   }
 
-  var attachments = args[attachArgs] as Iterable<String> ?? [];
+  var attachments = args[attachArgs] as Iterable<String>? ?? [];
   for (var f in attachments) {
     var attachFile = File(f);
     if (!attachFile.existsSync()) {
@@ -119,7 +116,7 @@ ArgResults parseArgs(List<String> rawArgs) {
   return args;
 }
 
-void showUsage(ArgParser parser, [String message]) {
+void showUsage(ArgParser parser, [String? message]) {
   if (message != null) {
     print(message);
     print('');

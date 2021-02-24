@@ -13,17 +13,17 @@ final Logger _logger = Logger('mailer_sender');
 
 class _MailSendTask {
   // If [message] is `null` close connection.
-  Message message;
-  Completer<SendReport> completer;
+  Message? message;
+  late Completer<SendReport> completer;
 }
 
 class PersistentConnection {
-  Connection _connection;
+  Connection? _connection;
 
   final mailSendTasksController = StreamController<_MailSendTask>();
   Stream<_MailSendTask> get mailSendTasks => mailSendTasksController.stream;
 
-  PersistentConnection(SmtpServer smtpServer, {Duration timeout}) {
+  PersistentConnection(SmtpServer smtpServer, {Duration? timeout}) {
     mailSendTasks.listen((_MailSendTask task) async {
       _logger.finer('New mail sending task.  ${task.message?.subject}');
       try {
@@ -37,7 +37,7 @@ class PersistentConnection {
         }
 
         _connection ??= await client.connect(smtpServer, timeout);
-        var report = await _send(task.message, _connection, timeout);
+        var report = await _send(task.message, _connection!, timeout);
         task.completer.complete(report);
       } catch (e) {
         _logger.fine('Completing with error: $e');
@@ -85,8 +85,8 @@ class PersistentConnection {
 /// [SocketException]
 /// [SmtpMessageValidationException]
 /// Please report other exceptions you encounter.
-Future<SendReport> send(Message message, SmtpServer smtpServer,
-    {Duration timeout}) async {
+Future<SendReport> send(Message message, SmtpServer? smtpServer,
+    {Duration? timeout}) async {
   _validate(message);
   var connection = await client.connect(smtpServer, timeout);
   var sendReport = await _send(message, connection, timeout);
@@ -102,7 +102,7 @@ Future<SendReport> send(Message message, SmtpServer smtpServer,
 /// [SmtpClientCommunicationException],
 /// [SocketException]
 /// others
-Future<void> checkCredentials(SmtpServer smtpServer, {Duration timeout}) async {
+Future<void> checkCredentials(SmtpServer smtpServer, {Duration? timeout}) async {
   var connection = await client.connect(smtpServer, timeout);
   await client.close(connection);
 }
@@ -124,7 +124,7 @@ void _validate(Message message) {
 /// [SocketException]
 /// Please report other exceptions you encounter.
 Future<SendReport> _send(
-    Message message, Connection connection, Duration timeout) async {
+    Message? message, Connection connection, Duration? timeout) async {
   var messageSendStart = DateTime.now();
   DateTime messageSendEnd;
   try {

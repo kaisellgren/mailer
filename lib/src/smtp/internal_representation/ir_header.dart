@@ -7,7 +7,7 @@ abstract class _IRHeader extends _IROutput {
   static final List<int> _b64postfix = convert.utf8.encode('?=$eol');
   static final int _b64Length = _b64prefix.length + _b64postfix.length;
 
-  Stream<List<int>> _outValue(String value) => Stream.fromIterable(
+  Stream<List<int>> _outValue(String? value) => Stream.fromIterable(
       [_name, ': ', value ?? '', eol].map(convert.utf8.encode));
 
   // Outputs value encoded as base64.
@@ -43,7 +43,7 @@ abstract class _IRHeader extends _IROutput {
 }
 
 class _IRHeaderText extends _IRHeader {
-  final String _value;
+  final String? _value;
 
   _IRHeaderText(String name, this._value) : super(name);
 
@@ -52,21 +52,21 @@ class _IRHeaderText extends _IRHeader {
     var utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
 
     if ((_value?.length ?? 0) > maxLineLength ||
-        !isPrintableRegExp.hasMatch(_value) ||
+        !isPrintableRegExp.hasMatch(_value!) ||
         // Make sure that text which looks like an encoded text is encoded.
-        _value.contains('=?') ||
-        (!utf8Allowed && _value.contains(RegExp(r'[^\x20-\x7E]')))) {
-      return _outValueB64(_value);
+        _value!.contains('=?') ||
+        (!utf8Allowed && _value!.contains(RegExp(r'[^\x20-\x7E]')))) {
+      return _outValueB64(_value!);
     }
     return _outValue(_value);
   }
 }
 
-Iterable<String> _addressToString(Iterable<Address> addresses)
-=> addresses == null ? []: addresses.map((a) => a.toString());
+Iterable<String> _addressToString(Iterable<Address?> addresses) =>
+    addresses.map((a) => a.toString());
 
 class _IRHeaderAddress extends _IRHeader {
-  final Address _address;
+  final Address? _address;
 
   _IRHeaderAddress(String name, this._address) : super(name);
 
@@ -76,7 +76,7 @@ class _IRHeaderAddress extends _IRHeader {
 }
 
 class _IRHeaderAddresses extends _IRHeader {
-  final Iterable<Address> _addresses;
+  final Iterable<Address?> _addresses;
 
   _IRHeaderAddresses(String name, this._addresses) : super(name);
 
@@ -134,7 +134,7 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
     } else if (value is Iterable<Address>) {
       headers.add(_IRHeaderAddresses(name, value));
     } else if (value is Iterable<String> &&
-        value.every((s) => (s ?? '').contains('@'))) {
+        value.every((s) => (s).contains('@'))) {
       headers.add(_IRHeaderAddresses(name, value.map((a) => Address(a))));
     } else {
       throw InvalidHeaderException('Type of value for $name is invalid');
@@ -150,12 +150,12 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
   }
 
   if (!msgHeader.containsKey('to')) {
-    var tos = message.recipientsAsAddresses ?? [];
+    var tos = message.recipientsAsAddresses;
     if (tos.isNotEmpty) headers.add(_IRHeaderAddresses('to', tos));
   }
 
   if (!msgHeader.containsKey('cc')) {
-    var ccs = message.ccsAsAddresses ?? [];
+    var ccs = message.ccsAsAddresses;
     if (ccs.isNotEmpty) headers.add(_IRHeaderAddresses('cc', ccs));
   }
 

@@ -12,13 +12,13 @@ import 'internal_representation/internal_representation.dart';
 
 /// Returns if ehlo was successful.
 Future<bool> _doEhlo(Connection c, String clientName) async {
-  var respEhlo = await c.send('EHLO $clientName', acceptedRespCodes: null);
+  var respEhlo = await (c.send('EHLO $clientName', acceptedRespCodes: null));
 
-  if (!respEhlo.responseCode.startsWith('2')) {
+  if (!(respEhlo == null || respEhlo.responseCode.startsWith('2'))) {
     return false;
   }
 
-  var capabilities = Capabilities.fromResponse(respEhlo.responseLines);
+  var capabilities = Capabilities.fromResponse(respEhlo!.responseLines);
 
   if (!capabilities.startTls || c.isSecure) {
     c.capabilities = capabilities;
@@ -29,7 +29,7 @@ Future<bool> _doEhlo(Connection c, String clientName) async {
   // The server supports TLS and we haven't switched to it yet,
   // so let's do it.
   var tlsResp = await c.send('STARTTLS', acceptedRespCodes: null);
-  if (!tlsResp.responseCode.startsWith('2')) {
+  if (tlsResp == null || !tlsResp.responseCode.startsWith('2')) {
     // Even though server announced STARTTLS, it now chickens out.
     return false;
   }
@@ -41,7 +41,7 @@ Future<bool> _doEhlo(Connection c, String clientName) async {
   return _doEhlo(c, clientName);
 }
 
-Future<void> _doEhloHelo(Connection c, {String clientName}) async {
+Future<void> _doEhloHelo(Connection c, {String? clientName}) async {
   if (clientName == null || clientName.trim().isEmpty) {
     clientName = Platform.localHostname;
   }
@@ -64,8 +64,8 @@ Future<bool> _doAuthLogin(Connection c) async {
         'The server does not support LOGIN authentication method.');
   }
 
-  var username = c.server.username;
-  var password = c.server.password;
+  var username = c.server!.username!;
+  var password = c.server!.password!;
 
   // 'Username:' in base64 is: VXN...
   await c.send('AUTH LOGIN',
@@ -75,7 +75,8 @@ Future<bool> _doAuthLogin(Connection c) async {
       acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
   var loginResp = await c
       .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
-  return loginResp.responseCode.startsWith('2');
+
+  return loginResp!.responseCode.startsWith('2');
 }
 
 Future<bool> _doAuthXoauth2(Connection c) async {
@@ -85,19 +86,20 @@ Future<bool> _doAuthXoauth2(Connection c) async {
         'The server does not support XOAUTH2 authentication method.');
   }
 
-  var token = c.server.xoauth2Token;
+  var token = c.server!.xoauth2Token;
 
   // See https://developers.google.com/gmail/imap/xoauth2-protocol
-  var loginResp = await c.send('AUTH XOAUTH2 $token', acceptedRespCodes: []);
+  var loginResp = await (c.send('AUTH XOAUTH2 $token', acceptedRespCodes: [])
+      as FutureOr<ServerResponse>);
   return loginResp.responseCode.startsWith('2');
 }
 
 Future<void> _doAuthentication(Connection c) async {
   var loginOk = true;
 
-  if (c.server.username != null) {
+  if (c.server!.username != null) {
     loginOk = await _doAuthLogin(c);
-  } else if (c.server.xoauth2Token != null) {
+  } else if (c.server!.xoauth2Token != null) {
     loginOk = await _doAuthXoauth2(c);
   }
 
@@ -107,7 +109,7 @@ Future<void> _doAuthentication(Connection c) async {
   }
 }
 
-Future<Connection> connect(SmtpServer smtpServer, Duration timeout) async {
+Future<Connection> connect(SmtpServer? smtpServer, Duration? timeout) async {
   final c = Connection(smtpServer, timeout: timeout);
 
   try {
@@ -121,8 +123,7 @@ Future<Connection> connect(SmtpServer smtpServer, Duration timeout) async {
         throw SmtpNoGreetingException(
             'Timed out while waiting for greeting (try ssl).');
       } else {
-        throw SmtpNoGreetingException(
-            'Timed out while waiting for greeting.');
+        throw SmtpNoGreetingException('Timed out while waiting for greeting.');
       }
     }
 
@@ -135,14 +136,12 @@ Future<Connection> connect(SmtpServer smtpServer, Duration timeout) async {
     await _doAuthentication(c);
     return c;
   } catch (e) {
-    if (c != null) {
-      await c.close();
-    }
+    await c.close();
     rethrow;
   }
 }
 
-Future<void> close(Connection connection) async {
+Future<void> close(Connection? connection) async {
   if (connection == null) {
     return;
   }
@@ -163,7 +162,7 @@ Future<void> close(Connection connection) async {
 /// [SmtpUnsecureException],
 /// [SocketException],
 Future<void> sendSingleMessage(
-    Message message, Connection c, Duration timeout) async {
+    Message? message, Connection c, Duration? timeout) async {
   var irMessage = IRMessage(message);
   var envelopeTos = irMessage.envelopeTos;
 
@@ -178,7 +177,7 @@ Future<void> sendSingleMessage(
   // Give the server all recipients.
   // TODO what if only one address fails?
   await Future.forEach(
-      envelopeTos, (recipient) => c.send('RCPT TO:<$recipient>'));
+      envelopeTos, (dynamic recipient) => c.send('RCPT TO:<$recipient>'));
 
   // Finally send the actual mail.
   await c.send('DATA', acceptedRespCodes: ['2', '3']);

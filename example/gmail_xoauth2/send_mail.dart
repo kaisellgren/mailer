@@ -18,13 +18,13 @@ void main(List<String> rawArgs) async {
 
   var args = parseArgs(rawArgs);
   final file = args[argFile] as String;
-  final mailTo = args[argTo] as String;
+  final mailTo = args[argTo] as String?;
 
   var jsonCredentials = json.decode(File(file).readAsStringSync());
   var identifier = jsonCredentials['identifier'] as String;
-  var secret = jsonCredentials['secret'] as String;
-  var refreshToken = jsonCredentials['refreshToken'] as String;
-  var username = jsonCredentials['username'] as String;
+  var secret = jsonCredentials['secret'] as String?;
+  var refreshToken = jsonCredentials['refreshToken'] as String?;
+  var username = jsonCredentials['username'] as String?;
 
   var clientId = ClientId(identifier, secret);
 
@@ -36,7 +36,7 @@ void main(List<String> rawArgs) async {
       idToken: identifier);
 
   // Refresh credentials periodically!
-  if (credentials.accessToken == null || credentials.accessToken.hasExpired) {
+  if (credentials.accessToken.hasExpired) {
     credentials = await refreshCredentials(clientId, credentials, client);
   }
   client.close();
@@ -67,8 +67,8 @@ ArgResults parseArgs(List<String> rawArgs) {
     ..addOption(argFile, help: 'Read secrets from <file>.');
 
   var argResults = parser.parse(rawArgs);
-  var toAddress = argResults[argTo] as String;
-  var file = argResults[argFile] as String;
+  var toAddress = argResults[argTo] as String?;
+  var file = argResults[argFile] as String?;
   if (toAddress == null || toAddress.isEmpty || file == null || file.isEmpty) {
     print(parser.usage);
     throw Exception('Missing argument');

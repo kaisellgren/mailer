@@ -10,11 +10,11 @@ const scopes = ['https://mail.google.com'];
 main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
   final identifier = args[argId] as String;
-  final secret = args[argSecret] as String;
-  final username = args[argUsername] as String;
+  final secret = args[argSecret] as String?;
+  final username = args[argUsername] as String?;
 
   final clientId = ClientId(identifier, secret);
-  final fileName = args[argFile] as String;
+  final fileName = args[argFile] as String?;
 
   AccessCredentials credentials;
   final client = http.Client();
@@ -67,9 +67,9 @@ ArgResults parseArgs(List<String> rawArgs) {
     ..addOption(argFile, help: 'Write secrets to <file>.');
 
   var argResults = parser.parse(rawArgs);
-  var id = argResults[argId] as String;
-  var secret = argResults[argSecret] as String;
-  var username = argResults[argUsername] as String;
+  var id = argResults[argId] as String?;
+  var secret = argResults[argSecret] as String?;
+  var username = argResults[argUsername] as String?;
   if (id == null ||
       id.isEmpty ||
       secret == null ||
