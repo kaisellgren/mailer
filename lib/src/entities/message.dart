@@ -24,15 +24,15 @@ import 'attachment.dart';
 ///
 /// See [Attachment] for how to reference inline-attachments.
 class Message {
-  String envelopeFrom;
-  List<String> envelopeTos;
+  String? envelopeFrom;
+  List<String>? envelopeTos;
 
   /// Allowed types are String and Address
   /// String must be a simple email-address.
   ///
   /// There is no parsing for name / mail-address pairs!
   /// Always use Address in this case.  (Otherwise we might incorrectly encode
-  /// the name / mail-address pair with base64.
+  /// the name / mail-address pair with base64.)
   dynamic from;
   Address get fromAsAddress => _asAddresses([from]).first;
 
@@ -57,7 +57,7 @@ class Message {
   ///
   /// There is no parsing for name / mail-address pairs!
   /// Always use Address in this case.  (Otherwise we might incorrectly encode
-  /// the name / mail-address pair with base64.
+  /// the name / mail-address pair with base64.)
   ///
   /// base64 encoding is applied for:
   /// * Strings containing non-ascii chars
@@ -66,11 +66,11 @@ class Message {
   /// * Address.names if they are too long
   Map<String, dynamic> headers = {};
 
-  String subject;
-  String text;
-  String html;
+  String? subject;
+  String? text;
+  String? html;
   List<Attachment> attachments = [];
 
   static Iterable<Address> _asAddresses(Iterable<dynamic> adrs) =>
-      adrs == null ? []: adrs.map((a) => a is String ? Address(a) : a as Address);
+      adrs.map((a) => a is String ? Address(a) : a as Address);
 }

@@ -1,19 +1,20 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
-import "package:http/http.dart" as http;
-import "package:googleapis_auth/auth_io.dart";
+import 'package:http/http.dart' as http;
+import 'package:googleapis_auth/auth_io.dart';
 
 const scopes = ['https://mail.google.com'];
 
+// ignore: always_declare_return_types
 main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
   final identifier = args[argId] as String;
-  final secret = args[argSecret] as String;
-  final username = args[argUsername] as String;
+  final secret = args[argSecret] as String?;
+  final username = args[argUsername] as String?;
 
   final clientId = ClientId(identifier, secret);
-  final fileName = args[argFile] as String;
+  final fileName = args[argFile] as String?;
 
   AccessCredentials credentials;
   final client = http.Client();
@@ -42,9 +43,9 @@ main(List<String> rawArgs) async {
 }
 
 void prompt(String url) {
-  print("Please go to the following URL and grant access:");
-  print("  => $url");
-  print("");
+  print('Please go to the following URL and grant access:');
+  print('  => $url');
+  print('');
 }
 
 const argId = 'id';
@@ -66,9 +67,9 @@ ArgResults parseArgs(List<String> rawArgs) {
     ..addOption(argFile, help: 'Write secrets to <file>.');
 
   var argResults = parser.parse(rawArgs);
-  var id = argResults[argId] as String;
-  var secret = argResults[argSecret] as String;
-  var username = argResults[argUsername] as String;
+  var id = argResults[argId] as String?;
+  var secret = argResults[argSecret] as String?;
+  var username = argResults[argUsername] as String?;
   if (id == null ||
       id.isEmpty ||
       secret == null ||
@@ -76,7 +77,7 @@ ArgResults parseArgs(List<String> rawArgs) {
       username == null ||
       username.isEmpty) {
     print(parser.usage);
-    throw new Exception('Missing argument');
+    throw Exception('Missing argument');
   }
   return argResults;
 }

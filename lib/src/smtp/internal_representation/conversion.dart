@@ -34,12 +34,12 @@ bool _isMultiByteContinuationByte(int b) {
 // Note that the 2nd, 3rd and 4th byte all start with 10
 Iterable<List<int>> split(List<int> data, int maxLength,
     {bool avoidUtf8Cut = true}) sync* {
-  int start = 0;
+  var start = 0;
   for (;;) {
     if (start >= data.length) break;
 
     // When using List.sublist "end" is not included in the output.
-    int end = start + maxLength;
+    var end = start + maxLength;
     if (end >= data.length) {
       yield data.sublist(start);
       break;
@@ -47,7 +47,7 @@ Iterable<List<int>> split(List<int> data, int maxLength,
 
     // Look at the character immediately following the chunk we would like to
     // return.
-    int e = end; // We do not need to add 1!  e now "points" to the character
+    var e = end; // We do not need to add 1!  e now "points" to the character
     // behind the characters a List.subList would return.
     // We have already verified that this character exists.
     while (avoidUtf8Cut && e > start && _isMultiByteContinuationByte(data[e])) {
@@ -70,12 +70,12 @@ Iterable<List<int>> split(List<int> data, int maxLength,
 
 Stream<List<int>> _splitS(
     Stream<List<int>> dataS, int splitOver, int maxLength) {
-  int currentLineLength = 0;
+  var currentLineLength = 0;
 
   var sc = StreamController<List<int>>();
   void processData(List<int> data) {
     if (data.length + currentLineLength > maxLength) {
-      int targetLength = maxLength ~/ 2;
+      var targetLength = maxLength ~/ 2;
       if (targetLength + currentLineLength > maxLength) {
         targetLength = maxLength - currentLineLength;
       }

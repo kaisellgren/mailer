@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
-import "package:googleapis_auth/auth_io.dart";
-import "package:http/http.dart" as http;
+import 'package:googleapis_auth/auth_io.dart';
+import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
 const scopes = ['https://mail.google.com'];
 
-main(List<String> rawArgs) async {
+void main(List<String> rawArgs) async {
   Logger.root.level = Level.ALL;
   Logger.root.onRecord.listen((LogRecord rec) {
     print('${rec.level.name}: ${rec.time}: ${rec.message}');
@@ -18,25 +18,25 @@ main(List<String> rawArgs) async {
 
   var args = parseArgs(rawArgs);
   final file = args[argFile] as String;
-  final mailTo = args[argTo] as String;
+  final mailTo = args[argTo] as String?;
 
   var jsonCredentials = json.decode(File(file).readAsStringSync());
   var identifier = jsonCredentials['identifier'] as String;
-  var secret = jsonCredentials['secret'] as String;
-  var refreshToken = jsonCredentials['refreshToken'] as String;
-  var username = jsonCredentials['username'] as String;
+  var secret = jsonCredentials['secret'] as String?;
+  var refreshToken = jsonCredentials['refreshToken'] as String?;
+  var username = jsonCredentials['username'] as String?;
 
   var clientId = ClientId(identifier, secret);
 
   final client = http.Client();
-  AccessCredentials credentials = AccessCredentials(
+  var credentials = AccessCredentials(
       AccessToken('Bearer', 'EXPIRED', DateTime.utc(2000)),
       refreshToken,
       scopes,
       idToken: identifier);
 
   // Refresh credentials periodically!
-  if (credentials.accessToken == null || credentials.accessToken.hasExpired) {
+  if (credentials.accessToken.hasExpired) {
     credentials = await refreshCredentials(clientId, credentials, client);
   }
   client.close();
@@ -67,11 +67,11 @@ ArgResults parseArgs(List<String> rawArgs) {
     ..addOption(argFile, help: 'Read secrets from <file>.');
 
   var argResults = parser.parse(rawArgs);
-  var toAddress = argResults[argTo] as String;
-  var file = argResults[argFile] as String;
+  var toAddress = argResults[argTo] as String?;
+  var file = argResults[argFile] as String?;
   if (toAddress == null || toAddress.isEmpty || file == null || file.isEmpty) {
     print(parser.usage);
-    throw new Exception('Missing argument');
+    throw Exception('Missing argument');
   }
   return argResults;
 }

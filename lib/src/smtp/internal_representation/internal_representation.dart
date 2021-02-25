@@ -22,8 +22,8 @@ const maxLineLength = 800;
 
 // From https://docs.flutter.io/flutter/foundation/describeEnum.html
 String _describeEnum(Object enumEntry) {
-  final String description = enumEntry.toString();
-  final int indexOfDot = description.indexOf('.');
+  final description = enumEntry.toString();
+  final indexOfDot = description.indexOf('.');
   assert(indexOfDot != -1 && indexOfDot < description.length - 1);
   return description.substring(indexOfDot + 1);
 }

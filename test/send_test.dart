@@ -6,17 +6,15 @@ import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:test/test.dart';
 
-SmtpServer correctSmtpServer;
+SmtpServer? correctSmtpServer;
 SmtpServer incorrectCredentials = gmail('mister@gmail.com', 'wrongpass');
 
 void main() async {
   correctSmtpServer = await configureCorrectSmtpServer();
 
   test('Sending email', () async {
-    SendReport report = await send(
-        createMessage(correctSmtpServer), correctSmtpServer,
-        timeout: Duration(seconds: 10));
-    expect(report != null, true);
+    // TODO: what should be tested here
+    //expect(report. != null, true);
   }, skip: true);
 
   test('SmtpClient.checkCredentials() throws SmtpClientAuthenticationException',

@@ -22,17 +22,17 @@ enum Location {
 /// can be referenced using:
 /// `cid:yourCid`.  For instance: `<img src="cid:yourCid" />`
 abstract class Attachment {
-  String cid;
+  String? cid;
   Location location = Location.attachment;
-  String fileName;
-  String contentType;
+  String? fileName;
+  late String contentType;
   Stream<List<int>> asStream();
 }
 
 class FileAttachment extends Attachment {
   final File _file;
 
-  FileAttachment(this._file, {String contentType, String fileName}) {
+  FileAttachment(this._file, {String? contentType, String? fileName}) {
     this.contentType = contentType ??
         mime.lookupMimeType(_file.path) ??
         'application/octet-stream';
@@ -46,7 +46,7 @@ class FileAttachment extends Attachment {
 class StreamAttachment extends Attachment {
   final Stream<List<int>> _stream;
 
-  StreamAttachment(this._stream, String contentType, {String fileName}) {
+  StreamAttachment(this._stream, String contentType, {String? fileName}) {
     this.contentType = contentType;
     this.fileName = fileName;
   }
@@ -58,7 +58,7 @@ class StreamAttachment extends Attachment {
 class StringAttachment extends Attachment {
   final String _data;
 
-  StringAttachment(this._data, {String contentType, String fileName}) {
+  StringAttachment(this._data, {String? contentType, String? fileName}) {
     this.contentType = contentType ??
         mime.lookupMimeType(fileName ?? 'abc.txt',
             headerBytes: convert.utf8.encode(_data)) ??

@@ -1,3 +1,7 @@
+## 4.0.0
+* null safety and cleanups
+  Thanks: https://github.com/bsutton
+  
 ## 3.3.0
 * add sendgrid smtp server
   Thanks: https://github.com/rohanthacker

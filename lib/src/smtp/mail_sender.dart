@@ -9,21 +9,21 @@ import 'connection.dart';
 import 'exceptions.dart';
 import 'smtp_client.dart' as client;
 
-final Logger _logger = new Logger('mailer_sender');
+final Logger _logger = Logger('mailer_sender');
 
 class _MailSendTask {
   // If [message] is `null` close connection.
-  Message message;
-  Completer<SendReport> completer;
+  Message? message;
+  late Completer<SendReport> completer;
 }
 
 class PersistentConnection {
-  Connection _connection;
+  Connection? _connection;
 
-  final mailSendTasksController = new StreamController<_MailSendTask>();
+  final mailSendTasksController = StreamController<_MailSendTask>();
   Stream<_MailSendTask> get mailSendTasks => mailSendTasksController.stream;
 
-  PersistentConnection(SmtpServer smtpServer, {Duration timeout}) {
+  PersistentConnection(SmtpServer smtpServer, {Duration? timeout}) {
     mailSendTasks.listen((_MailSendTask task) async {
       _logger.finer('New mail sending task.  ${task.message?.subject}');
       try {
@@ -36,10 +36,8 @@ class PersistentConnection {
           return;
         }
 
-        if (_connection == null) {
-          _connection = await client.connect(smtpServer, timeout);
-        }
-        var report = await _send(task.message, _connection, timeout);
+        _connection ??= await client.connect(smtpServer, timeout);
+        var report = await _send(task.message!, _connection!, timeout);
         task.completer.complete(report);
       } catch (e) {
         _logger.fine('Completing with error: $e');
@@ -88,7 +86,7 @@ class PersistentConnection {
 /// [SmtpMessageValidationException]
 /// Please report other exceptions you encounter.
 Future<SendReport> send(Message message, SmtpServer smtpServer,
-    {Duration timeout}) async {
+    {Duration? timeout}) async {
   _validate(message);
   var connection = await client.connect(smtpServer, timeout);
   var sendReport = await _send(message, connection, timeout);
@@ -104,7 +102,7 @@ Future<SendReport> send(Message message, SmtpServer smtpServer,
 /// [SmtpClientCommunicationException],
 /// [SocketException]
 /// others
-Future<void> checkCredentials(SmtpServer smtpServer, {Duration timeout}) async {
+Future<void> checkCredentials(SmtpServer smtpServer, {Duration? timeout}) async {
   var connection = await client.connect(smtpServer, timeout);
   await client.close(connection);
 }
@@ -126,8 +124,8 @@ void _validate(Message message) {
 /// [SocketException]
 /// Please report other exceptions you encounter.
 Future<SendReport> _send(
-    Message message, Connection connection, Duration timeout) async {
-  DateTime messageSendStart = DateTime.now();
+    Message message, Connection connection, Duration? timeout) async {
+  var messageSendStart = DateTime.now();
   DateTime messageSendEnd;
   try {
     await client.sendSingleMessage(message, connection, timeout);
@@ -136,6 +134,8 @@ Future<SendReport> _send(
     _logger.warning('Could not send mail.', e);
     rethrow;
   }
-  return SendReport(message, connection.connectionOpenStart, messageSendStart,
+  // If sending the message was successful we had to open a connection and
+  // `connection.connectionOpenStart` can no longer be null.
+  return SendReport(message, connection.connectionOpenStart!, messageSendStart,
       messageSendEnd);
 }
