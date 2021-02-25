@@ -37,7 +37,7 @@ class PersistentConnection {
         }
 
         _connection ??= await client.connect(smtpServer, timeout);
-        var report = await _send(task.message, _connection!, timeout);
+        var report = await _send(task.message!, _connection!, timeout);
         task.completer.complete(report);
       } catch (e) {
         _logger.fine('Completing with error: $e');
@@ -85,7 +85,7 @@ class PersistentConnection {
 /// [SocketException]
 /// [SmtpMessageValidationException]
 /// Please report other exceptions you encounter.
-Future<SendReport> send(Message message, SmtpServer? smtpServer,
+Future<SendReport> send(Message message, SmtpServer smtpServer,
     {Duration? timeout}) async {
   _validate(message);
   var connection = await client.connect(smtpServer, timeout);
@@ -124,7 +124,7 @@ void _validate(Message message) {
 /// [SocketException]
 /// Please report other exceptions you encounter.
 Future<SendReport> _send(
-    Message? message, Connection connection, Duration? timeout) async {
+    Message message, Connection connection, Duration? timeout) async {
   var messageSendStart = DateTime.now();
   DateTime messageSendEnd;
   try {
@@ -134,6 +134,8 @@ Future<SendReport> _send(
     _logger.warning('Could not send mail.', e);
     rethrow;
   }
-  return SendReport(message, connection.connectionOpenStart, messageSendStart,
+  // If sending the message was successful we had to open a connection and
+  // `connection.connectionOpenStart` can no longer be null.
+  return SendReport(message, connection.connectionOpenStart!, messageSendStart,
       messageSendEnd);
 }

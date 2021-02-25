@@ -187,7 +187,7 @@ class _IRContentText extends _IRContent {
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
-    addEol(String s) async* {
+    Stream<String> addEol(String s) async* {
       yield s;
       yield eol;
     }

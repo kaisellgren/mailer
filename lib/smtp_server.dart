@@ -5,11 +5,11 @@ export 'smtp_server/qq.dart';
 export 'smtp_server/yahoo.dart';
 
 class SmtpServer {
-  final String? host;
-  final int? port;
+  final String host;
+  final int port;
   final bool ignoreBadCertificate;
-  final bool? ssl;
-  final bool? allowInsecure;
+  final bool ssl;
+  final bool allowInsecure;
   final String? username;
   final String? password;
   final String? xoauth2Token;

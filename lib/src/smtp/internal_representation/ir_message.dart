@@ -19,13 +19,13 @@ class IRMessage {
         ..._message!.recipientsAsAddresses,
         ..._message!.ccsAsAddresses,
         ..._message!.bccsAsAddresses
-      ].where((a) => a?.mailAddress != null).map((a) => a!.mailAddress);
+      ].where((a) => a.mailAddress != null).map((a) => a.mailAddress);
     }
     return envelopeTos;
   }
 
   String get envelopeFrom =>
-      _message!.envelopeFrom ?? _message!.fromAsAddress?.mailAddress ?? '';
+      _message!.envelopeFrom ?? _message!.fromAsAddress.mailAddress ?? '';
 
   Stream<List<int>> data(Capabilities capabilities) =>
       _content.out(_IRMetaInformation(capabilities));

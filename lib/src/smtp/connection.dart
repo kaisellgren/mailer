@@ -27,7 +27,7 @@ class ServerResponse {
 }
 
 class Connection {
-  final SmtpServer? server;
+  final SmtpServer server;
   final Duration timeout;
   DateTime? _connectionOpenStart;
 
@@ -49,13 +49,13 @@ class Connection {
   /// Returns the next message from server.  An exception is thrown if
   /// [acceptedRespCodes] is not empty and the response code from the server
   /// does not start with any of the strings in [acceptedRespCodes];
-  Future<ServerResponse?> send(String? command,
+  Future<ServerResponse?> send(String command,
       {List<String>? acceptedRespCodes = const ['2'],
       String? expect,
       bool waitForResponse = true}) async {
     // Send the new command.
-    if (command != null) {
-      _logger.fine('> $command');
+    _logger.fine('> $command');
+    if (command.isNotEmpty) {
       _socket!.write('$command\r\n');
     }
 
@@ -116,23 +116,23 @@ class Connection {
     // A StreamQueue always pauses unless we explicitly call next().
     // So we don't need to call pause() ourselves.
     _socket = await SecureSocket.secure(_socket!,
-        onBadCertificate: (_) => server!.ignoreBadCertificate);
+        onBadCertificate: (_) => server.ignoreBadCertificate);
     _setSocketIn();
   }
 
   /// Initializes a connection to the given server.
   Future<void> connect() async {
     _connectionOpenStart = DateTime.now();
-    _logger.finer('Connecting to ${server!.host} at port ${server!.port}.');
+    _logger.finer('Connecting to ${server.host} at port ${server.port}.');
 
     // Secured connection was demanded by the user.
-    if (server!.ssl!) {
-      _socket = await SecureSocket.connect(server!.host, server!.port!,
-          onBadCertificate: (_) => server!.ignoreBadCertificate,
+    if (server.ssl) {
+      _socket = await SecureSocket.connect(server.host, server.port,
+          onBadCertificate: (_) => server.ignoreBadCertificate,
           timeout: timeout);
     } else {
       _socket =
-          await Socket.connect(server!.host, server!.port!, timeout: timeout);
+          await Socket.connect(server.host, server.port, timeout: timeout);
     }
     _socket!.timeout(timeout);
 
@@ -153,7 +153,7 @@ class Connection {
   }
 
   void verifySecuredConnection() {
-    if (!server!.allowInsecure! && !isSecure) {
+    if (!server.allowInsecure && !isSecure) {
       _socket!.close();
       throw SmtpUnsecureException('Aborting because connection is not secure');
     }

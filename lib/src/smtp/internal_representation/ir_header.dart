@@ -62,11 +62,11 @@ class _IRHeaderText extends _IRHeader {
   }
 }
 
-Iterable<String> _addressToString(Iterable<Address?> addresses) =>
+Iterable<String> _addressToString(Iterable<Address> addresses) =>
     addresses.map((a) => a.toString());
 
 class _IRHeaderAddress extends _IRHeader {
-  final Address? _address;
+  final Address _address;
 
   _IRHeaderAddress(String name, this._address) : super(name);
 
@@ -76,7 +76,7 @@ class _IRHeaderAddress extends _IRHeader {
 }
 
 class _IRHeaderAddresses extends _IRHeader {
-  final Iterable<Address?> _addresses;
+  final Iterable<Address> _addresses;
 
   _IRHeaderAddresses(String name, this._addresses) : super(name);
 
@@ -164,7 +164,7 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
   }
 
   if (!msgHeader.containsKey('x-mailer')) {
-    headers.add(_IRHeaderText('x-mailer', 'Dart Mailer library 2'));
+    headers.add(_IRHeaderText('x-mailer', 'Dart Mailer library'));
   }
 
   headers.add(_IRHeaderText('mime-version', '1.0'));

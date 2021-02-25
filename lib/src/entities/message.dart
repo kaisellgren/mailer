@@ -32,21 +32,21 @@ class Message {
   ///
   /// There is no parsing for name / mail-address pairs!
   /// Always use Address in this case.  (Otherwise we might incorrectly encode
-  /// the name / mail-address pair with base64.
+  /// the name / mail-address pair with base64.)
   dynamic from;
-  Address? get fromAsAddress => _asAddresses([from]).first;
+  Address get fromAsAddress => _asAddresses([from]).first;
 
   /// See [from] for allowed types.
   List<dynamic> recipients = [];
-  Iterable<Address?> get recipientsAsAddresses => _asAddresses(recipients);
+  Iterable<Address> get recipientsAsAddresses => _asAddresses(recipients);
 
   /// See [from] for allowed types.
   List<dynamic> ccRecipients = [];
-  Iterable<Address?> get ccsAsAddresses => _asAddresses(ccRecipients);
+  Iterable<Address> get ccsAsAddresses => _asAddresses(ccRecipients);
 
   /// See [from] for allowed types.
   List<dynamic> bccRecipients = [];
-  Iterable<Address?> get bccsAsAddresses => _asAddresses(bccRecipients);
+  Iterable<Address> get bccsAsAddresses => _asAddresses(bccRecipients);
 
   /// Allowed values are String, Address, Iterable<Address>, Iterable<String> or
   /// DateTime.
@@ -57,7 +57,7 @@ class Message {
   ///
   /// There is no parsing for name / mail-address pairs!
   /// Always use Address in this case.  (Otherwise we might incorrectly encode
-  /// the name / mail-address pair with base64.
+  /// the name / mail-address pair with base64.)
   ///
   /// base64 encoding is applied for:
   /// * Strings containing non-ascii chars
@@ -71,6 +71,6 @@ class Message {
   String? html;
   List<Attachment> attachments = [];
 
-  static Iterable<Address?> _asAddresses(Iterable<dynamic> adrs) =>
-      adrs.map((a) => a is String ? Address(a) : a as Address?);
+  static Iterable<Address> _asAddresses(Iterable<dynamic> adrs) =>
+      adrs.map((a) => a is String ? Address(a) : a as Address);
 }

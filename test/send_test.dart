@@ -29,12 +29,12 @@ Future<SmtpServer> configureCorrectSmtpServer() async {
   final json = convert.json.decode(await config.readAsString());
 
   return SmtpServer(
-    json['host'] as String?,
-    username: json['username'] as String?,
-    password: json['password'] as String?,
-    port: json['port'] as int?,
-    ssl: json['ssl'] as bool?,
-    allowInsecure: json['allowInsecure'] as bool?,
+    json['host'] as String,
+    username: json['username'] as String,
+    password: json['password'] as String,
+    port: json['port'] as int,
+    ssl: json['ssl'] as bool,
+    allowInsecure: json['allowInsecure'] as bool,
   );
 }
 

@@ -64,8 +64,8 @@ Future<bool> _doAuthLogin(Connection c) async {
         'The server does not support LOGIN authentication method.');
   }
 
-  var username = c.server!.username!;
-  var password = c.server!.password!;
+  var username = c.server.username!;
+  var password = c.server.password!;
 
   // 'Username:' in base64 is: VXN...
   await c.send('AUTH LOGIN',
@@ -73,8 +73,9 @@ Future<bool> _doAuthLogin(Connection c) async {
   // 'Password:' in base64 is: UGF...
   await c.send(convert.base64.encode(username.codeUnits),
       acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
-  var loginResp = await c
-      .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
+  var loginResp = await c.send(
+      convert.base64.encode(password.codeUnits),
+      acceptedRespCodes: []);
 
   return loginResp!.responseCode.startsWith('2');
 }
@@ -86,7 +87,7 @@ Future<bool> _doAuthXoauth2(Connection c) async {
         'The server does not support XOAUTH2 authentication method.');
   }
 
-  var token = c.server!.xoauth2Token;
+  var token = c.server.xoauth2Token;
 
   // See https://developers.google.com/gmail/imap/xoauth2-protocol
   var loginResp = await (c.send('AUTH XOAUTH2 $token', acceptedRespCodes: [])
@@ -97,9 +98,9 @@ Future<bool> _doAuthXoauth2(Connection c) async {
 Future<void> _doAuthentication(Connection c) async {
   var loginOk = true;
 
-  if (c.server!.username != null) {
+  if (c.server.username != null && c.server.password != null) {
     loginOk = await _doAuthLogin(c);
-  } else if (c.server!.xoauth2Token != null) {
+  } else if (c.server.xoauth2Token != null) {
     loginOk = await _doAuthXoauth2(c);
   }
 
@@ -109,7 +110,7 @@ Future<void> _doAuthentication(Connection c) async {
   }
 }
 
-Future<Connection> connect(SmtpServer? smtpServer, Duration? timeout) async {
+Future<Connection> connect(SmtpServer smtpServer, Duration? timeout) async {
   final c = Connection(smtpServer, timeout: timeout);
 
   try {
@@ -117,7 +118,7 @@ Future<Connection> connect(SmtpServer? smtpServer, Duration? timeout) async {
 
     try {
       // Greeting (Don't send anything.  We first wait for a 2xx message.)
-      await c.send(null);
+      await c.send('');
     } on TimeoutException {
       if (!c.isSecure) {
         throw SmtpNoGreetingException(

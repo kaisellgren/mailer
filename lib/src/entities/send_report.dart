@@ -1,8 +1,8 @@
 import 'message.dart';
 
 class SendReport {
-  final Message? mail;
-  final DateTime? connectionOpened;
+  final Message mail;
+  final DateTime connectionOpened;
   final DateTime messageSendingStart;
   final DateTime messageSendingEnd;
 

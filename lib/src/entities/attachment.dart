@@ -25,7 +25,7 @@ abstract class Attachment {
   String? cid;
   Location location = Location.attachment;
   String? fileName;
-  String? contentType;
+  late String contentType;
   Stream<List<int>> asStream();
 }
 

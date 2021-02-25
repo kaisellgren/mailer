@@ -22,10 +22,13 @@ bool _validAddress(dynamic addressIn) {
   } else {
     address = addressIn as String;
   }
-  return _validMailAddress(address!);
+  return _validMailAddress(address);
 }
 
-bool _validMailAddress(String ma) {
+bool _validMailAddress(String? ma) {
+  if (ma == null) {
+    return false;
+  }
   var split = ma.split('@');
   return split.length == 2 &&
       split.every((part) => part.isNotEmpty && _printableCharsOnly(part));
@@ -42,7 +45,7 @@ List<Problem> validate(Message message) {
 
   validate(
       _validMailAddress(
-          message.envelopeFrom ?? message.fromAsAddress!.mailAddress!),
+          message.envelopeFrom ?? message.fromAsAddress.mailAddress),
       'ENV_FROM',
       'Envelope mail address is invalid.  ${message.envelopeFrom}');
   var counter = 0;
