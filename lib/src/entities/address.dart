@@ -1,8 +1,8 @@
 class Address {
-  String name;
-  String mailAddress;
+  final String name;
+  final String mailAddress;
 
-  Address([this.mailAddress, this.name]);
+  const Address([this.mailAddress, this.name]);
 
   /// Generates an address that must conform to RFC 5322.
   /// For example, `name <foo@domain.com>`, `<foo@domain.com>`
