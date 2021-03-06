@@ -4,13 +4,14 @@ class Address {
 
   const Address([this.mailAddress, this.name]);
 
-  /// Generates an address that must conform to RFC 5322.
-  /// For example, `name <foo@domain.com>`, `<foo@domain.com>`
-  /// and `foo.domain.com`.
+  /// The name used to output to SMTP server.
+  /// Implementation can override it to pre-process the name before sending.
+  /// For example, providing a default name for certain address, or quoting it.
+  String get sanitizedName => name;
+  /// The address used to output to SMTP server.
+  /// Implementation can override it to pre-process the address before sending
+  String get sanitizedAddress => mailAddress;
+
   @override
-  String toString() {
-    var fromName = name ?? '';
-    // ToDo base64 fromName (add _IRMetaInformation as argument)
-    return '$fromName <$mailAddress>';
-  }
+  String toString() => "${name ?? ''} <$mailAddress>";
 }
