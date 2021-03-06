@@ -37,13 +37,23 @@ abstract class _IRHeader extends _IROutput {
     yield convert.utf8.encode(_name);
     yield _$colonSpace;
 
-    bool second = false;
+    var len = 2, //2 = _$commaSpace
+      second = false;
     for (final address in addresses) {
-      if (second) yield _$commaSpace;
-      else second = true;
-
       final name = address.sanitizedName,
         maddr = address.sanitizedAddress;
+      var adrlen = maddr.length;
+      if (name != null) adrlen += name.length + 3; //not accurate but good enough
+
+      if (second) {
+        yield _$commaSpace;
+
+        if (len + adrlen > maxEncodedLength) {
+          len = 2;
+          yield _$eolSpace;
+        }
+      } else second = true;
+
       if (name == null) {
         yield convert.utf8.encode(maddr);
       } else {
@@ -54,6 +64,8 @@ abstract class _IRHeader extends _IROutput {
         yield convert.utf8.encode(maddr);
         yield _$gt;
       }
+
+      len += adrlen;
     }
 
     yield _$eol;
