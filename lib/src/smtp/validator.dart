@@ -15,9 +15,8 @@ bool _validAddress(dynamic addressIn) {
 
   String address;
   if (addressIn is Address) {
-    //We can't validate [Address.name] directly, since the implementation
-    //of [Address.toString] might sanitize it.
-    if (!_printableCharsOnly(addressIn.toString())) return false;
+    //Don't validate [Address.name] here since it will be encoded with base64
+    //if necessary
     address = addressIn.mailAddress;
   } else {
     address = addressIn as String;
