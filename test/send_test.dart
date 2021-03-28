@@ -41,7 +41,7 @@ Future<SmtpServer> configureCorrectSmtpServer() async {
 Message createMessage(SmtpServer smtpServer) {
   // Message to myself
   return Message()
-    ..from = Address(smtpServer.username)
+    ..from = Address(smtpServer.username!)
     ..recipients.add(smtpServer.username)
     ..subject = 'Test Dart Mailer library :: 😀 :: ${DateTime.now()}'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.';

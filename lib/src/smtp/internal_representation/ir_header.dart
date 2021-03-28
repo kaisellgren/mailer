@@ -3,17 +3,81 @@ part of 'internal_representation.dart';
 abstract class _IRHeader extends _IROutput {
   final String _name;
 
-  static final List<int> _b64prefix = convert.utf8.encode(' =?utf-8?B?');
-  static final List<int> _b64postfix = convert.utf8.encode('?=$eol');
+  static final _b64prefix = convert.utf8.encode('=?utf-8?B?'),
+      _b64postfix = convert.utf8.encode('?='),
+      _$eol = convert.utf8.encode(eol),
+      _$eolSpace = convert.utf8.encode('$eol '),
+      _$spaceLt = convert.utf8.encode(' <'),
+      _$gt = convert.utf8.encode('>'),
+      _$commaSpace = convert.utf8.encode(', '),
+      _$colonSpace = convert.utf8.encode(': ');
   static final int _b64Length = _b64prefix.length + _b64postfix.length;
 
-  Stream<List<int>> _outValue(String? value) => Stream.fromIterable(
-      [_name, ': ', value ?? '', eol].map(convert.utf8.encode));
+  Stream<List<int>> _outValue(String? value) async* {
+    yield convert.utf8.encode(_name);
+    yield _$colonSpace;
+    if (value != null) yield convert.utf8.encode(value);
+    yield _$eol;
+  }
 
-  // Outputs value encoded as base64.
+  // Outputs this header's name and the given [value] encoded as base64.
   // Every chunk starts with ' ' and ends with eol.
   // Call _outValueB64 after an eol.
   Stream<List<int>> _outValueB64(String value) async* {
+    yield convert.utf8.encode(_name);
+    yield _$colonSpace;
+    yield* _outB64(value);
+    yield _$eol;
+  }
+
+  /// Outputs the given [addresses].
+  Stream<List<int>> _outAddressesValue(Iterable<Address> addresses,
+      _IRMetaInformation irMetaInformation) async* {
+    yield convert.utf8.encode(_name);
+    yield _$colonSpace;
+
+    var len = 2, //2 = _$commaSpace
+        second = false;
+    for (final address in addresses) {
+      final name = address.sanitizedName, maddr = address.sanitizedAddress;
+      var adrlen = maddr.length;
+      if (name != null) {
+        adrlen += name.length + 3;
+      } //not accurate but good enough
+
+      if (second) {
+        yield _$commaSpace;
+
+        if (len + adrlen > maxEncodedLength) {
+          len = 2;
+          yield _$eolSpace;
+        }
+      } else {
+        second = true;
+      }
+
+      if (name == null) {
+        yield convert.utf8.encode(maddr);
+      } else {
+        if (_shallB64(name, irMetaInformation)) {
+          yield* _outB64(name);
+        } else {
+          yield convert.utf8.encode(name);
+        }
+
+        yield _$spaceLt;
+        yield convert.utf8.encode(maddr);
+        yield _$gt;
+      }
+
+      len += adrlen;
+    }
+
+    yield _$eol;
+  }
+
+  // Outputs the given [value] encoded as base64.
+  static Stream<List<int>> _outB64(String value) async* {
     // Encode with base64.
     var availableLengthForBase64 = maxEncodedLength - _b64Length;
 
@@ -24,14 +88,27 @@ abstract class _IRHeader extends _IROutput {
     // At least 10 chars (random length).
     if (availableLength < 10) availableLength = 10;
 
-    var splitData = split(convert.utf8.encode(value), availableLength);
+    var second = false;
+    for (var d in split(convert.utf8.encode(value), availableLength)) {
+      if (second) {
+        yield _$eolSpace;
+      } else {
+        second = true;
+      }
 
-    yield convert.utf8.encode('$_name: $eol');
-    for (var d in splitData) {
       yield _b64prefix;
       yield convert.utf8.encode(convert.base64.encode(d));
       yield _b64postfix;
     }
+  }
+
+  static bool _shallB64(String value, _IRMetaInformation irMetaInformation) {
+    return (value.length > maxLineLength ||
+        !isPrintableRegExp.hasMatch(value) ||
+        // Make sure that text which looks like an encoded text is encoded.
+        value.contains('=?') ||
+        (!irMetaInformation.capabilities.smtpUtf8 &&
+            value.contains(RegExp(r'[^\x20-\x7E]'))));
   }
 
   /*
@@ -43,27 +120,16 @@ abstract class _IRHeader extends _IROutput {
 }
 
 class _IRHeaderText extends _IRHeader {
-  final String? _value;
+  final String _value;
 
   _IRHeaderText(String name, this._value) : super(name);
 
   @override
-  Stream<List<int>> out(_IRMetaInformation irMetaInformation) {
-    var utf8Allowed = irMetaInformation.capabilities.smtpUtf8;
-
-    if ((_value?.length ?? 0) > maxLineLength ||
-        !isPrintableRegExp.hasMatch(_value!) ||
-        // Make sure that text which looks like an encoded text is encoded.
-        _value!.contains('=?') ||
-        (!utf8Allowed && _value!.contains(RegExp(r'[^\x20-\x7E]')))) {
-      return _outValueB64(_value!);
-    }
-    return _outValue(_value);
-  }
+  Stream<List<int>> out(_IRMetaInformation irMetaInformation) =>
+      _IRHeader._shallB64(_value, irMetaInformation)
+          ? _outValueB64(_value)
+          : _outValue(_value);
 }
-
-Iterable<String> _addressToString(Iterable<Address> addresses) =>
-    addresses.map((a) => a.toString());
 
 class _IRHeaderAddress extends _IRHeader {
   final Address _address;
@@ -72,7 +138,7 @@ class _IRHeaderAddress extends _IRHeader {
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) =>
-      _outValue(_addressToString([_address]).first);
+      _outAddressesValue([_address], irMetaInformation);
 }
 
 class _IRHeaderAddresses extends _IRHeader {
@@ -82,7 +148,7 @@ class _IRHeaderAddresses extends _IRHeader {
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) =>
-      _outValue(_addressToString(_addresses).join(', '));
+      _outAddressesValue(_addresses, irMetaInformation);
 }
 
 class _IRHeaderContentType extends _IRHeader {
@@ -142,7 +208,7 @@ Iterable<_IRHeader> _buildHeaders(Message message) {
   });
 
   if (!msgHeader.containsKey('subject') && message.subject != null) {
-    headers.add(_IRHeaderText('subject', message.subject));
+    headers.add(_IRHeaderText('subject', message.subject!));
   }
 
   if (!msgHeader.containsKey('from')) {

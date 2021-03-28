@@ -84,7 +84,7 @@ Iterable<T> _follow<T>(T t, Iterable<T> ts) sync* {
 
 class _IRContentPartMixed extends _IRContentPart {
   _IRContentPartMixed(Message message, Iterable<_IRHeader> header) {
-    var attachments = message.attachments ;
+    var attachments = message.attachments;
     var attached = attachments.where((a) => a.location == Location.attachment);
 
     _active = attached.isNotEmpty;
@@ -155,7 +155,7 @@ class _IRContentAttachment extends _IRContent {
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
 
     if ((_attachment.cid ?? '').isNotEmpty) {
-      _header.add(_IRHeaderText('content-id', _attachment.cid));
+      _header.add(_IRHeaderText('content-id', _attachment.cid!));
     }
 
     var fnSuffix = '';

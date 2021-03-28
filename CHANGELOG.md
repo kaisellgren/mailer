@@ -1,3 +1,6 @@
+## 5.0.0
+* minor interface changes.  Some are now const / final objects.
+
 ## 4.0.0
 * null safety and cleanups
   Thanks: https://github.com/bsutton
