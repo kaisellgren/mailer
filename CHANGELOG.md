@@ -1,3 +1,9 @@
+## 5.0.0
+* minor interface changes.  Some are now const / final objects.
+* added a lot of tests
+* names of addresses may contain unicode characters now  
+  still no punycode support!
+
 ## 4.0.0
 * null safety and cleanups
   Thanks: https://github.com/bsutton

@@ -1,3 +1,17 @@
+import 'package:meta/meta.dart';
+
+@visibleForTesting
+Capabilities capabilitiesForTesting(
+    {bool startTls = false,
+    bool smtpUtf8 = false,
+    bool authPlain = true,
+    bool authLogin = false,
+    bool authXoauth2 = false,
+    List<String> all = const <String>[]}) {
+  return Capabilities._values(
+      startTls, smtpUtf8, authPlain, authLogin, authXoauth2, all);
+}
+
 class Capabilities {
   final bool startTls;
   final bool smtpUtf8;
