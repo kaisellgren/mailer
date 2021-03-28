@@ -173,7 +173,7 @@ class _IRContentAttachment extends _IRContent {
 enum _IRTextType { plain, html }
 
 class _IRContentText extends _IRContent {
-  String? _text;
+  String _text = '';
 
   _IRContentText(
       String? text, _IRTextType textType, Iterable<_IRHeader> header) {
