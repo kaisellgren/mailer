@@ -41,12 +41,14 @@ abstract class _IRContentPart extends _IRContent {
   late Iterable<_IRContent> _content;
 
   List<int> _boundaryStart(String boundary) => to8('--$boundary$eol');
+
   List<int> _boundaryEnd(String boundary) => to8('--$boundary--$eol');
 
   // We don't want to expose the number of sent emails.
   // Only use the counter, if milliseconds hasn't changed.
   static int _counter = 0;
   static int? _prevTimestamp;
+
   static String _buildBoundary() {
     var now = DateTime.now().millisecondsSinceEpoch;
     if (now != _prevTimestamp) _counter = 0;

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert' as convert;
 
 import 'package:intl/intl.dart';
+import 'package:logging/logging.dart';
 import 'package:mailer/src/utils.dart';
 
 import '../../entities/address.dart';
