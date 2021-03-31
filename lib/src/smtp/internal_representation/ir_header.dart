@@ -103,7 +103,11 @@ abstract class _IRHeader extends _IROutput {
   }
 
   static bool _shallB64(String value, _IRMetaInformation irMetaInformation) {
-    return (value.length > maxLineLength ||
+    // If we have a maxLineLength is it the length of utf8 characters or
+    // the length of utf8 bytes?
+    // Just to be safe we'll count the bytes.
+    var byteLength = convert.utf8.encode(value).length;
+    return (byteLength > maxLineLength ||
         !isPrintableRegExp.hasMatch(value) ||
         // Make sure that text which looks like an encoded text is encoded.
         value.contains('=?') ||
