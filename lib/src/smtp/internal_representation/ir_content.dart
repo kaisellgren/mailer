@@ -41,12 +41,14 @@ abstract class _IRContentPart extends _IRContent {
   late Iterable<_IRContent> _content;
 
   List<int> _boundaryStart(String boundary) => to8('--$boundary$eol');
+
   List<int> _boundaryEnd(String boundary) => to8('--$boundary--$eol');
 
   // We don't want to expose the number of sent emails.
   // Only use the counter, if milliseconds hasn't changed.
   static int _counter = 0;
   static int? _prevTimestamp;
+
   static String _buildBoundary() {
     var now = DateTime.now().millisecondsSinceEpoch;
     if (now != _prevTimestamp) _counter = 0;
@@ -84,7 +86,7 @@ Iterable<T> _follow<T>(T t, Iterable<T> ts) sync* {
 
 class _IRContentPartMixed extends _IRContentPart {
   _IRContentPartMixed(Message message, Iterable<_IRHeader> header) {
-    var attachments = message.attachments ;
+    var attachments = message.attachments;
     var attached = attachments.where((a) => a.location == Location.attachment);
 
     _active = attached.isNotEmpty;
@@ -155,7 +157,7 @@ class _IRContentAttachment extends _IRContent {
     _header.add(_IRHeaderText('content-transfer-encoding', 'base64'));
 
     if ((_attachment.cid ?? '').isNotEmpty) {
-      _header.add(_IRHeaderText('content-id', _attachment.cid));
+      _header.add(_IRHeaderText('content-id', _attachment.cid!));
     }
 
     var fnSuffix = '';
@@ -173,7 +175,7 @@ class _IRContentAttachment extends _IRContent {
 enum _IRTextType { plain, html }
 
 class _IRContentText extends _IRContent {
-  String? _text;
+  String _text = '';
 
   _IRContentText(
       String? text, _IRTextType textType, Iterable<_IRHeader> header) {

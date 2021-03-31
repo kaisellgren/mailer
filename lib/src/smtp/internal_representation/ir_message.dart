@@ -1,6 +1,7 @@
 part of 'internal_representation.dart';
 
 class IRMessage {
+  final Logger _logger = Logger('IRMessage');
   final Message? _message;
   late _IRContent _content;
 
@@ -19,19 +20,23 @@ class IRMessage {
         ..._message!.recipientsAsAddresses,
         ..._message!.ccsAsAddresses,
         ..._message!.bccsAsAddresses
-      ].where((a) => a.mailAddress != null).map((a) => a.mailAddress);
+      ].map((a) => a.mailAddress);
     }
     return envelopeTos;
   }
 
   String get envelopeFrom =>
-      _message!.envelopeFrom ?? _message!.fromAsAddress.mailAddress ?? '';
+      _message!.envelopeFrom ?? _message!.fromAsAddress.mailAddress;
 
   Stream<List<int>> data(Capabilities capabilities) =>
-      _content.out(_IRMetaInformation(capabilities));
+      _content.out(_IRMetaInformation(capabilities)).map((s) {
+        _logger.finest('«${convert.utf8.decoder.convert(s)}»');
+        return s;
+      });
 }
 
 class InvalidHeaderException implements Exception {
   String message;
+
   InvalidHeaderException(this.message);
 }

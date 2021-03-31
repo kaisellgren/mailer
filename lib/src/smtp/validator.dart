@@ -15,9 +15,8 @@ bool _validAddress(dynamic addressIn) {
 
   String? address;
   if (addressIn is Address) {
-    //We can't validate [Address.name] directly, since the implementation
-    //of [Address.toString] might sanitize it.
-    if (!_printableCharsOnly(addressIn.toString())) return false;
+    //Don't validate [Address.name] here since it will be encoded with base64
+    //if necessary
     address = addressIn.mailAddress;
   } else {
     address = addressIn as String;
@@ -25,10 +24,7 @@ bool _validAddress(dynamic addressIn) {
   return _validMailAddress(address);
 }
 
-bool _validMailAddress(String? ma) {
-  if (ma == null) {
-    return false;
-  }
+bool _validMailAddress(String ma) {
   var split = ma.split('@');
   return split.length == 2 &&
       split.every((part) => part.isNotEmpty && _printableCharsOnly(part));
@@ -67,7 +63,7 @@ List<Problem> validate(Message message) {
     a = aIn is String ? Address(aIn) : aIn as Address?;
 
     validate(
-        a != null && (a.mailAddress ?? '').isNotEmpty,
+        a != null && (a.mailAddress).isNotEmpty,
         'FROM_ADDRESS_EMPTY',
         'A recipient address is null or empty.  (pos: $counter).');
     if (a != null) {

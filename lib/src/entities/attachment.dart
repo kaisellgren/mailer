@@ -16,11 +16,15 @@ enum Location {
 /// Represents a single email attachment.
 ///
 /// You may specify a [File], a [Stream] or just a [String] of [data].
-/// [cid] allows you to specify the content id.
+/// [cid] allows you to specify the content id for html inlining.
 ///
 /// When [location] is set to [Location.inline] The attachment (usually image)
 /// can be referenced using:
 /// `cid:yourCid`.  For instance: `<img src="cid:yourCid" />`
+///
+/// [cid] must contain an `@` and be inside `<` and `>`.
+/// The cid: `<myImage@3.141>` can then be referenced inside your html as:
+/// `<img src="cid:myImage@3.141">`
 abstract class Attachment {
   String? cid;
   Location location = Location.attachment;
