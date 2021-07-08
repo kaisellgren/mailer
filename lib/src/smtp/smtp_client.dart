@@ -90,9 +90,8 @@ Future<bool> _doAuthXoauth2(Connection c) async {
   var token = c.server.xoauth2Token;
 
   // See https://developers.google.com/gmail/imap/xoauth2-protocol
-  var loginResp = await (c.send('AUTH XOAUTH2 $token', acceptedRespCodes: [])
-      as FutureOr<ServerResponse>);
-  return loginResp.responseCode.startsWith('2');
+  final loginResp = await c.send('AUTH XOAUTH2 $token', acceptedRespCodes: []);
+  return loginResp!.responseCode.startsWith('2');
 }
 
 Future<void> _doAuthentication(Connection c) async {

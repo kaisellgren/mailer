@@ -1,3 +1,6 @@
+## 5.0.1
+* Fix null-safety migration bug with bad type cast.
+
 ## 5.0.0
 * minor interface changes.  Some are now const / final objects.
 * added a lot of tests
