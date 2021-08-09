@@ -14,7 +14,8 @@ final Logger _logger = Logger('mailer_sender');
 class _MailSendTask {
   // If [message] is `null` close connection.
   Message? message;
-  late Completer<SendReport> completer;
+  // if `null` connection close was successful.
+  late Completer<SendReport?> completer;
 }
 
 class PersistentConnection {
@@ -58,7 +59,9 @@ class PersistentConnection {
       ..message = message
       ..completer = Completer();
     mailSendTasksController.add(mailTask);
-    return mailTask.completer.future;
+    return mailTask.completer.future
+        // `null` is only a valid return value for connection close messages.
+        .then((value) => ArgumentError.checkNotNull(value));
   }
 
   /// Throws following exceptions:
@@ -102,7 +105,8 @@ Future<SendReport> send(Message message, SmtpServer smtpServer,
 /// [SmtpClientCommunicationException],
 /// [SocketException]
 /// others
-Future<void> checkCredentials(SmtpServer smtpServer, {Duration? timeout}) async {
+Future<void> checkCredentials(SmtpServer smtpServer,
+    {Duration? timeout}) async {
   var connection = await client.connect(smtpServer, timeout);
   await client.close(connection);
 }
