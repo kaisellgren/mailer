@@ -1,3 +1,7 @@
+## 5.0.2
+* Fix Null error when closing smtp connection
+  Thanks: https://github.com/hpoul
+
 ## 5.0.1
 * Fix null-safety migration bug with bad type cast.
 

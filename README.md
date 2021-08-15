@@ -4,6 +4,27 @@
 
 Mailer supports file attachments and HTML emails.
 
+## FLUTTER developers
+
+Please do NOT use mailer together with your credentials.  Extracting them is very easy and anybody could then send
+mails using your account.  If you use your gmail credentials it's even worse as an attacker could read your mails as
+well.
+
+[https://github.com/JohannesMilke](Johannes Milke) has created an excellent tutorial on how to use `mailer` without
+needing to embed your credentials in the flutter app.
+
+[https://www.youtube.com/watch?v=RDwst9icjAY](Flutter Tutorial - How To Send Email In Background \[2021\] Without Backend)
+
+## Server developers
+
+[https://suragch.medium.com/](Suragch) has written an excellent tutorial on
+[https://suragch.medium.com/how-to-send-yourself-email-notifications-from-a-dart-server-a7c16a1900d6](How to send yourself email notifications from a Dart server)
+
+Thanks to Suragch for bringing those tutorials to my attention.  
+If you have created a tutorial yourself (or know of one) please open an issue, so that I can add it to this "list".
+
+Note that those tutorial don't need to be in English!
+
 ## SMTP definitions
 
 Mailer provides configurations for a few common SMTP servers.
