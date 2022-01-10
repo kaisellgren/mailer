@@ -68,4 +68,12 @@ void main() {
       }
     });
   }
+
+  test('Sanitized name', () {
+    expect('Regular Name', Address('x@x.com', 'Regular Name').sanitizedName);
+    expect(null, Address('x@x.com').sanitizedName);
+    expect('"Smith, Bob"', Address('x@x.com', 'Smith, Bob').sanitizedName);
+    expect(r'"Robert \"Bob\" Smith"',
+        Address('x@x.com', r'Robert "Bob" Smith').sanitizedName);
+  });
 }

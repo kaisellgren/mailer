@@ -1,3 +1,5 @@
+final _quotableNameRegExp = RegExp(r'[",]');
+
 class Address {
   final String? name;
   final String mailAddress;
@@ -11,7 +13,7 @@ class Address {
     if (name == null) return null;
 
     // Quote the name if it contains a comma or a quote.
-    if (name!.contains(r'[",]')) {
+    if (name!.contains(_quotableNameRegExp)) {
       return '"${name!.replaceAll('"', r'\"')}"';
     }
 
