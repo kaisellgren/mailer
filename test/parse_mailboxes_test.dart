@@ -29,7 +29,7 @@ void main() {
     },
     {
       'test': r'"Example, Robert \"Bob\" \J." <bob@example.com>',
-      'values': [Address('bob@example.com', r'Example, Robert "Bob" \J.')],
+      'values': [Address('bob@example.com', r'Example, Robert "Bob" J.')],
     },
     {
       'test': 'bob@example.com,jim@example.com',
@@ -51,7 +51,7 @@ void main() {
         Address('bob2@example.com', ''),
         Address('bob3@example.com', 'Bob Example'),
         Address('bob4@example.com', 'Bob Example'),
-        Address('bob5@example.com', r'Example, Robert "Bob" \J.'),
+        Address('bob5@example.com', r'Example, Robert "Bob" J.'),
       ],
     },
   ];

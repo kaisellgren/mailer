@@ -61,16 +61,10 @@ List<Address> parseMailboxes(String addresses) {
       if (c == _quoteCodeUnit) {
         inQuote = false;
       } else if (c == _backslashCodeUnit) {
-        // Handle \" inside of quotes
+        // Handle \ escape - \" inside of quotes
         ++p;
         if (p < codeUnits.length) {
-          var nextC = codeUnits[p];
-          if (nextC == _quoteCodeUnit) {
-            name.add(nextC);
-          } else {
-            --p;
-            name.add(c);
-          }
+          name.add(codeUnits[p]);
         }
       } else {
         name.add(c);
