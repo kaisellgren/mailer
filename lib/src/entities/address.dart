@@ -7,7 +7,16 @@ class Address {
   /// The name used to output to SMTP server.
   /// Implementation can override it to pre-process the name before sending.
   /// For example, providing a default name for certain address, or quoting it.
-  String? get sanitizedName => name;
+  String? get sanitizedName {
+    if (name == null) return null;
+
+    // Quote the name if it contains a comma or a quote.
+    if (name!.contains(r'[",]')) {
+      return '"${name!.replaceAll('"', r'\"')}"';
+    }
+
+    return name;
+  }
 
   /// The address used to output to SMTP server.
   /// Implementation can override it to pre-process the address before sending
