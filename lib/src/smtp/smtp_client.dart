@@ -57,7 +57,7 @@ Future<void> _doEhloHelo(Connection c, {String? clientName}) async {
   c.capabilities = Capabilities();
 }
 
-Future<bool> _doAuthLogin(Connection c) async {
+Future<ServerResponse> _doAuthLogin(Connection c) async {
   var capabilities = c.capabilities;
   if (!capabilities.authLogin) {
     throw SmtpClientCommunicationException(
@@ -73,14 +73,13 @@ Future<bool> _doAuthLogin(Connection c) async {
   // 'Password:' in base64 is: UGF...
   await c.send(convert.base64.encode(username.codeUnits),
       acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
-  var loginResp = await c.send(
-      convert.base64.encode(password.codeUnits),
-      acceptedRespCodes: []);
+  var loginResp = await c
+      .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
 
-  return loginResp!.responseCode.startsWith('2');
+  return loginResp!;
 }
 
-Future<bool> _doAuthXoauth2(Connection c) async {
+Future<ServerResponse> _doAuthXoauth2(Connection c) async {
   var capabilities = c.capabilities;
   if (!capabilities.authXoauth2) {
     throw SmtpClientCommunicationException(
@@ -91,21 +90,23 @@ Future<bool> _doAuthXoauth2(Connection c) async {
 
   // See https://developers.google.com/gmail/imap/xoauth2-protocol
   final loginResp = await c.send('AUTH XOAUTH2 $token', acceptedRespCodes: []);
-  return loginResp!.responseCode.startsWith('2');
+  return loginResp!;
 }
 
 Future<void> _doAuthentication(Connection c) async {
-  var loginOk = true;
+  ServerResponse? loginResp;
 
   if (c.server.username != null && c.server.password != null) {
-    loginOk = await _doAuthLogin(c);
+    loginResp = await _doAuthLogin(c);
   } else if (c.server.xoauth2Token != null) {
-    loginOk = await _doAuthXoauth2(c);
+    loginResp = await _doAuthXoauth2(c);
   }
 
-  if (!loginOk) {
+  if (loginResp != null && !loginResp.responseCode.startsWith('2')) {
     throw SmtpClientAuthenticationException(
-        'Incorrect username / password / credentials');
+      'Authentication Failed (code: ${loginResp.responseCode}), response:\n' +
+          loginResp.responseLines.map((m) => '< $m').join('\n'),
+    );
   }
 }
 
