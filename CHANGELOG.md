@@ -1,3 +1,9 @@
+## 5.1.0
+* Include the SMTP error code in the authentication failure exception
+  Thanks: https://github.com/jonasfj
+* Add support for parsing a list of rfc5322 mailbox-formatted addresses
+  Thanks: https://github.com/dsyrstad
+
 ## 5.0.2
 * Fix Null error when closing smtp connection
   Thanks: https://github.com/hpoul
