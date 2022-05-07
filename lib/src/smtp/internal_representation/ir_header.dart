@@ -173,7 +173,7 @@ class _IRHeaderDate extends _IRHeader {
   final DateTime _dateTime;
 
   static final DateFormat _dateFormat =
-      DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000');
+      DateFormat('EEE, dd MMM yyyy HH:mm:ss +0000', 'en_US');
 
   _IRHeaderDate(String name, this._dateTime) : super(name);
 
