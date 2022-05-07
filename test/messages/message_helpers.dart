@@ -2,7 +2,7 @@ part of message_out_test;
 
 String e(String stringToEscape) => RegExp.escape(stringToEscape);
 
-const dateHeader =
+const defaultDateHeader =
     'date: [\\w]{3}, [0-9]+ [\\w]{3} 2[0-9]{3} [0-9]{1,2}:[0-9]{2}:[0-9]{2} \\+[0-9]{4}\r\n';
 const contentTypeHeaderAlternative =
     'content-type: multipart/alternative;boundary="mailer-\\?=(?<boundaryAlternative>.*)"\r\n';
@@ -29,12 +29,16 @@ final defaultText = 'utf8😀t';
 final defaultHtml = 'utf8😀h';
 
 String mailRegExpTextAndHtml(String subject,
-    {String? text, String? html, String? fromHeader}) {
-  return '^'
-          'subject: $subject\r\n'
+    {String? text, String? html, String? fromHeader, String? dateHeader}) {
+  return '^' +
+      (dateHeader ??
+          '') + // if the date header is specified it comes before the subject.
+      'subject: $subject\r\n'
           'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
       e('to: test2@test.com\r\n') +
-      dateHeader +
+      (dateHeader != null
+          ? ''
+          : defaultDateHeader) + // if not the date header comes after the to header
       e('x-mailer: Dart Mailer library\r\n') +
       e('mime-version: 1.0\r\n') +
       contentTypeHeaderAlternative +
@@ -72,7 +76,7 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
           'subject: $subject\r\n'
           'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
       e('to: test2@test.com\r\n') +
-      dateHeader +
+      defaultDateHeader +
       e('x-mailer: Dart Mailer library\r\n') +
       e('mime-version: 1.0\r\n') +
       contentTypeHeaderMixed +
@@ -126,7 +130,7 @@ String mailRegExpTextOrHtml(String subject,
           'subject: $subject\r\n'
           'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
       e('to: test2@test.com\r\n') +
-      dateHeader +
+      defaultDateHeader +
       e('x-mailer: Dart Mailer library\r\n') +
       e('mime-version: 1.0\r\n') +
       e('content-type: text/${text != null ? 'plain' : 'html'}; charset=utf-8\r\n') +

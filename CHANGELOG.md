@@ -1,3 +1,7 @@
+## 5.1.1
+* Specify locale for date headers
+  Thanks https://github.com/michael-spf for the bug report
+
 ## 5.1.0
 * Include the SMTP error code in the authentication failure exception
   Thanks: https://github.com/jonasfj
