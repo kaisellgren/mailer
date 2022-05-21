@@ -160,10 +160,10 @@ class _IRContentAttachment extends _IRContent {
       _header.add(_IRHeaderText('content-id', _attachment.cid!));
     }
 
-    var fnSuffix = '';
-    if ((filename ?? '').isNotEmpty) fnSuffix = '; filename="$filename"';
-    _header.add(_IRHeaderText('content-disposition',
-        '${_describeEnum(_attachment.location)}$fnSuffix'));
+    final parms = <String, String>{};
+    if ((filename ?? '').isNotEmpty) parms['filename'] = filename!;
+    _header.add(_IRHeaderText(
+        'content-disposition', _describeEnum(_attachment.location), parms));
   }
 
   @override
