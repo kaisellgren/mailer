@@ -1,3 +1,7 @@
+## 5.2.0
+* fix non-ascii attachment name
+  Thanks https://github.com/holyens
+
 ## 5.1.1
 * Specify locale for date headers
   Thanks https://github.com/michael-spf for the bug report
