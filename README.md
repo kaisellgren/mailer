@@ -64,11 +64,17 @@ in [legacy.dart](https://github.com/kaisellgren/mailer/blob/v2/lib/legacy.dart)
 
 See [gmail example](example/send_gmail.dart).
 
+We also have an example which uses [gmail oauth](example/gmail_xoauth2/).
+
 ```dart
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 
 main() async {
+  // Note that using a username and password for gmail only works if
+  // you have two-factor authentication enabled and created an App password.
+  // Search for "gmail app password 2fa"
+  // The alternative is to use oauth.
   String username = 'username@gmail.com';
   String password = 'password';
 
