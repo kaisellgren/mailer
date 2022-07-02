@@ -30,6 +30,30 @@ abstract class _IRHeader extends _IROutput {
     yield _$eol;
   }
 
+  Stream<List<int>> _outValueWithParms(
+      String value, _IRMetaInformation irMetaInformation,
+      [Map<String, String>? parms]) async* {
+    yield convert.utf8.encode(_name);
+    yield _$colonSpace;
+    if (_IRHeader._shallB64(value, irMetaInformation)) {
+      yield* _outB64(value);
+    } else {
+      yield convert.utf8.encode(value);
+    }
+    if (parms != null) {
+      for (var parm in (parms.entries)) {
+        yield convert.utf8.encode('; ${parm.key}="');
+        if (_IRHeader._shallB64(parm.value, irMetaInformation)) {
+          yield* _outB64(parm.value);
+        } else {
+          yield convert.utf8.encode(parm.value);
+        }
+        yield convert.utf8.encode('"');
+      }
+    }
+    yield _$eol;
+  }
+
   /// Outputs the given [addresses].
   Stream<List<int>> _outAddressesValue(Iterable<Address> addresses,
       _IRMetaInformation irMetaInformation) async* {
@@ -125,14 +149,13 @@ abstract class _IRHeader extends _IROutput {
 
 class _IRHeaderText extends _IRHeader {
   final String _value;
+  final Map<String, String>? _parms;
 
-  _IRHeaderText(String name, this._value) : super(name);
+  _IRHeaderText(String name, this._value, [this._parms]) : super(name);
 
   @override
   Stream<List<int>> out(_IRMetaInformation irMetaInformation) =>
-      _IRHeader._shallB64(_value, irMetaInformation)
-          ? _outValueB64(_value)
-          : _outValue(_value);
+      _outValueWithParms(_value, irMetaInformation, _parms);
 }
 
 class _IRHeaderAddress extends _IRHeader {
