@@ -4,6 +4,7 @@ export 'smtp_server/mailgun.dart';
 export 'smtp_server/qq.dart';
 export 'smtp_server/yahoo.dart';
 export 'smtp_server/yandex.dart';
+export 'smtp_server/zoho.dart';
 
 class SmtpServer {
   final String host;
