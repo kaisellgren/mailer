@@ -65,8 +65,10 @@ class TestAttachment {
   final String type;
   final String disposition;
   final String content;
+  final String? customHeader;
 
-  TestAttachment(this.name, this.type, this.disposition, this.content);
+  TestAttachment(this.name, this.type, this.disposition, this.content,
+      {this.customHeader});
 }
 
 String mailRegExpTextHtmlAndInlineAttachments(String subject,
@@ -104,6 +106,7 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
         e('content-type: ${a.type}\r\n') +
         e('content-transfer-encoding: base64\r\n') +
         e('content-disposition: ${a.disposition}\r\n') +
+        e(a.customHeader == null ? '' : '${a.customHeader}\r\n') +
         e('\r\n') +
         e('${a.name}\r\n') +
         e('\r\n');
@@ -115,6 +118,7 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
         e('content-type: ${a.type}\r\n') +
         e('content-transfer-encoding: base64\r\n') +
         e('content-disposition: ${a.disposition}\r\n') +
+        e(a.customHeader == null ? '' : '${a.customHeader}\r\n') +
         e('\r\n') +
         e('${a.name}\r\n') +
         e('\r\n');

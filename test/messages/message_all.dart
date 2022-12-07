@@ -22,6 +22,7 @@ final messageAll = () => MessageTest(
         StringAttachment('\u{1f596} \\o/' * 1000)..location = Location.inline,
         FileAttachment(File('test/exploits_of_a_mom.png')),
         StreamAttachment(countStream(1000).map(utf8.encode), 'application/json')
+          ..additionalHeaders['X-XYZ'] = 'XyZZy'
       ],
     mailRegExpTextHtmlAndInlineAttachments(_subjectBelow,
         [testStringAttachment], [testFileAttachment, testStreamAttachment],
@@ -331,4 +332,5 @@ final TestAttachment testStreamAttachment = TestAttachment(
         'ODE5ODA5ODE5ODI5ODE5ODI5ODM5ODI5ODM5ODQ5ODM5ODQ5ODU5ODQ5ODU5ODY5ODU5ODY5ODc5ODY5ODc5\r\n'
         'ODg5ODc5ODg5ODk5ODg5ODk5OTA5ODk5OTA5OTE5OTA5OTE5OTI5OTE5OTI5OTM5OTI5OTM5OTQ5OTM5OTQ5\r\n'
         'OTU5OTQ5OTU5OTY5OTU5OTY5OTc5OTY5OTc5OTg5OTc5OTg5OTk5OTg5OTkxMDAwOTk5MTAwMDEwMDExMDAw\r\n'
-        'MTAwMTEwMDJdfQ==');
+        'MTAwMTEwMDJdfQ==',
+    customHeader: 'x-xyz: XyZZy');

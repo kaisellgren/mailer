@@ -164,6 +164,12 @@ class _IRContentAttachment extends _IRContent {
     if ((filename ?? '').isNotEmpty) parms['filename'] = filename!;
     _header.add(_IRHeaderText(
         'content-disposition', _describeEnum(_attachment.location), parms));
+
+    // Add additional headers set by the user.
+    for (final headerEntry in _attachment.additionalHeaders.entries) {
+      _header
+          .add(_IRHeaderText(headerEntry.key.toLowerCase(), headerEntry.value));
+    }
   }
 
   @override
