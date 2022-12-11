@@ -1,3 +1,7 @@
+## 5.3.0
+* add possibility to add custom header to attachments
+  Thanks https://github.com/dsyrstad
+
 ## 5.2.0
 * fix non-ascii attachment name
   Thanks https://github.com/holyens
