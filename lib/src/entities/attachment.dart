@@ -30,6 +30,12 @@ abstract class Attachment {
   Location location = Location.attachment;
   String? fileName;
   late String contentType;
+
+  /// Additional headers that will be added to the attachment after all of the standard headers are set.
+  /// This is useful for adding, for example, "X-Attachment-Id" to an attachment, which is used by
+  /// gmail when referencing an image in `<img src="cid:...">`.
+  final Map<String, String> additionalHeaders = {};
+
   Stream<List<int>> asStream();
 }
 
