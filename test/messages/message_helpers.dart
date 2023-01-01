@@ -30,6 +30,7 @@ final defaultHtml = 'utf8😀h';
 
 String mailRegExpTextAndHtml(String subject,
     {String? text, String? html, String? fromHeader, String? dateHeader}) {
+  // ignore: prefer_interpolation_to_compose_strings
   return '^' +
       (dateHeader ??
           '') + // if the date header is specified it comes before the subject.
@@ -74,6 +75,7 @@ class TestAttachment {
 String mailRegExpTextHtmlAndInlineAttachments(String subject,
     List<TestAttachment> inlineAttachments, List<TestAttachment> attachments,
     {String? text, String? html, String? fromHeader}) {
+  // ignore: prefer_interpolation_to_compose_strings
   var result = '^'
           'subject: $subject\r\n'
           'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
@@ -101,7 +103,7 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
       e('\r\n') +
       '${html ?? e('dXRmOPCfmIBoDQo=')}\r\n' +
       e('\r\n');
-  inlineAttachments.forEach((a) {
+  for (var a in inlineAttachments) {
     result += boundaryRelated +
         e('content-type: ${a.type}\r\n') +
         e('content-transfer-encoding: base64\r\n') +
@@ -110,10 +112,10 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
         e('\r\n') +
         e('${a.name}\r\n') +
         e('\r\n');
-  });
+  }
   result += boundaryEndRelated + e('\r\n');
   result += boundaryEndAlternative + e('\r\n');
-  attachments.forEach((a) {
+  for (var a in attachments) {
     result += boundaryMixed +
         e('content-type: ${a.type}\r\n') +
         e('content-transfer-encoding: base64\r\n') +
@@ -122,14 +124,15 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
         e('\r\n') +
         e('${a.name}\r\n') +
         e('\r\n');
-  });
+  }
 
-  result += boundaryEndMixed + '\r\n' + r'$';
+  result += '$boundaryEndMixed\r\n' r'$';
   return result;
 }
 
 String mailRegExpTextOrHtml(String subject,
     {String? text, String? html, String? fromHeader}) {
+  // ignore: prefer_interpolation_to_compose_strings
   return '^'
           'subject: $subject\r\n'
           'from: ${fromHeader ?? defaultFromRegExp}\r\n' +

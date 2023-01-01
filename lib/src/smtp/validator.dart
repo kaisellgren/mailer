@@ -45,18 +45,18 @@ List<Problem> validate(Message message) {
       'ENV_FROM',
       'Envelope mail address is invalid.  ${message.envelopeFrom}');
   var counter = 0;
-  (message.envelopeTos ?? <String>[]).forEach((a) {
+  for (var a in (message.envelopeTos ?? <String>[])) {
     counter++;
     validate((a.isNotEmpty), 'ENV_TO_EMPTY',
         'Envelope to address (pos: $counter) is null or empty');
     validate(
         _validMailAddress(a), 'ENV_TO', 'Envelope to address is invalid.  $a');
-  });
+  }
 
   validate(_validAddress(message.from), 'FROM_ADDRESS',
       'The from address is invalid.  (${message.from})');
   counter = 0;
-  message.recipients.forEach((aIn) {
+  for (var aIn in message.recipients) {
     counter++;
     Address? a;
 
@@ -70,7 +70,7 @@ List<Problem> validate(Message message) {
       validate(_validAddress(a), 'FROM_ADDRESS',
           'A recipient address is invalid.  ($a).');
     }
-  });
+  }
   try {
     var irMessage = IRMessage(message);
     if (irMessage.envelopeTos.isEmpty) {

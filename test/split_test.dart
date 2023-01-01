@@ -38,10 +38,8 @@ final List<_TestCase> _testCases = [
 
 void main() async {
   var i = 0;
-  _testCases.forEach((tc) => {
-        test(
-            'Split on utf8-borders (${i++})',
-            () async =>
-                expect(split(tc.testString, tc.splitAt), tc.splitStrings))
-      });
+  for (var tc in _testCases) {
+    test('Split on utf8-borders (${i++})',
+        () async => expect(split(tc.testString, tc.splitAt), tc.splitStrings));
+  }
 }

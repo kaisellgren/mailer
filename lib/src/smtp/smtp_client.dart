@@ -104,8 +104,7 @@ Future<void> _doAuthentication(Connection c) async {
 
   if (loginResp != null && !loginResp.responseCode.startsWith('2')) {
     throw SmtpClientAuthenticationException(
-      'Authentication Failed (code: ${loginResp.responseCode}), response:\n' +
-          loginResp.responseLines.map((m) => '< $m').join('\n'),
+      'Authentication Failed (code: ${loginResp.responseCode}), response:\n${loginResp.responseLines.map((m) => '< $m').join('\n')}',
     );
   }
 }
@@ -173,7 +172,7 @@ Future<void> sendSingleMessage(
   // 'From: ' header!)
   var smtpUtf8 = capabilities.smtpUtf8;
   await c.send(
-      'MAIL FROM:<${irMessage.envelopeFrom}>' + (smtpUtf8 ? ' SMTPUTF8' : ''));
+      'MAIL FROM:<${irMessage.envelopeFrom}>${smtpUtf8 ? ' SMTPUTF8' : ''}');
 
   // Give the server all recipients.
   // TODO what if only one address fails?

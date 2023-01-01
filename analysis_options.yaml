@@ -7,6 +7,7 @@ analyzer:
     - flutter/**
     - lib/api/*.dart
     - .dart_tool
+    - example/gmail_xoauth2
 
 linter:
   rules:
@@ -14,4 +15,4 @@ linter:
     - cancel_subscriptions
     - close_sinks
 
-include: package:pedantic/analysis_options.yaml
+include: package:lints/recommended.yaml

@@ -66,7 +66,7 @@ void main() async {
   // Logger.root.onRecord.listen((LogRecord rec) =>
   //     print('${rec.level.name}: ${rec.time}: ${rec.message}'));
 
-  testCases.forEach((testCase) {
+  for (var testCase in testCases) {
     // If we have a StreamAttachment we can't send the same message twice.
     // In this case the testCase is a function which generates a `MessageTest`
     var tcUtf8 = (testCase is Function ? testCase() : testCase) as MessageTest;
@@ -90,5 +90,5 @@ void main() async {
                 smtpUtf8: false, stringReplacements: tcUtf8.stringReplacements),
             completion(equals(true)),
             reason: '${tcWithoutUtf8.name} (smtpUtf8 false)'));
-  });
+  }
 }

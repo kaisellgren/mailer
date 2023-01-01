@@ -1,8 +1,8 @@
 part of message_out_test;
 
-final _subjectBelow = 's' + ('\u{1f596}' * 199);
-final _subjectAbove = 's' + ('\u{1f596}' * 200);
-final _textBody = 't' + ('\u{1f596}' * 300);
+final _subjectBelow = 's${'\u{1f596}' * 199}';
+final _subjectAbove = 's${'\u{1f596}' * 200}';
+final _textBody = 't${'\u{1f596}' * 300}';
 
 final _subjectBelowUtf8RegExp = e(
     '=?utf-8?B?c/Cflpbwn5aW8J+WlvCflpbwn5aW8J+WlvCflpbwn5aW8J+WlvCflpbwn5aW?=\r\n'

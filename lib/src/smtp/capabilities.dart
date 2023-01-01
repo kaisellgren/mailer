@@ -41,7 +41,7 @@ class Capabilities {
     var login = false;
     var xoauth2 = false;
 
-    capabilities.forEach((cap) {
+    for (var cap in capabilities) {
       if (cap.contains('STARTTLS')) {
         startTls = true;
       } else if (cap.contains('SMTPUTF8')) {
@@ -52,7 +52,7 @@ class Capabilities {
         login = authMethods.contains('LOGIN');
         xoauth2 = authMethods.contains('XOAUTH2');
       }
-    });
+    }
 
     return Capabilities._values(
         startTls, smtpUtf8, plain, login, xoauth2, capabilities);

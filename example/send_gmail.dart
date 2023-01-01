@@ -23,7 +23,7 @@ void main(List<String> rawArgs) async {
 
   var tos = args[toArgs] as List<String>? ?? [];
   if (tos.isEmpty) {
-    tos.add(username.contains('@') ? username : username + '@gmail.com');
+    tos.add(username.contains('@') ? username : '$username@gmail.com');
   }
 
   // If you want to use an arbitrary SMTP server, go with `SmtpServer()`.
@@ -50,7 +50,7 @@ void main(List<String> rawArgs) async {
   try {
     final sendReport =
         await send(message, smtpServer, timeout: Duration(seconds: 15));
-    print('Message sent: ' + sendReport.toString());
+    print('Message sent: $sendReport');
   } on MailerException catch (e) {
     print('Message not sent.');
     for (var p in e.problems) {
@@ -67,7 +67,7 @@ void main(List<String> rawArgs) async {
       message.subject =
           'Test Dart Mailer library :: 😀 :: ${DateTime.now()} / $i';
       final sendReport = await connection.send(message);
-      print('Message sent: ' + sendReport.toString());
+      print('Message sent: $sendReport');
     }
   } on MailerException catch (e) {
     print('Message not sent.');
