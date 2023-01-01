@@ -20,16 +20,6 @@ abstract class _IRHeader extends _IROutput {
     yield _$eol;
   }
 
-  // Outputs this header's name and the given [value] encoded as base64.
-  // Every chunk starts with ' ' and ends with eol.
-  // Call _outValueB64 after an eol.
-  Stream<List<int>> _outValueB64(String value) async* {
-    yield convert.utf8.encode(_name);
-    yield _$colonSpace;
-    yield* _outB64(value);
-    yield _$eol;
-  }
-
   Stream<List<int>> _outValueWithParms(
       String value, _IRMetaInformation irMetaInformation,
       [Map<String, String>? parms]) async* {

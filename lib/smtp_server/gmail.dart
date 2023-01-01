@@ -3,13 +3,8 @@ import '../smtp_server.dart';
 
 /// Send through gmail with username / password authentication.
 ///
-/// **WARNING** Authentication with username / password is a Less-Secure-App
-/// feature, which has been [scheduled for deprecation][1] once.
-///
-/// [1]: https://gsuiteupdates.googleblog.com/2019/12/less-secure-apps-oauth-google-username-password-incorrect.html
-@Deprecated(
-  'Favor gmailUserXoauth2 as username/password is considered a Less-Secure-Apps',
-)
+/// As username/password only works if you use 2-factor authentication and
+/// create a password in the "app-password" screen.
 SmtpServer gmail(String username, String password) =>
     SmtpServer('smtp.gmail.com', username: username, password: password);
 

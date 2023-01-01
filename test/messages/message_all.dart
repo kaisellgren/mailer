@@ -10,7 +10,7 @@ Stream<String> countStream(int to) async* {
   yield ']}';
 }
 
-final messageAll = () => MessageTest(
+void messageAll() => MessageTest(
     'Message with long utf8 subject, long utf8 html, long utf8 text and attachments',
     Message()
       ..from = _utf8Address

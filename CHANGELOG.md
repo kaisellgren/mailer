@@ -1,3 +1,8 @@
+## 6.0.0
+* Allow `intl 0.18` as dependency
+* Major version upgrade because `mail_sender.dart` no longer exposes `mailSendTasks`.
+* Switch from `pedantic` to `lints`
+
 ## 5.3.0
 * add possibility to add custom header to attachments
   Thanks https://github.com/dsyrstad

@@ -6,7 +6,6 @@ import 'package:mailer/src/smtp/validator.dart';
 import '../../mailer.dart';
 import '../../smtp_server.dart';
 import 'connection.dart';
-import 'exceptions.dart';
 import 'smtp_client.dart' as client;
 
 final Logger _logger = Logger('mailer_sender');
@@ -22,10 +21,10 @@ class PersistentConnection {
   Connection? _connection;
 
   final mailSendTasksController = StreamController<_MailSendTask>();
-  Stream<_MailSendTask> get mailSendTasks => mailSendTasksController.stream;
+  Stream<_MailSendTask> get _mailSendTasks => mailSendTasksController.stream;
 
   PersistentConnection(SmtpServer smtpServer, {Duration? timeout}) {
-    mailSendTasks.listen((_MailSendTask task) async {
+    _mailSendTasks.listen((_MailSendTask task) async {
       _logger.finer('New mail sending task.  ${task.message?.subject}');
       try {
         if (task.message == null) {

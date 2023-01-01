@@ -4,11 +4,10 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:logging/logging.dart';
-import 'package:mailer/src/smtp/exceptions.dart';
 import 'package:mailer/smtp_server.dart';
+import 'package:mailer/src/smtp/exceptions.dart';
 
 import 'capabilities.dart';
-import 'exceptions.dart';
 
 /// This class contains all relevant data for one smtp connection/session.
 ///
@@ -35,6 +34,8 @@ class Connection {
 
   late Capabilities capabilities;
 
+  // Done with close function.
+  // ignore: close_sinks
   Socket? _socket;
   StreamQueue<String>? _socketIn;
 
