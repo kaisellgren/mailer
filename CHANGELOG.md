@@ -1,28 +1,32 @@
+## 6.0.1
+* Fix yahoo definition  
+  Thanks https://github.com/schneiti 
+
 ## 6.0.0
 * Allow `intl 0.18` as dependency
 * Major version upgrade because `mail_sender.dart` no longer exposes `mailSendTasks`.
 * Switch from `pedantic` to `lints`
 
 ## 5.3.0
-* add possibility to add custom header to attachments
+* add possibility to add custom header to attachments  
   Thanks https://github.com/dsyrstad
 
 ## 5.2.0
-* fix non-ascii attachment name
+* fix non-ascii attachment name  
   Thanks https://github.com/holyens
 
 ## 5.1.1
-* Specify locale for date headers
+* Specify locale for date headers  
   Thanks https://github.com/michael-spf for the bug report
 
 ## 5.1.0
-* Include the SMTP error code in the authentication failure exception
+* Include the SMTP error code in the authentication failure exception  
   Thanks: https://github.com/jonasfj
-* Add support for parsing a list of rfc5322 mailbox-formatted addresses
+* Add support for parsing a list of rfc5322 mailbox-formatted addresses  
   Thanks: https://github.com/dsyrstad
 
 ## 5.0.2
-* Fix Null error when closing smtp connection
+* Fix Null error when closing smtp connection  
   Thanks: https://github.com/hpoul
 
 ## 5.0.1
@@ -35,11 +39,11 @@
   still no punycode support!
 
 ## 4.0.0
-* null safety and cleanups
+* null safety and cleanups  
   Thanks: https://github.com/bsutton
   
 ## 3.3.0
-* add sendgrid smtp server
+* add sendgrid smtp server  
   Thanks: https://github.com/rohanthacker
 
 ## 3.2.1
