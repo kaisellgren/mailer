@@ -58,34 +58,38 @@ Future<void> _doEhloHelo(Connection c, {String? clientName}) async {
 }
 
 Future<ServerResponse> _doAuthLogin(Connection c) async {
-  var capabilities = c.capabilities;
-  if (!capabilities.authLogin) {
-    throw SmtpClientCommunicationException(
-        'The server does not support LOGIN authentication method.');
-  }
-
   var username = c.server.username!;
   var password = c.server.password!;
 
   // 'Username:' in base64 is: VXN...
-  await c.send('AUTH LOGIN',
-      acceptedRespCodes: ['334'], expect: 'VXNlcm5hbWU6');
+  await c.send('AUTH LOGIN', acceptedRespCodes: ['334'], expect: 'VXNlcm5hbWU6');
   // 'Password:' in base64 is: UGF...
-  await c.send(convert.base64.encode(username.codeUnits),
-      acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
-  var loginResp = await c
-      .send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
+  await c.send(convert.base64.encode(username.codeUnits), acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
+  var loginResp = await c.send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
 
   return loginResp!;
 }
 
-Future<ServerResponse> _doAuthXoauth2(Connection c) async {
-  var capabilities = c.capabilities;
-  if (!capabilities.authXoauth2) {
-    throw SmtpClientCommunicationException(
-        'The server does not support XOAUTH2 authentication method.');
-  }
+Future<ServerResponse> _doAuthPlain(Connection c) async {
+  var digest = _getPlainDigest(c.server.username!, c.server.password!);
 
+  await c.send('AUTH PLAIN', acceptedRespCodes: ['334']);
+  var loginResp = await c.send(digest, acceptedRespCodes: []);
+
+  return loginResp!;
+}
+
+String _getPlainDigest(String username, String password) {
+  var u = convert.utf8.encode(username);
+  var p = convert.utf8.encode(password);
+  var a = <int>[0];
+  a.addAll(u);
+  a.add(0);
+  a.addAll(p);
+  return convert.base64.encoder.convert(a);
+}
+
+Future<ServerResponse> _doAuthXoauth2(Connection c) async {
   var token = c.server.xoauth2Token;
 
   // See https://developers.google.com/gmail/imap/xoauth2-protocol
@@ -97,9 +101,19 @@ Future<void> _doAuthentication(Connection c) async {
   ServerResponse? loginResp;
 
   if (c.server.username != null && c.server.password != null) {
-    loginResp = await _doAuthLogin(c);
+    if (c.capabilities.authLogin) {
+      loginResp = await _doAuthLogin(c);
+    } else if (c.capabilities.authPlain) {
+      loginResp = await _doAuthPlain(c);
+    } else {
+      throw SmtpClientCommunicationException('The server does not support LOGIN or PLAIN authentication method.');
+    }
   } else if (c.server.xoauth2Token != null) {
-    loginResp = await _doAuthXoauth2(c);
+    if (c.capabilities.authXoauth2) {
+      loginResp = await _doAuthXoauth2(c);
+    } else {
+      throw SmtpClientCommunicationException('The server does not support XOAUTH2 authentication method.');
+    }
   }
 
   if (loginResp != null && !loginResp.responseCode.startsWith('2')) {
@@ -120,8 +134,7 @@ Future<Connection> connect(SmtpServer smtpServer, Duration? timeout) async {
       await c.send('');
     } on TimeoutException {
       if (!c.isSecure) {
-        throw SmtpNoGreetingException(
-            'Timed out while waiting for greeting (try ssl).');
+        throw SmtpNoGreetingException('Timed out while waiting for greeting (try ssl).');
       } else {
         throw SmtpNoGreetingException('Timed out while waiting for greeting.');
       }
@@ -161,8 +174,7 @@ Future<void> close(Connection? connection) async {
 /// [SmtpClientCommunicationException],
 /// [SmtpUnsecureException],
 /// [SocketException],
-Future<void> sendSingleMessage(
-    Message? message, Connection c, Duration? timeout) async {
+Future<void> sendSingleMessage(Message? message, Connection c, Duration? timeout) async {
   var irMessage = IRMessage(message);
   var envelopeTos = irMessage.envelopeTos;
 
@@ -171,13 +183,11 @@ Future<void> sendSingleMessage(
   // Tell the server the envelope from address (might be different to the
   // 'From: ' header!)
   var smtpUtf8 = capabilities.smtpUtf8;
-  await c.send(
-      'MAIL FROM:<${irMessage.envelopeFrom}>${smtpUtf8 ? ' SMTPUTF8' : ''}');
+  await c.send('MAIL FROM:<${irMessage.envelopeFrom}>${smtpUtf8 ? ' SMTPUTF8' : ''}');
 
   // Give the server all recipients.
   // TODO what if only one address fails?
-  await Future.forEach(
-      envelopeTos, (dynamic recipient) => c.send('RCPT TO:<$recipient>'));
+  await Future.forEach(envelopeTos, (dynamic recipient) => c.send('RCPT TO:<$recipient>'));
 
   // Finally send the actual mail.
   await c.send('DATA', acceptedRespCodes: ['2', '3']);
