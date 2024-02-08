@@ -1,3 +1,8 @@
+## 6.1.0
+* Add auth plain  
+  Thansk https://github.com/michep
+* Allow `intl 0.19.0` as dependency
+
 ## 6.0.1
 * Fix yahoo definition  
   Thanks https://github.com/schneiti 
