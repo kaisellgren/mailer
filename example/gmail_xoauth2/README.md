@@ -7,7 +7,7 @@ OAuth2 google credentials are explained [here](https://developers.google.com/ide
 
 ## Get an app id
 
-Go to the [API & Services dashboard](https://console.developers.google.com/apis) and
+Go to the [API & Services dashboard](https://console.developers.google.com/apis/credentials) and
 "create credentials" with type other.
 
 You will get an app-`id` and an app-`secret`.
