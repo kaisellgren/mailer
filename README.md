@@ -1,19 +1,26 @@
 # mailer
 
-**mailer** is an easy to use library for composing and sending emails in Dart.
+**mailer** is an easy-to-use library for composing and sending emails in Dart.
 
 Mailer supports file attachments and HTML emails.
 
 ## FLUTTER developers
 
+**This library does not work with flutter web.**  Sending mails using the SMTP is technically not possible over HTTP.
+
+
 Please do NOT use mailer together with your credentials.  Extracting them is very easy and anybody could then send
 mails using your account.  If you use your gmail credentials it's even worse as an attacker could read your mails as
 well.
+
 
 [Johannes Milke](https://github.com/JohannesMilke) has created an excellent tutorial on how to use `mailer` without
 needing to embed your credentials in the flutter app.
 
 [Flutter Tutorial - How To Send Email In Background \[2021\] Without Backend](https://www.youtube.com/watch?v=RDwst9icjAY)
+
+The tutorial will use firebase and ask for the credentials of the android user: ![flutter-screenshot](doc/flutter_user.png)
+By using the account of the android user it avoids storing your credentials in the app.
 
 ## Server developers
 
