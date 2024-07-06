@@ -90,10 +90,13 @@ class PersistentConnection {
 Future<SendReport> send(Message message, SmtpServer smtpServer,
     {Duration? timeout}) async {
   _validate(message);
-  var connection = await client.connect(smtpServer, timeout);
-  var sendReport = await _send(message, connection, timeout);
-  await client.close(connection);
-  return sendReport;
+  final connection = await client.connect(smtpServer, timeout);
+  try {
+    final sendReport = await _send(message, connection, timeout);
+    return sendReport;
+  } finally {
+    await client.close(connection);
+  }
 }
 
 /// Convenience method for testing SmtpServer configuration.
@@ -128,7 +131,7 @@ void _validate(Message message) {
 /// Please report other exceptions you encounter.
 Future<SendReport> _send(
     Message message, Connection connection, Duration? timeout) async {
-  var messageSendStart = DateTime.now();
+  final messageSendStart = DateTime.now();
   DateTime messageSendEnd;
   try {
     await client.sendSingleMessage(message, connection, timeout);
