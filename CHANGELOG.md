@@ -1,3 +1,7 @@
+## 6.1.1
+* Close connections in finally block
+  Thanks https://github.com/darkstarx
+
 ## 6.1.0
 * Add auth plain  
   Thansk https://github.com/michep
