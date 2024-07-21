@@ -64,7 +64,7 @@ List<Problem> validate(Message message) {
 
     validate(
         a != null && (a.mailAddress).isNotEmpty,
-        'FROM_ADDRESS_EMPTY',
+        'TO_ADDRESS_EMPTY',
         'A recipient address is null or empty.  (pos: $counter).');
     if (a != null) {
       validate(_validAddress(a), 'FROM_ADDRESS',
