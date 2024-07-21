@@ -1,5 +1,9 @@
+## 6.1.2
+* Fix error code if recipients mail address is empty.  
+  Thanks https://github.com/amugofjava
+
 ## 6.1.1
-* Close connections in finally block
+* Close connections in finally block  
   Thanks https://github.com/darkstarx
 
 ## 6.1.0
