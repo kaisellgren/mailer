@@ -73,7 +73,7 @@ Iterable<List<int>> split(List<int> data, int maxLength,
 }
 
 Stream<List<int>> _splitS(
-    Stream<List<int>> dataS, int splitOver, int maxLength) {
+    Stream<List<int>> dataS, int maxLength) {
   var currentLineLength = 0;
   var insertEol = false;
 
@@ -87,16 +87,15 @@ Stream<List<int>> _splitS(
       }
       _logger.finest('_splitS: > maxLength ($maxLength) Splitting into $targetLength parts');
       split(data, targetLength, avoidUtf8Cut: false).forEach(processData);
-    } else if (data.length + currentLineLength > splitOver) {
-      _logger.finest('_splitS: inside splitOver ($splitOver) and maxLength ($maxLength) window.');
-      // We are now over splitOver but not too long.  Perfect.
+    } else if (data.length + currentLineLength == maxLength) {
+      _logger.finest('_splitS: == maxLength ($maxLength)');
       if (insertEol) sc.add(eol8);
       sc.add(data);
       currentLineLength = 0;
       insertEol = true;
     } else {
-      _logger.finest('_splitS: below splitOver ($splitOver).');
-      // We are still below splitOver
+      _logger.finest('_splitS: below maxLength ($maxLength).');
+      // We are still below maxLength
       if (insertEol) sc.add(eol8);
       insertEol = false;
 
@@ -111,11 +110,10 @@ Stream<List<int>> _splitS(
 
 class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
   final int maxLength;
-  final int splitOverLength;
 
-  StreamSplitter([this.splitOverLength = 80, this.maxLength = 800]);
+  StreamSplitter([this.maxLength = 76]);
 
   @override
   Stream<List<int>> bind(Stream<List<int>> stream) =>
-      _splitS(stream, splitOverLength, maxLength);
+      _splitS(stream, maxLength);
 }
