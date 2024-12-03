@@ -1,3 +1,6 @@
+## 6.3.0
+* Allow mime 2.*
+
 ## 6.2.0
 * Limit base64 encoded lines to 76 characters.
   Thanks https://github.com/isoos
