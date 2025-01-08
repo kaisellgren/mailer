@@ -1,3 +1,7 @@
+## 6.4.0
+* Switch to `^0.17` instead of range for the intl dependency.  
+  Thanks https://github.com/mnordine
+
 ## 6.3.0
 * Allow mime 2.*
 
