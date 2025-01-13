@@ -1,3 +1,7 @@
+## 6.4.1
+* Fix dependency range for intl library.  
+  Thanks https://github.com/isoos and https://github.com/mnordine
+
 ## 6.4.0
 * Switch to `^0.17` instead of range for the intl dependency.  
   Thanks https://github.com/mnordine
