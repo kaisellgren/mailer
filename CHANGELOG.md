@@ -1,3 +1,7 @@
+## 6.5.0
+* Add brevo stmp server
+  Thanks https://github.com/FBanitz
+
 ## 6.4.1
 * Fix dependency range for intl library.  
   Thanks https://github.com/isoos and https://github.com/mnordine
