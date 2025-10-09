@@ -1,3 +1,4 @@
+export 'smtp_server/amazon.dart';
 export 'smtp_server/gmail.dart';
 export 'smtp_server/hotmail.dart';
 export 'smtp_server/mailgun.dart';
