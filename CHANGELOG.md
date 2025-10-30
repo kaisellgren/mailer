@@ -1,3 +1,7 @@
+## 6.6.0
+* Add Amazon simple Email Service stmp server
+  Thanks https://github.com/karelklic
+
 ## 6.5.0
 * Add brevo stmp server
   Thanks https://github.com/FBanitz
