@@ -1,5 +1,5 @@
 name: mailer
-version: 6.5.0
+version: 6.6.0
 description: >
   Compose and send emails from Dart.
   Supports file attachments and HTML emails
