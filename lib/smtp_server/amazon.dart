@@ -6,8 +6,7 @@ import '../smtp_server.dart';
 /// Send through Amazon Simple Email Service (Amazon SES).
 ///
 /// Region is the AWS region, e.g. 'us-east-1', or 'eu-west-1'.
-SmtpServer amazon(String accessKeyId, String secretKey, String region) =>
-    SmtpServer(
+SmtpServer amazon(String accessKeyId, String secretKey, String region) => SmtpServer(
       'email-smtp.$region.amazonaws.com',
       username: accessKeyId,
       password: _smtpPassword(secretKey, region),

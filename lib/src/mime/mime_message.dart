@@ -1,14 +1,13 @@
-part of 'internal_representation.dart';
+part of 'mime.dart';
 
-class IRMessage {
-  final Logger _logger = Logger('IRMessage');
+class MimeMessage {
   final Message? _message;
-  late _IRContent _content;
+  late Part _content;
 
   // Possibly throws.
-  IRMessage(this._message) {
+  MimeMessage(this._message) {
     var headers = _buildHeaders(_message!);
-    _content = _IRContentPartMixed(_message!, headers);
+    _content = MultipartMixed(_message!, headers);
   }
 
   Iterable<String?> get envelopeTos {
@@ -25,13 +24,17 @@ class IRMessage {
     return envelopeTos;
   }
 
-  String get envelopeFrom =>
-      _message!.envelopeFrom ?? _message!.fromAsAddress.mailAddress;
+  String get envelopeFrom => _message!.envelopeFrom ?? _message!.fromAsAddress.mailAddress;
 
   Stream<List<int>> data(Capabilities capabilities) =>
-      _content.out(_IRMetaInformation(capabilities)).map((s) {
-        _logger.finest('«${convert.utf8.decoder.convert(s)}»');
-        return s;
+      _content.out(RenderContext(capabilities)).map((s) {
+        if (s is String) {
+          return convert.utf8.encode(s);
+        }
+        if (s is List<int>) {
+          return s;
+        }
+        throw StateError('Did not expect ${s.runtimeType} in Part stream');
       });
 }
 

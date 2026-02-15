@@ -2,13 +2,14 @@ import 'dart:async';
 import 'dart:convert' as convert;
 import 'dart:io';
 
-import 'package:mailer/smtp_server.dart';
+import '../../smtp_server.dart';
 
-import '../entities/message.dart';
+import '../core/message.dart';
 import 'capabilities.dart';
 import 'connection.dart';
 import 'exceptions.dart';
-import 'internal_representation/internal_representation.dart';
+import '../mime/mime.dart';
+import 'buffering_stream_transformer.dart';
 
 /// Returns if ehlo was successful.
 Future<bool> _doEhlo(Connection c, String clientName) async {
@@ -64,8 +65,10 @@ Future<ServerResponse> _doAuthLogin(Connection c) async {
   // 'Username:' in base64 is: VXN...
   await c.send('AUTH LOGIN', acceptedRespCodes: ['334'], expect: 'VXNlcm5hbWU6');
   // 'Password:' in base64 is: UGF...
-  await c.send(convert.base64.encode(username.codeUnits), acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6');
-  var loginResp = await c.send(convert.base64.encode(password.codeUnits), acceptedRespCodes: []);
+  await c.send(convert.base64.encode(username.codeUnits),
+      acceptedRespCodes: ['334'], expect: 'UGFzc3dvcmQ6', private: true);
+  var loginResp =
+      await c.send(convert.base64.encode(password.codeUnits), acceptedRespCodes: [], private: true);
 
   return loginResp!;
 }
@@ -74,7 +77,7 @@ Future<ServerResponse> _doAuthPlain(Connection c) async {
   var digest = _getPlainDigest(c.server.username!, c.server.password!);
 
   await c.send('AUTH PLAIN', acceptedRespCodes: ['334']);
-  var loginResp = await c.send(digest, acceptedRespCodes: []);
+  var loginResp = await c.send(digest, acceptedRespCodes: [], private: true);
 
   return loginResp!;
 }
@@ -93,7 +96,7 @@ Future<ServerResponse> _doAuthXoauth2(Connection c) async {
   var token = c.server.xoauth2Token;
 
   // See https://developers.google.com/gmail/imap/xoauth2-protocol
-  final loginResp = await c.send('AUTH XOAUTH2 $token', acceptedRespCodes: []);
+  final loginResp = await c.send('AUTH XOAUTH2 $token', acceptedRespCodes: [], private: true);
   return loginResp!;
 }
 
@@ -106,13 +109,15 @@ Future<void> _doAuthentication(Connection c) async {
     } else if (c.capabilities.authPlain) {
       loginResp = await _doAuthPlain(c);
     } else {
-      throw SmtpClientCommunicationException('The server does not support LOGIN or PLAIN authentication method.');
+      throw SmtpClientCommunicationException(
+          'The server does not support LOGIN or PLAIN authentication method.');
     }
   } else if (c.server.xoauth2Token != null) {
     if (c.capabilities.authXoauth2) {
       loginResp = await _doAuthXoauth2(c);
     } else {
-      throw SmtpClientCommunicationException('The server does not support XOAUTH2 authentication method.');
+      throw SmtpClientCommunicationException(
+          'The server does not support XOAUTH2 authentication method.');
     }
   }
 
@@ -175,7 +180,7 @@ Future<void> close(Connection? connection) async {
 /// [SmtpUnsecureException],
 /// [SocketException],
 Future<void> sendSingleMessage(Message? message, Connection c, Duration? timeout) async {
-  var irMessage = IRMessage(message);
+  var irMessage = MimeMessage(message);
   var envelopeTos = irMessage.envelopeTos;
 
   var capabilities = c.capabilities;
@@ -190,9 +195,19 @@ Future<void> sendSingleMessage(Message? message, Connection c, Duration? timeout
   await Future.forEach(envelopeTos, (dynamic recipient) => c.send('RCPT TO:<$recipient>'));
 
   // Finally send the actual mail.
-  await c.send('DATA', acceptedRespCodes: ['2', '3']);
-
-  await c.sendStream(irMessage.data(capabilities));
-
-  await c.send('.', acceptedRespCodes: ['2', '3']);
+  if (capabilities.chunking) {
+    // STREAMING via BDAT
+    await for (var chunk
+        in irMessage.data(capabilities).transform(BufferingStreamTransformer(64 * 1024))) {
+      await c.send('BDAT ${chunk.length}', acceptedRespCodes: [], waitForResponse: false);
+      await c.sendStream(Stream.value(chunk));
+      await c.send('', acceptedRespCodes: ['2']);
+    }
+    await c.send('BDAT 0 LAST', acceptedRespCodes: ['2']);
+  } else {
+    // DATA command
+    await c.send('DATA', acceptedRespCodes: ['2', '3']);
+    await c.sendStream(irMessage.data(capabilities));
+    await c.send('.', acceptedRespCodes: ['2', '3']);
+  }
 }

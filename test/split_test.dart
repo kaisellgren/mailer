@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:mailer/src/smtp/internal_representation/conversion.dart';
+import 'package:mailer/src/mime/stream_splitter.dart';
 import 'package:test/test.dart';
 
 class _TestCase {
@@ -12,8 +12,7 @@ class _TestCase {
 
   factory _TestCase(String testString, int splitAt, List<String> splitStrings) {
     var testStringBytes = utf8.encode(testString);
-    var splitStringBytes =
-        splitStrings.map(utf8.encode).toList(growable: false);
+    var splitStringBytes = splitStrings.map(utf8.encode).toList(growable: false);
     return _TestCase._(testStringBytes, splitAt, splitStringBytes);
   }
 }
@@ -36,7 +35,7 @@ final List<_TestCase> _testCases = [
   _TestCase('aaa𠜎𠜱𠝹𠱓𠱸b', 6, ['aaa', '𠜎', '𠜱', '𠝹', '𠱓', '𠱸b']),
 ];
 
-void main() async {
+void main() {
   var i = 0;
   for (var tc in _testCases) {
     test('Split on utf8-borders (${i++})',

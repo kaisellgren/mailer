@@ -1,4 +1,4 @@
-part of message_out_test;
+part of '../message_out_test.dart';
 
 String e(String stringToEscape) => RegExp.escape(stringToEscape);
 
@@ -30,34 +30,10 @@ final defaultHtml = 'utf8😀h';
 
 String mailRegExpTextAndHtml(String subject,
     {String? text, String? html, String? fromHeader, String? dateHeader}) {
-  // ignore: prefer_interpolation_to_compose_strings
-  return '^' +
-      (dateHeader ??
-          '') + // if the date header is specified it comes before the subject.
+  return '^${dateHeader ?? ''}' // if the date header is specified it comes before the subject.
       'subject: $subject\r\n'
-          'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
-      e('to: test2@test.com\r\n') +
-      (dateHeader != null
-          ? ''
-          : defaultDateHeader) + // if not the date header comes after the to header
-      e('x-mailer: Dart Mailer library\r\n') +
-      e('mime-version: 1.0\r\n') +
-      contentTypeHeaderAlternative +
-      e('\r\n') +
-      boundaryAlternative +
-      e('content-type: text/plain; charset=utf-8\r\n') +
-      e('content-transfer-encoding: base64\r\n') +
-      e('\r\n') +
-      '${text ?? e('dXRmOPCfmIB0DQo=')}\r\n' +
-      e('\r\n') +
-      boundaryAlternative +
-      e('content-type: text/html; charset=utf-8\r\n') +
-      e('content-transfer-encoding: base64\r\n') +
-      e('\r\n') +
-      '${html ?? e('dXRmOPCfmIBoDQo=')}\r\n' +
-      e('\r\n') +
-      boundaryEndAlternative +
-      e('\r\n') +
+      'from: ${fromHeader ?? defaultFromRegExp}\r\n${e('to: test2@test.com\r\n')}${dateHeader != null ? '' : defaultDateHeader}' // if not the date header comes after the to header
+      '${e('x-mailer: Dart Mailer library\r\n')}${e('mime-version: 1.0\r\n')}$contentTypeHeaderAlternative${e('\r\n')}$boundaryAlternative${e('content-type: text/plain; charset=utf-8\r\n')}${e('content-transfer-encoding: base64\r\n')}${e('\r\n')}${text ?? e('dXRmOPCfmIB0DQo=')}\r\n${e('\r\n')}$boundaryAlternative${e('content-type: text/html; charset=utf-8\r\n')}${e('content-transfer-encoding: base64\r\n')}${e('\r\n')}${html ?? e('dXRmOPCfmIBoDQo=')}\r\n${e('\r\n')}$boundaryEndAlternative${e('\r\n')}'
       r'$';
 }
 
@@ -68,41 +44,15 @@ class TestAttachment {
   final String content;
   final String? customHeader;
 
-  TestAttachment(this.name, this.type, this.disposition, this.content,
-      {this.customHeader});
+  TestAttachment(this.name, this.type, this.disposition, this.content, {this.customHeader});
 }
 
-String mailRegExpTextHtmlAndInlineAttachments(String subject,
-    List<TestAttachment> inlineAttachments, List<TestAttachment> attachments,
+String mailRegExpTextHtmlAndInlineAttachments(
+    String subject, List<TestAttachment> inlineAttachments, List<TestAttachment> attachments,
     {String? text, String? html, String? fromHeader}) {
-  // ignore: prefer_interpolation_to_compose_strings
   var result = '^'
-          'subject: $subject\r\n'
-          'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
-      e('to: test2@test.com\r\n') +
-      defaultDateHeader +
-      e('x-mailer: Dart Mailer library\r\n') +
-      e('mime-version: 1.0\r\n') +
-      contentTypeHeaderMixed +
-      e('\r\n') +
-      boundaryMixed +
-      contentTypeHeaderAlternative +
-      e('\r\n') +
-      boundaryAlternative +
-      e('content-type: text/plain; charset=utf-8\r\n') +
-      e('content-transfer-encoding: base64\r\n') +
-      e('\r\n') +
-      '${text ?? e('dXRmOPCfmIB0DQo=')}\r\n' +
-      e('\r\n') +
-      boundaryAlternative +
-      contentTypeHeaderRelated +
-      e('\r\n') +
-      boundaryRelated +
-      e('content-type: text/html; charset=utf-8\r\n') +
-      e('content-transfer-encoding: base64\r\n') +
-      e('\r\n') +
-      '${html ?? e('dXRmOPCfmIBoDQo=')}\r\n' +
-      e('\r\n');
+      'subject: $subject\r\n'
+      'from: ${fromHeader ?? defaultFromRegExp}\r\n${e('to: test2@test.com\r\n')}$defaultDateHeader${e('x-mailer: Dart Mailer library\r\n')}${e('mime-version: 1.0\r\n')}$contentTypeHeaderMixed${e('\r\n')}$boundaryMixed$contentTypeHeaderAlternative${e('\r\n')}$boundaryAlternative${e('content-type: text/plain; charset=utf-8\r\n')}${e('content-transfer-encoding: base64\r\n')}${e('\r\n')}${text ?? e('dXRmOPCfmIB0DQo=')}\r\n${e('\r\n')}$boundaryAlternative$contentTypeHeaderRelated${e('\r\n')}$boundaryRelated${e('content-type: text/html; charset=utf-8\r\n')}${e('content-transfer-encoding: base64\r\n')}${e('\r\n')}${html ?? e('dXRmOPCfmIBoDQo=')}\r\n${e('\r\n')}';
   for (var a in inlineAttachments) {
     result += boundaryRelated +
         e('content-type: ${a.type}\r\n') +
@@ -130,21 +80,10 @@ String mailRegExpTextHtmlAndInlineAttachments(String subject,
   return result;
 }
 
-String mailRegExpTextOrHtml(String subject,
-    {String? text, String? html, String? fromHeader}) {
-  // ignore: prefer_interpolation_to_compose_strings
+String mailRegExpTextOrHtml(String subject, {String? text, String? html, String? fromHeader}) {
   return '^'
-          'subject: $subject\r\n'
-          'from: ${fromHeader ?? defaultFromRegExp}\r\n' +
-      e('to: test2@test.com\r\n') +
-      defaultDateHeader +
-      e('x-mailer: Dart Mailer library\r\n') +
-      e('mime-version: 1.0\r\n') +
-      e('content-type: text/${text != null ? 'plain' : 'html'}; charset=utf-8\r\n') +
-      e('content-transfer-encoding: base64\r\n') +
-      e('\r\n') +
-      '${text ?? html}\r\n' +
-      e('\r\n') +
+      'subject: $subject\r\n'
+      'from: ${fromHeader ?? defaultFromRegExp}\r\n${e('to: test2@test.com\r\n')}$defaultDateHeader${e('x-mailer: Dart Mailer library\r\n')}${e('mime-version: 1.0\r\n')}${e('content-type: text/${text != null ? 'plain' : 'html'}; charset=utf-8\r\n')}${e('content-transfer-encoding: base64\r\n')}${e('\r\n')}${text ?? html}\r\n${e('\r\n')}'
       r'$';
 }
 

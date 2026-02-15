@@ -1,3 +1,5 @@
+import '../idna/idna.dart';
+
 final _quotableNameRegExp = RegExp(r'[",]');
 
 class Address {
@@ -20,9 +22,29 @@ class Address {
     return name;
   }
 
-  /// The address used to output to SMTP server.
-  /// Implementation can override it to pre-process the address before sending
-  String get sanitizedAddress => mailAddress;
+  /// Returns the mail address with the domain encoded using IDNA (Punycode).
+  ///
+  /// This properly handles internationalized domain names by:
+  /// 1. Normalizing Unicode to NFC
+  /// 2. Converting to lowercase
+  /// 3. Encoding non-ASCII labels with Punycode (xn-- prefix)
+  ///
+  /// The local-part (before @) is not modified, as SMTP does not support
+  /// UTF-8 in local-parts without the SMTPUTF8 extension.
+  String get encodedAddress {
+    try {
+      final lastAt = mailAddress.lastIndexOf('@');
+      if (lastAt == -1) {
+        return mailAddress;
+      }
+      final localPart = mailAddress.substring(0, lastAt);
+      final domain = mailAddress.substring(lastAt + 1);
+      final encodedDomain = idnaEncode(domain);
+      return '$localPart@$encodedDomain';
+    } catch (_) {
+      return mailAddress;
+    }
+  }
 
   @override
   String toString() => "${name ?? ''} <$mailAddress>";
@@ -54,8 +76,7 @@ List<Address> parseMailboxes(String addresses) {
     }
 
     if (email.isNotEmpty) {
-      result.add(Address(String.fromCharCodes(email).trim(),
-          String.fromCharCodes(name).trim()));
+      result.add(Address(String.fromCharCodes(email).trim(), String.fromCharCodes(name).trim()));
     }
 
     email.clear();

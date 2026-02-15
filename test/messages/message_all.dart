@@ -1,4 +1,4 @@
-part of message_out_test;
+part of '../message_out_test.dart';
 
 Stream<String> countStream(int to) async* {
   yield '{ "numbers": [';
@@ -24,25 +24,16 @@ void messageAll() => MessageTest(
         StreamAttachment(countStream(1000).map(utf8.encode), 'application/json')
           ..additionalHeaders['X-XYZ'] = 'XyZZy'
       ],
-    mailRegExpTextHtmlAndInlineAttachments(_subjectBelow,
-        [testStringAttachment], [testFileAttachment, testStreamAttachment],
-        fromHeader: _utf8FromHeaderRegexp,
-        html: _textBodyEncoded,
-        text: _textBodyEncoded),
-    mailRegExpTextHtmlAndInlineAttachments(_subjectBelowUtf8RegExp,
-        [testStringAttachment], [testFileAttachment, testStreamAttachment],
-        fromHeader: _utf8FromHeaderEncodedRegexp,
-        html: _textBodyEncoded,
-        text: _textBodyEncoded),
+    mailRegExpTextHtmlAndInlineAttachments(
+        _subjectBelow, [testStringAttachment], [testFileAttachment, testStreamAttachment],
+        fromHeader: _utf8FromHeaderRegexp, html: _textBodyEncoded, text: _textBodyEncoded),
+    mailRegExpTextHtmlAndInlineAttachments(
+        _subjectBelowUtf8RegExp, [testStringAttachment], [testFileAttachment, testStreamAttachment],
+        fromHeader: _utf8FromHeaderEncodedRegexp, html: _textBodyEncoded, text: _textBodyEncoded),
     stringReplacements: attachmentReplacementStrings);
 
 final attachmentReplacementStrings = {
-  for (var a in [
-    testStringAttachment,
-    testFileAttachment,
-    testStreamAttachment
-  ])
-    a.content: a.name
+  for (var a in [testStringAttachment, testFileAttachment, testStreamAttachment]) a.content: a.name
 };
 
 final TestAttachment testStringAttachment = TestAttachment(

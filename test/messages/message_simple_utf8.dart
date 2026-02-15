@@ -1,4 +1,4 @@
-part of message_out_test;
+part of '../message_out_test.dart';
 
 final _dateHeader = 'date: Thu, 31 Mar 2022 00:00:00 \\+0000\r\n';
 
@@ -12,5 +12,4 @@ final messageSimpleUtf8 = MessageTest(
       ..text = defaultText
       ..headers = {'date': DateTime.utc(2022, 3, 31)},
     mailRegExpTextAndHtml(defaultSubjectRegExpUtf8, dateHeader: _dateHeader),
-    mailRegExpTextAndHtml(defaultSubjectRegExpNotUtf8,
-        dateHeader: _dateHeader));
+    mailRegExpTextAndHtml(defaultSubjectRegExpNotUtf8, dateHeader: _dateHeader));

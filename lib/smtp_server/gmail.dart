@@ -8,9 +8,8 @@ import '../smtp_server.dart';
 SmtpServer gmail(String username, String password) =>
     SmtpServer('smtp.gmail.com', username: username, password: password);
 
-@Deprecated('Favor gmailUserXoauth2 or gmailRelayXoauth2')
-SmtpServer gmailXoauth2(String token) =>
-    SmtpServer('smtp.gmail.com', xoauth2Token: token);
+@Deprecated('Favor gmailSaslXoauth2 or gmailRelaySaslXoauth2')
+SmtpServer gmailXoauth2(String token) => SmtpServer('smtp.gmail.com', xoauth2Token: token);
 
 /// Send through gmail with [SASL XOAUTH2][1] authentication.
 ///

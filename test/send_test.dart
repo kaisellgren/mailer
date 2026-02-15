@@ -9,16 +9,12 @@ import 'package:test/test.dart';
 SmtpServer? correctSmtpServer;
 SmtpServer incorrectCredentials = gmail('mister@gmail.com', 'wrongpass');
 
-void main() async {
-  correctSmtpServer = await configureCorrectSmtpServer();
+void main() {
+  setUpAll(() async {
+    correctSmtpServer = await configureCorrectSmtpServer();
+  });
 
-  test('Sending email', () async {
-    // TODO: what should be tested here
-    //expect(report. != null, true);
-  }, skip: true);
-
-  test('SmtpClient.checkCredentials() throws SmtpClientAuthenticationException',
-      () async {
+  test('SmtpClient.checkCredentials() throws SmtpClientAuthenticationException', () async {
     expect(checkCredentials(incorrectCredentials, timeout: const Duration(seconds: 5)),
         throwsA(TypeMatcher<SmtpClientAuthenticationException>()));
   }, skip: false);

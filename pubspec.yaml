@@ -1,22 +1,26 @@
 name: mailer
-version: 6.6.0
+version: 7.0.0
 description: >
   Compose and send emails from Dart.
-  Supports file attachments and HTML emails
+  Supports file attachments and HTML emails.
 homepage: https://github.com/kaisellgren/mailer
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
+
 dependencies:
-  async: '^2.5.0'
-  crypto: '^3.0.0'
-  logging: '^1.0.0'
-  intl: '>=0.17.0 <1.0.0'
-  mime: '>=1.0.0 <3.0.0'
-  path: '^1.7.0'
-  meta: '^1.3.0'
+  async: '^2.11.0'
+  crypto: '^3.0.3'
+  logging: '^1.2.0'
+  intl: '^0.19.0'
+  mime: '^1.0.5'
+  path: '^1.8.3'
+  meta: '^1.11.0'
+  punycoder: '^0.2.2'
+  unorm_dart: '^0.3.2'
 
 dev_dependencies:
-  args: '^2.0.0'
-  test: '^1.5.1'
-  googleapis_auth: '^1.0.0'
-  lints: '^2.0.1'
+  args: '^2.4.2'
+  test: '^1.25.0'
+  googleapis_auth: '^1.4.1'
+  http: '^1.2.0'
+  lints: '^3.0.0'
