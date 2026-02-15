@@ -2,6 +2,11 @@
 
 **mailer** is an easy-to-use library for composing and sending emails in Dart.
 
+> [!WARNING]
+> This is an **SMTP client** library. It is designed to send emails by connecting to an **existing SMTP server** (like Gmail, SendGrid, Mailgun, or your own Postfix/Exim server).
+>
+> It is **not** an SMTP server and cannot receive emails or accept incoming connections from other mail clients.
+
 It supports:
 *   **Plaintext and HTML** emails.
 *   **Attachments** (files, streams, etc.).
