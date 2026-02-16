@@ -1,9 +1,6 @@
-
-
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:test/test.dart';
-
 
 SmtpServer incorrectCredentials = gmail('mister@gmail.com', 'wrongpass');
 
