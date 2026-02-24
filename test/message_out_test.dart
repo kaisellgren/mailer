@@ -1,4 +1,4 @@
-library message_out_test;
+library;
 
 import 'dart:convert';
 import 'dart:io';

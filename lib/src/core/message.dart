@@ -49,12 +49,12 @@ class Message {
   List<dynamic> bccRecipients = [];
   Iterable<Address> get bccsAsAddresses => _asAddresses(bccRecipients);
 
-  /// Allowed values are String, Address, Iterable<Address>, Iterable<String> or
-  /// DateTime.
+  /// Allowed values are `String`, `Address`, `Iterable<Address>`, `Iterable<String>` or
+  /// `DateTime`.
   ///
-  /// Iterable<String> is only allowed if all Strings are email-addresses.
+  /// `Iterable<String>` is only allowed if all Strings are email-addresses.
   ///
-  /// If a String contains an @ it is treated like an email-address.
+  /// If a String contains an `@` it is treated like an email-address.
   ///
   /// There is no parsing for name / mail-address pairs!
   /// Always use Address in this case.  (Otherwise we might incorrectly encode
