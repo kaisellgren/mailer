@@ -1,6 +1,6 @@
-# How to use XOAUTH2 authentication in the [mailer](https://github.com/kaisellgren/mailer) lib (version ^3.0.0)
+# How to use XOAUTH2 authentication in the [mailer](https://github.com/kaisellgren/mailer) lib
 
-This example uses the [googleapis_auth](https://github.com/dart-lang/googleapis_auth) library.
+This example uses the [googleapis_auth](https://github.com/google/googleapis.dart/tree/master/googleapis_auth) library.
 
 OAuth2 google credentials are explained [here](https://developers.google.com/identity/protocols/OAuth2)
 
@@ -12,34 +12,41 @@ Go to the [API & Services dashboard](https://console.developers.google.com/apis/
 
 You will get an app-`id` and an app-`secret`.
 
-It should also be possible to create a service account.  However AFAIK only google apps accounts
-are allowed to do that.  For more information see [googleapis_auth → Autonomous Application / Service Account](https://github.com/dart-lang/googleapis_auth)
+It should also be possible to create a service account.  However, AFAIK only google apps accounts
+are allowed to do that.  For more information see [googleapis_auth → Autonomous Application / Service Account](https://github.com/google/googleapis.dart/tree/master/googleapis_auth)
 
 
-## You want to send mails with your account.
+
+## Server Side / Command Line Usage
 
 This is acceptable if you are using `mailer` in a server (command line) app.
 
-**Do not use your account in flutter apps.**  It is possible to extract credentials
-from apps and an attacker would be able to send spam using your account.
-
-I unfortunately don't know how to find out which account has been used when asking for permissions.
-You therefore have to specify the username (`--username`) manually.  They obviously have to match.
+**See the [detailed manual](../../doc/gmail_xoauth2/README.md) for step-by-step instructions.**
 
 First retrieve the credentials using [obtain_credentials.dart](obtain_credentials.dart):  
-`dart bin/obtain_credentials.dart --username 'yourAddress@gmail.com' --file '/tmp/secrets.json --id 'YOUR_ID.apps.googleusercontent.com' --secret 'YOUR_SECRET'`
+`dart example/gmail_xoauth2/obtain_credentials.dart --username 'yourAddress@gmail.com' --file 'secrets.json' --id 'YOUR_ID.apps.googleusercontent.com' --secret 'YOUR_SECRET'`
 
 You can then send mails using:
-`dart bin/send_mail.dart --file '/tmp/secrets.json --to 'someTestAddress@test.com'`
-
-Again don't store your credentials in any mobile app!
+`dart example/gmail_xoauth2/send_mail.dart --file 'secrets.json' --to 'someTestAddress@test.com'`
 
 
-## Send mail in flutter apps.
+## Flutter Apps
 
-You will need to ask the user.
+**Do not use the server-side method above in Flutter apps.**  It requires storing your client secret, which is not secure in a mobile app.
+Instead, use the [google_sign_in](https://pub.dev/packages/google_sign_in) package to authenticate the user.
+This package handles the OAuth flow securely and provides the `accessToken` needed for `gmailSaslXoauth2`.
 
-Write your own `prompt` function ([obtain_credentials.dart](obtain_credentials.dart)) which
-displays the homepage to the user.
+When the user authenticates, they will see a consent screen similar to this:
 
-Then ask the user for its email-address and store the credentials somewhere.
+![User Consent Screen](flutter_user.png)
+
+After obtaining the `accessToken` from `google_sign_in`, you can use it with `mailer`:
+
+```dart
+final googleSignIn = GoogleSignIn(scopes: ['https://mail.google.com/']);
+final account = await googleSignIn.signIn();
+final auth = await account.authentication;
+
+final smtpServer = gmailSaslXoauth2(account.email, auth.accessToken);
+// ... send email
+```

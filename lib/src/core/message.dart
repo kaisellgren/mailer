@@ -1,4 +1,5 @@
 import 'address.dart';
+import 'address_validator.dart';
 import 'attachment.dart';
 
 /// This class represents an e-mail that can be sent to someone/some people.
@@ -51,7 +52,7 @@ class Message {
   /// Allowed values are String, Address, Iterable<Address>, Iterable<String> or
   /// DateTime.
   ///
-  /// Iterable<String> is only allowed if all Strings are email-addresses .
+  /// Iterable<String> is only allowed if all Strings are email-addresses.
   ///
   /// If a String contains an @ it is treated like an email-address.
   ///
@@ -70,6 +71,7 @@ class Message {
   String? text;
   String? html;
   List<Attachment> attachments = [];
+  AddressValidator? validator;
 
   static Iterable<Address> _asAddresses(Iterable<dynamic> adrs) =>
       adrs.map((a) => a is String ? Address(a) : a as Address);

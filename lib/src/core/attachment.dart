@@ -22,8 +22,14 @@ enum Location {
 /// can be referenced using:
 /// `cid:yourCid`.  For instance: `<img src="cid:yourCid" />`
 ///
-/// [cid] must contain an `@` and be inside `<` and `>`.
-/// The cid: `<myImage@3.141>` can then be referenced inside your html as:
+/// You may omit the surrounding `<` and `>` in [cid]. The library will add
+/// them if they are missing.
+///
+/// RFC 2392 requires [cid] to be a valid `addr-spec`, which implies it must
+/// contain an `@` symbol. The library does not enforce this, but it is
+/// recommended for better compatibility.
+///
+/// The cid: `myImage@3.141` can then be referenced inside your html as:
 /// `<img src="cid:myImage@3.141">`
 abstract class Attachment {
   String? cid;
@@ -43,9 +49,7 @@ class FileAttachment extends Attachment {
   final File _file;
 
   FileAttachment(this._file, {String? contentType, String? fileName}) {
-    this.contentType = contentType ??
-        mime.lookupMimeType(_file.path) ??
-        'application/octet-stream';
+    this.contentType = contentType ?? mime.lookupMimeType(_file.path) ?? 'application/octet-stream';
     this.fileName = fileName ?? basename(_file.path);
   }
 
@@ -70,14 +74,12 @@ class StringAttachment extends Attachment {
 
   StringAttachment(this._data, {String? contentType, String? fileName}) {
     this.contentType = contentType ??
-        mime.lookupMimeType(fileName ?? 'abc.txt',
-            headerBytes: convert.utf8.encode(_data)) ??
+        mime.lookupMimeType(fileName ?? 'abc.txt', headerBytes: convert.utf8.encode(_data)) ??
         'text/plain';
     this.fileName = fileName;
   }
 
   @override
   // There will be only one element in the stream: the utf8 encoded string.
-  Stream<List<int>> asStream() =>
-      Stream.fromIterable([convert.utf8.encode(_data)]);
+  Stream<List<int>> asStream() => Stream.fromIterable([convert.utf8.encode(_data)]);
 }

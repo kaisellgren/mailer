@@ -9,3 +9,4 @@ packages
 .dart_tool
 /test/smtpserver.json
 .DS_Store
+secrets.json

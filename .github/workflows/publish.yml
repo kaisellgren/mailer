@@ -1,0 +1,32 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*' # Triggers on tags like v1.2.3 or v1.2.3+1
+  workflow_dispatch: # Allows you to manually trigger a retry from the Actions tab
+
+jobs:
+  publish:
+    permissions:
+      id-token: write # Required for OIDC authentication
+      contents: read
+
+    runs-on: ubuntu-latest
+
+    environment: pub.dev
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart
+        uses: dart-lang/setup-dart@v1
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Publish to pub.dev
+        # The '--force' is safe here because the tag and
+        # environment approval act as your confirmation.
+        run: dart pub publish --force

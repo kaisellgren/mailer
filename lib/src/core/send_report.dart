@@ -6,8 +6,7 @@ class SendReport {
   final DateTime messageSendingStart;
   final DateTime messageSendingEnd;
 
-  SendReport(this.mail, this.connectionOpened, this.messageSendingStart,
-      this.messageSendingEnd);
+  SendReport(this.mail, this.connectionOpened, this.messageSendingStart, this.messageSendingEnd);
 
   @override
   String toString() {

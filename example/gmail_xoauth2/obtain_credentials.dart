@@ -6,8 +6,7 @@ import 'package:googleapis_auth/auth_io.dart';
 
 const scopes = ['https://mail.google.com'];
 
-// ignore: always_declare_return_types
-main(List<String> rawArgs) async {
+Future<void> main(List<String> rawArgs) async {
   var args = parseArgs(rawArgs);
   final identifier = args[argId] as String;
   final secret = args[argSecret] as String?;
@@ -18,8 +17,7 @@ main(List<String> rawArgs) async {
 
   AccessCredentials credentials;
   final client = http.Client();
-  credentials = await obtainAccessCredentialsViaUserConsent(
-      clientId, scopes, client, prompt);
+  credentials = await obtainAccessCredentialsViaUserConsent(clientId, scopes, client, prompt);
   client.close();
 
   print('Access token data: ${credentials.accessToken.data}');
@@ -42,10 +40,18 @@ main(List<String> rawArgs) async {
   }
 }
 
-void prompt(String url) {
+void prompt(String url) async {
   print('Please go to the following URL and grant access:');
   print('  => $url');
   print('');
+
+  if (Platform.isLinux) {
+    await Process.run('xdg-open', [url]);
+  } else if (Platform.isMacOS) {
+    await Process.run('open', [url]);
+  } else if (Platform.isWindows) {
+    await Process.run('powershell', ['start', '"$url"']);
+  }
 }
 
 const argId = 'id';
@@ -56,14 +62,11 @@ const argUsername = 'username';
 ArgResults parseArgs(List<String> rawArgs) {
   var parser = ArgParser()
     ..addOption(argId,
-        help:
-            'The app-id from your credentials (https://console.developers.google.com/apis).')
+        help: 'The app-id from your credentials (https://console.developers.google.com/apis).')
     ..addOption(argSecret,
-        help:
-            'The app-secret from your credentials (https://console.developers.google.com/apis).')
+        help: 'The app-secret from your credentials (https://console.developers.google.com/apis).')
     ..addOption(argUsername,
-        help:
-            'The mail address which gives the app-id the permission to read/send mails.')
+        help: 'The mail address which gives the app-id the permission to read/send mails.')
     ..addOption(argFile, help: 'Write secrets to <file>.');
 
   var argResults = parser.parse(rawArgs);

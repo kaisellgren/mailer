@@ -1,3 +1,20 @@
+## 7.0.0
+* Major Refactoring: Simplified library structure and standardized exports.
+  - Renamed internal `IR` classes to `Mime`.
+  - Moved files into `core`, `mime`, and `smtp` directories.
+  - Standardized on relative imports within the package.
+  - Moved to community repository (github.com/dart-mailer/mailer)
+* Feature: Added support for RFC 3030 (CHUNKING and BINARYMIME).
+* Feature: Implemented Custom Address Validation API.
+  - Added `PracticalAddressValidator` (recommended for input validation).
+  - Added `StrictAddressValidator` (RFC 5322 compliance).
+  - Added `PermissiveAddressValidator` and `SimpleAddressValidator`.
+* Feature: Correct IDNA encoding for domains.
+  - Proper NFC Unicode normalization using `unorm_dart`.
+  - Case folding and label validation (RFC 5890).
+* Breaking: Removed `lib/src/core/entities.dart`. Import `package:mailer/mailer.dart` instead.
+* Update: Bumped SDK constraint to Dart 3.
+
 ## 6.6.0
 * Add Amazon simple Email Service stmp server
   Thanks https://github.com/karelklic

@@ -1,4 +1,4 @@
-part of message_out_test;
+part of '../message_out_test.dart';
 
 final messageTextOnly = MessageTest(
     'Message with utf8 subject and text',
@@ -13,9 +13,9 @@ final messageTextOnly = MessageTest(
 final messageHtmlOnly = MessageTest(
     'Message with utf8 subject and html',
     Message()
-          ..from = Address('test1@test.com', 'Name')
-          ..recipients = ['test2@test.com']
-          ..subject = defaultSubject
-          ..html = defaultHtml,
+      ..from = Address('test1@test.com', 'Name')
+      ..recipients = ['test2@test.com']
+      ..subject = defaultSubject
+      ..html = defaultHtml,
     mailRegExpHtml(defaultSubjectRegExpUtf8),
     mailRegExpHtml(defaultSubjectRegExpNotUtf8));

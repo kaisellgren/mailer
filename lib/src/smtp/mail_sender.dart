@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:logging/logging.dart';
-import 'package:mailer/src/smtp/validator.dart';
+import 'validator.dart';
 
 import '../../mailer.dart';
 import '../../smtp_server.dart';
@@ -87,8 +87,7 @@ class PersistentConnection {
 /// [SocketException]
 /// [SmtpMessageValidationException]
 /// Please report other exceptions you encounter.
-Future<SendReport> send(Message message, SmtpServer smtpServer,
-    {Duration? timeout}) async {
+Future<SendReport> send(Message message, SmtpServer smtpServer, {Duration? timeout}) async {
   _validate(message);
   final connection = await client.connect(smtpServer, timeout);
   try {
@@ -107,8 +106,7 @@ Future<SendReport> send(Message message, SmtpServer smtpServer,
 /// [SmtpClientCommunicationException],
 /// [SocketException]
 /// others
-Future<void> checkCredentials(SmtpServer smtpServer,
-    {Duration? timeout}) async {
+Future<void> checkCredentials(SmtpServer smtpServer, {Duration? timeout}) async {
   var connection = await client.connect(smtpServer, timeout);
   await client.close(connection);
 }
@@ -119,8 +117,7 @@ void _validate(Message message) {
   if (validationProblems.isNotEmpty) {
     _logger.severe('Message validation error: '
         '${validationProblems.map((p) => p.msg).join('|')}');
-    throw SmtpMessageValidationException(
-        'Invalid message.', validationProblems);
+    throw SmtpMessageValidationException('Invalid message.', validationProblems);
   }
 }
 
@@ -129,8 +126,7 @@ void _validate(Message message) {
 /// [SmtpClientCommunicationException],
 /// [SocketException]
 /// Please report other exceptions you encounter.
-Future<SendReport> _send(
-    Message message, Connection connection, Duration? timeout) async {
+Future<SendReport> _send(Message message, Connection connection, Duration? timeout) async {
   final messageSendStart = DateTime.now();
   DateTime messageSendEnd;
   try {
@@ -142,6 +138,5 @@ Future<SendReport> _send(
   }
   // If sending the message was successful we had to open a connection and
   // `connection.connectionOpenStart` can no longer be null.
-  return SendReport(message, connection.connectionOpenStart!, messageSendStart,
-      messageSendEnd);
+  return SendReport(message, connection.connectionOpenStart!, messageSendStart, messageSendEnd);
 }

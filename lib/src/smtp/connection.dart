@@ -4,8 +4,8 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 import 'package:logging/logging.dart';
-import 'package:mailer/smtp_server.dart';
-import 'package:mailer/src/smtp/exceptions.dart';
+import '../../smtp_server.dart';
+import 'exceptions.dart';
 
 import 'capabilities.dart';
 
@@ -53,9 +53,14 @@ class Connection {
   Future<ServerResponse?> send(String command,
       {List<String>? acceptedRespCodes = const ['2'],
       String? expect,
-      bool waitForResponse = true}) async {
+      bool waitForResponse = true,
+      bool private = false}) async {
     // Send the new command.
-    _logger.fine('> $command');
+    if (private) {
+      _logger.fine('> *******');
+    } else {
+      _logger.fine('> $command');
+    }
     if (command.isNotEmpty) {
       _socket!.write('$command\r\n');
     }
@@ -76,8 +81,7 @@ class Connection {
     // for the _last_ line of a response.
     // Multi-line responses have '-' as 4th character except for the last
     // line.
-    while (currentLine == null ||
-        (currentLine.length > 3 && currentLine[3] != ' ')) {
+    while (currentLine == null || (currentLine.length > 3 && currentLine[3] != ' ')) {
       var hasNext = await _socketIn!.hasNext.timeout(timeout);
       if (!hasNext) {
         throw SmtpClientCommunicationException(
@@ -101,8 +105,7 @@ class Connection {
     if (acceptedRespCodes != null &&
         acceptedRespCodes.isNotEmpty &&
         !acceptedRespCodes.any((start) => responseCode.startsWith(start))) {
-      var msg =
-          'After sending $command, response did not start with any of: $acceptedRespCodes.';
+      var msg = 'After sending $command, response did not start with any of: $acceptedRespCodes.';
       msg += '\nResponse from server: $mString';
       _logger.warning(msg);
       throw SmtpClientCommunicationException(msg);
@@ -116,8 +119,8 @@ class Connection {
     // SecureSocket.secure suggests to call socketSubscription.pause().
     // A StreamQueue always pauses unless we explicitly call next().
     // So we don't need to call pause() ourselves.
-    _socket = await SecureSocket.secure(_socket!,
-        onBadCertificate: (_) => server.ignoreBadCertificate);
+    _socket =
+        await SecureSocket.secure(_socket!, onBadCertificate: (_) => server.ignoreBadCertificate);
     _setSocketIn();
   }
 
@@ -129,11 +132,9 @@ class Connection {
     // Secured connection was demanded by the user.
     if (server.ssl) {
       _socket = await SecureSocket.connect(server.host, server.port,
-          onBadCertificate: (_) => server.ignoreBadCertificate,
-          timeout: timeout);
+          onBadCertificate: (_) => server.ignoreBadCertificate, timeout: timeout);
     } else {
-      _socket =
-          await Socket.connect(server.host, server.port, timeout: timeout);
+      _socket = await Socket.connect(server.host, server.port, timeout: timeout);
     }
     _socket!.timeout(timeout);
 
@@ -149,8 +150,7 @@ class Connection {
     if (_socketIn != null) {
       _socketIn!.cancel();
     }
-    _socketIn = StreamQueue<String>(
-        utf8.decoder.bind(_socket!).transform(const LineSplitter()));
+    _socketIn = StreamQueue<String>(utf8.decoder.bind(_socket!).transform(const LineSplitter()));
   }
 
   void verifySecuredConnection() {

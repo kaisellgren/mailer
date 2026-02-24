@@ -30,9 +30,7 @@ void main(List<String> rawArgs) async {
 
   final client = http.Client();
   var credentials = AccessCredentials(
-      AccessToken('Bearer', 'EXPIRED', DateTime.utc(2000)),
-      refreshToken,
-      scopes,
+      AccessToken('Bearer', 'EXPIRED', DateTime.utc(2000)), refreshToken, scopes,
       idToken: identifier);
 
   // Refresh credentials periodically!
@@ -41,14 +39,9 @@ void main(List<String> rawArgs) async {
   }
   client.close();
 
-  // https://developers.google.com/gmail/imap/xoauth2-protocol
-  final oauth2token = base64Encode(utf8.encode(
-      'user=$username\x01auth=${credentials.accessToken.type} ${credentials.accessToken.data}\x01\x01'));
-  print('OAuth2Token: $oauth2token');
-
-  final smtpClient = gmailXoauth2(oauth2token);
+  final smtpClient = gmailSaslXoauth2(username!, credentials.accessToken.data);
   final message = Message()
-    ..from = Address('$username', 'My name 😀')
+    ..from = Address(username, 'My name 😀')
     ..recipients.add(mailTo)
     ..subject = 'xoauth2'
     ..text = 'This is the plain text.\nThis is line 2 of the text part.'

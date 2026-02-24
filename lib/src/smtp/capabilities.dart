@@ -7,9 +7,11 @@ Capabilities capabilitiesForTesting(
     bool authPlain = true,
     bool authLogin = false,
     bool authXoauth2 = false,
+    bool chunking = false,
+    bool binaryMime = false,
     List<String> all = const <String>[]}) {
   return Capabilities._values(
-      startTls, smtpUtf8, authPlain, authLogin, authXoauth2, all);
+      startTls, smtpUtf8, authPlain, authLogin, authXoauth2, chunking, binaryMime, all);
 }
 
 class Capabilities {
@@ -18,6 +20,8 @@ class Capabilities {
   final bool authPlain;
   final bool authLogin;
   final bool authXoauth2;
+  final bool chunking;
+  final bool binaryMime;
   final List<String> all;
 
   const Capabilities()
@@ -26,20 +30,23 @@ class Capabilities {
         authPlain = true,
         authLogin = false,
         authXoauth2 = false,
+        chunking = false,
+        binaryMime = false,
         all = const <String>[];
 
-  const Capabilities._values(this.startTls, this.smtpUtf8, this.authPlain,
-      this.authLogin, this.authXoauth2, this.all);
+  const Capabilities._values(this.startTls, this.smtpUtf8, this.authPlain, this.authLogin,
+      this.authXoauth2, this.chunking, this.binaryMime, this.all);
 
   factory Capabilities.fromResponse(Iterable<String> ehloMessage) {
-    final capabilities =
-        List<String>.unmodifiable(ehloMessage.map((m) => m.toUpperCase()));
+    final capabilities = List<String>.unmodifiable(ehloMessage.map((m) => m.toUpperCase()));
 
     var startTls = false;
     var smtpUtf8 = false;
     var plain = false;
     var login = false;
     var xoauth2 = false;
+    var chunking = false;
+    var binaryMime = false;
 
     for (var cap in capabilities) {
       if (cap.contains('STARTTLS')) {
@@ -51,10 +58,14 @@ class Capabilities {
         plain = authMethods.contains('PLAIN');
         login = authMethods.contains('LOGIN');
         xoauth2 = authMethods.contains('XOAUTH2');
+      } else if (cap.contains('CHUNKING')) {
+        chunking = true;
+      } else if (cap.contains('BINARYMIME')) {
+        binaryMime = true;
       }
     }
 
     return Capabilities._values(
-        startTls, smtpUtf8, plain, login, xoauth2, capabilities);
+        startTls, smtpUtf8, plain, login, xoauth2, chunking, binaryMime, capabilities);
   }
 }

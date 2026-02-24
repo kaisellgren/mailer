@@ -1,10 +1,6 @@
 import 'dart:async';
 import 'dart:convert' as convert;
 
-import 'package:logging/logging.dart';
-
-final Logger _logger = Logger('conversion');
-
 const String eol = '\r\n';
 
 List<int> to8(String s) => convert.utf8.encode(s);
@@ -36,8 +32,7 @@ bool _isMultiByteContinuationByte(int b) {
 // A 4 byte multi byte character for example is:
 // 11110000 10010000 10001101 10001000
 // Note that the 2nd, 3rd and 4th byte all start with 10
-Iterable<List<int>> split(List<int> data, int maxLength,
-    {bool avoidUtf8Cut = true}) sync* {
+Iterable<List<int>> split(List<int> data, int maxLength, {bool avoidUtf8Cut = true}) sync* {
   var start = 0;
   for (;;) {
     if (start >= data.length) break;
@@ -72,29 +67,31 @@ Iterable<List<int>> split(List<int> data, int maxLength,
   }
 }
 
-Stream<List<int>> _splitS(
-    Stream<List<int>> dataS, int maxLength) {
+Stream<List<int>> _splitS(Stream<List<int>> dataS, int maxLength) {
   var currentLineLength = 0;
   var insertEol = false;
 
   var sc = StreamController<List<int>>();
   void processData(List<int> data) {
-    _logger.finest('_splitS: <- ${data.length} bytes  currentLineLength: $currentLineLength');
     if (data.length + currentLineLength > maxLength) {
+      // calculate target length.
+      // We want to fill up the current line, but we also want to avoid
+      // very small chunks.
       var targetLength = maxLength ~/ 2;
       if (targetLength + currentLineLength > maxLength) {
         targetLength = maxLength - currentLineLength;
       }
-      _logger.finest('_splitS: > maxLength ($maxLength) Splitting into $targetLength parts');
+      // Recursive call.
+      // We need to split the data into smaller chunks and process them.
+      // We don't care about utf8 splitting here.
+      // The recursive call will handle the logic of adding the EOL.
       split(data, targetLength, avoidUtf8Cut: false).forEach(processData);
     } else if (data.length + currentLineLength == maxLength) {
-      _logger.finest('_splitS: == maxLength ($maxLength)');
       if (insertEol) sc.add(eol8);
       sc.add(data);
       currentLineLength = 0;
       insertEol = true;
     } else {
-      _logger.finest('_splitS: below maxLength ($maxLength).');
       // We are still below maxLength
       if (insertEol) sc.add(eol8);
       insertEol = false;
@@ -114,6 +111,5 @@ class StreamSplitter extends StreamTransformerBase<List<int>, List<int>> {
   StreamSplitter([this.maxLength = 76]);
 
   @override
-  Stream<List<int>> bind(Stream<List<int>> stream) =>
-      _splitS(stream, maxLength);
+  Stream<List<int>> bind(Stream<List<int>> stream) => _splitS(stream, maxLength);
 }

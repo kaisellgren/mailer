@@ -31,8 +31,7 @@ void main(List<String> rawArgs) async {
   // other providers.
   final smtpServer = gmail(username, args.rest[1]);
 
-  Iterable<Address> toAd(Iterable<String>? addresses) =>
-      (addresses ?? []).map((a) => Address(a));
+  Iterable<Address> toAd(Iterable<String>? addresses) => (addresses ?? []).map((a) => Address(a));
 
   Iterable<Attachment> toAt(Iterable<String>? attachments) =>
       (attachments ?? []).map((a) => FileAttachment(File(a)));
@@ -48,8 +47,7 @@ void main(List<String> rawArgs) async {
     ..attachments.addAll(toAt(args[attachArgs] as Iterable<String>?));
 
   try {
-    final sendReport =
-        await send(message, smtpServer, timeout: Duration(seconds: 15));
+    final sendReport = await send(message, smtpServer, timeout: Duration(seconds: 15));
     print('Message sent: $sendReport');
   } on MailerException catch (e) {
     print('Message not sent.');
@@ -59,13 +57,11 @@ void main(List<String> rawArgs) async {
   }
 
   print('Now sending using a persistent connection');
-  var connection =
-      PersistentConnection(smtpServer, timeout: Duration(seconds: 15));
+  var connection = PersistentConnection(smtpServer, timeout: Duration(seconds: 15));
   // Send multiple mails on one connection:
   try {
     for (var i = 0; i < 3; i++) {
-      message.subject =
-          'Test Dart Mailer library :: 😀 :: ${DateTime.now()} / $i';
+      message.subject = 'Test Dart Mailer library :: 😀 :: ${DateTime.now()} / $i';
       final sendReport = await connection.send(message);
       print('Message sent: $sendReport');
     }

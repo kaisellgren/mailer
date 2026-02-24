@@ -1,18 +1,11 @@
-analyzer:
-  strong-mode:
-    implicit-casts: false
-  errors:
-    todo: ignore
-  exclude:
-    - flutter/**
-    - lib/api/*.dart
-    - .dart_tool
-    - example/gmail_xoauth2
+include: package:lints/recommended.yaml
 
 linter:
   rules:
-    - avoid_empty_else
-    - cancel_subscriptions
-    - close_sinks
+    - prefer_single_quotes
+    - unawaited_futures
+    - always_declare_return_types
+    - lines_longer_than_80_chars: false
 
-include: package:lints/recommended.yaml
+formatter:
+  page_width: 100
