@@ -3,6 +3,7 @@
   - Renamed internal `IR` classes to `Mime`.
   - Moved files into `core`, `mime`, and `smtp` directories.
   - Standardized on relative imports within the package.
+  - Moved to community repository (github.com/dart-mailer/mailer)
 * Feature: Added support for RFC 3030 (CHUNKING and BINARYMIME).
 * Feature: Implemented Custom Address Validation API.
   - Added `PracticalAddressValidator` (recommended for input validation).
