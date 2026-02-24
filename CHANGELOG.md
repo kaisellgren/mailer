@@ -1,3 +1,7 @@
+## 7.1.0
+* allow mime 2.0.0 and intl up to 0.21.0
+  Thanks https://github.com/karelklic
+
 ## 7.0.0
 * Major Refactoring: Simplified library structure and standardized exports.
   - Renamed internal `IR` classes to `Mime`.
