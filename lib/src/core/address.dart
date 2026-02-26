@@ -1,4 +1,5 @@
-import '../idna/idna.dart';
+import 'package:punycoder/punycoder.dart';
+import 'package:unorm_dart/unorm_dart.dart' as unorm;
 
 final _quotableNameRegExp = RegExp(r'[",]');
 
@@ -26,21 +27,19 @@ class Address {
   ///
   /// This properly handles internationalized domain names by:
   /// 1. Normalizing Unicode to NFC
-  /// 2. Converting to lowercase
-  /// 3. Encoding non-ASCII labels with Punycode (xn-- prefix)
+  /// 2. Converting the domain to Punycode using [emailToAscii]
   ///
-  /// The local-part (before @) is not modified, as SMTP does not support
-  /// UTF-8 in local-parts without the SMTPUTF8 extension.
+  /// The local-part (before @) is not modified by [emailToAscii].
   String get encodedAddress {
     try {
-      final lastAt = mailAddress.lastIndexOf('@');
-      if (lastAt == -1) {
+      if (!mailAddress.contains('@')) {
         return mailAddress;
       }
-      final localPart = mailAddress.substring(0, lastAt);
-      final domain = mailAddress.substring(lastAt + 1);
-      final encodedDomain = idnaEncode(domain);
-      return '$localPart@$encodedDomain';
+
+      // Normalize to NFC before encoding
+      final normalized = unorm.nfc(mailAddress);
+
+      return emailToAscii(normalized);
     } catch (_) {
       return mailAddress;
     }
