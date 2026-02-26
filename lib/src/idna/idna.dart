@@ -22,13 +22,25 @@ const int maxDomainLength = 253;
 /// The ACE (ASCII Compatible Encoding) prefix for Punycode labels.
 const String acePrefix = 'xn--';
 
+/// Exception thrown when IDNA encoding fails.
+class IdnaException implements Exception {
+  /// A description of the error.
+  final String message;
+
+  /// Creates an [IdnaException] with the given [message].
+  const IdnaException(this.message);
+
+  @override
+  String toString() => 'IdnaException: $message';
+}
+
 /// Encodes a domain name to its ASCII-compatible (Punycode) form.
 ///
 /// This function:
 /// 1. Normalizes the domain to NFC
 /// 2. Applies IDNA encoding using [domainToAscii]
 ///
-/// Throws [FormatException] if encoding or validation fails.
+/// Throws [IdnaException] if encoding or validation fails.
 ///
 /// Example:
 /// ```dart
@@ -45,15 +57,19 @@ String idnaEncode(String domain) {
   // punycoder expects input to be normalized.
   final normalized = unorm.nfc(domain);
 
-  // Use domainToAscii which handles splitting, lowercase, prefix and validation
-  return domainToAscii(normalized);
+  try {
+    // Use domainToAscii which handles splitting, lowercase, prefix and validation
+    return domainToAscii(normalized);
+  } on FormatException catch (e) {
+    throw IdnaException(e.message);
+  }
 }
 
 /// Decodes a Punycode-encoded domain name back to Unicode.
 ///
 /// This function uses [domainToUnicode] to handle 'xn--' prefixed labels.
 ///
-/// Throws [FormatException] if Punycode decoding fails.
+/// Throws [IdnaException] if Punycode decoding fails.
 ///
 /// Example:
 /// ```dart
@@ -64,7 +80,11 @@ String idnaDecode(String domain) {
     return domain;
   }
 
-  return domainToUnicode(domain);
+  try {
+    return domainToUnicode(domain);
+  } on FormatException catch (e) {
+    throw IdnaException(e.message);
+  }
 }
 
 /// Checks if a domain contains any non-ASCII characters.

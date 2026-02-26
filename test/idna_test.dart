@@ -88,7 +88,7 @@ void main() {
     group('Error handling', () {
       test('throws on label exceeding max length', () {
         final longLabel = 'a' * 64;
-        expect(() => idnaEncode('$longLabel.com'), throwsA(isA<FormatException>()));
+        expect(() => idnaEncode('$longLabel.com'), throwsA(isA<IdnaException>()));
       });
     });
   });
