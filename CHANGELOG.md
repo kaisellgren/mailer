@@ -1,3 +1,9 @@
+## 7.2.0
+* Upgrade `punycoder` to v0.3.0.
+* Refactor IDNA module to use `domainToAscii` and `domainToUnicode` from `punycoder`.
+* Refactor `Address.encodedAddress` to use `emailToAscii` from `punycoder`.
+* Maintain `IdnaException` for backward compatibility by wrapping `punycoder`'s `FormatException`.
+
 ## 7.1.0
 * allow mime 2.0.0 and intl up to 0.21.0
   Thanks https://github.com/karelklic

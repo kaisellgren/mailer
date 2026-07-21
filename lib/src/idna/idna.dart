@@ -34,23 +34,13 @@ class IdnaException implements Exception {
   String toString() => 'IdnaException: $message';
 }
 
-/// The Punycode codec instance used for encoding/decoding.
-const _punycodeCodec = PunycodeCodec();
-
 /// Encodes a domain name to its ASCII-compatible (Punycode) form.
 ///
 /// This function:
-/// 1. Splits the domain into labels (parts between dots)
-/// 2. Normalizes each label to NFC (Normalization Form Canonical Composition)
-/// 3. Performs case folding (converts to lowercase)
-/// 4. Applies Punycode encoding with 'xn--' prefix for non-ASCII labels
-/// 5. Validates label lengths (≤63 characters)
+/// 1. Normalizes the domain to NFC
+/// 2. Applies IDNA encoding using [domainToAscii]
 ///
-/// Throws [IdnaException] if:
-/// - A label exceeds 63 characters after encoding
-/// - The domain exceeds 253 characters
-/// - A label is empty
-/// - The Punycode encoding fails
+/// Throws [IdnaException] if encoding or validation fails.
 ///
 /// Example:
 /// ```dart
@@ -63,68 +53,21 @@ String idnaEncode(String domain) {
     return domain;
   }
 
-  final labels = domain.split('.');
-  final encodedLabels = <String>[];
+  // Normalize to NFC (Normalization Form Canonical Composition)
+  // punycoder expects input to be normalized.
+  final normalized = unorm.nfc(domain);
 
-  for (final label in labels) {
-    final encoded = _encodeLabel(label);
-    encodedLabels.add(encoded);
-  }
-
-  final result = encodedLabels.join('.');
-
-  // Validate total domain length
-  if (result.length > maxDomainLength) {
-    throw IdnaException('Encoded domain exceeds maximum length of $maxDomainLength characters: '
-        '${result.length} characters');
-  }
-
-  return result;
-}
-
-/// Encodes a single domain label using IDNA rules.
-String _encodeLabel(String label) {
-  if (label.isEmpty) {
-    // Empty labels can occur with trailing dots (e.g., "example.com.")
-    // Return as-is to preserve the structure
-    return label;
-  }
-
-  // 1. Normalize to NFC (Normalization Form Canonical Composition)
-  // This ensures that characters like 'ü' (U+00FC) and 'u' + '̈' (U+0308)
-  // are treated identically.
-  String normalized = unorm.nfc(label);
-
-  // 2. Case folding: convert to lowercase
-  // Domain names are case-insensitive per DNS specifications.
-  normalized = normalized.toLowerCase();
-
-  // 3. Encode using PunycodeCodec
-  // The codec automatically:
-  // - Returns unchanged if already ASCII
-  // - Adds 'xn--' prefix for non-ASCII labels
   try {
-    final encoded = _punycodeCodec.encode(normalized);
-
-    // 4. Validate encoded label length
-    if (encoded.length > maxLabelLength) {
-      throw IdnaException('Encoded label exceeds maximum length of $maxLabelLength characters: '
-          '"$encoded" (${encoded.length} characters)');
-    }
-
-    return encoded;
-  } catch (e) {
-    if (e is IdnaException) rethrow;
-    throw IdnaException('Failed to encode label "$label": $e');
+    // Use domainToAscii which handles splitting, lowercase, prefix and validation
+    return domainToAscii(normalized);
+  } on FormatException catch (e) {
+    throw IdnaException(e.message);
   }
 }
 
 /// Decodes a Punycode-encoded domain name back to Unicode.
 ///
-/// This function:
-/// 1. Splits the domain into labels
-/// 2. Detects 'xn--' prefixed labels and decodes them
-/// 3. Returns the decoded Unicode domain
+/// This function uses [domainToUnicode] to handle 'xn--' prefixed labels.
 ///
 /// Throws [IdnaException] if Punycode decoding fails.
 ///
@@ -137,28 +80,10 @@ String idnaDecode(String domain) {
     return domain;
   }
 
-  final labels = domain.split('.');
-  final decodedLabels = <String>[];
-
-  for (final label in labels) {
-    final decoded = _decodeLabel(label);
-    decodedLabels.add(decoded);
-  }
-
-  return decodedLabels.join('.');
-}
-
-/// Decodes a single Punycode label.
-String _decodeLabel(String label) {
-  if (label.isEmpty) {
-    return label;
-  }
-
-  // PunycodeCodec.decode handles 'xn--' prefixed labels automatically
   try {
-    return _punycodeCodec.decode(label);
-  } catch (e) {
-    throw IdnaException('Failed to decode Punycode label "$label": $e');
+    return domainToUnicode(domain);
+  } on FormatException catch (e) {
+    throw IdnaException(e.message);
   }
 }
 
